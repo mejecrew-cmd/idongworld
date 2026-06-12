@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 📌 packages/frontend/scripts/check-state-route-runtime.mjs — state route removal runtime check
  * ────────────────────────────────────────────────────────────
  * 🎯 역할: frontend와 backend가 통합 state route 없이 전용 API로 동작하는지 runtime에서 검증한다.
@@ -22,6 +22,8 @@ import process from 'node:process'
 const frontendRoot = path.resolve(import.meta.dirname, '..')
 const envPath = path.join(frontendRoot, '.env.local')
 const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:5173'
+const appRoutePath = path.join(frontendRoot, 'src', 'App.tsx')
+const zonesPath = path.join(frontendRoot, 'src', 'data', 'zones.ts')
 
 function readEnvFile(filePath) {
   if (!fs.existsSync(filePath)) {
@@ -91,6 +93,33 @@ assert(html.includes('/src/main.tsx') || html.includes('/vite-assets/'), 'Fronte
   frontendUrl,
 })
 
+const appRouteSource = fs.readFileSync(appRoutePath, 'utf8')
+const zonesSource = fs.readFileSync(zonesPath, 'utf8')
+const requiredAreaRoutes = [
+  'area/02',
+  'area/03',
+  'area/06',
+  'area/12',
+  'area/13',
+  'area/14',
+  'area/:areaNo',
+]
+const missingAreaRoutes = requiredAreaRoutes.filter((route) => !appRouteSource.includes(`path="${route}"`))
+const requiredAreaNos = Array.from({ length: 15 }, (_, index) => `AREA-${String(index + 1).padStart(2, '0')}`)
+const missingAreaNos = requiredAreaNos.filter((areaNo) => !zonesSource.includes(`areaNo: '${areaNo}'`))
+
+assert(missingAreaRoutes.length === 0, 'My-island AREA routes are missing from App.tsx', {
+  requiredAreaRoutes,
+  missingAreaRoutes,
+})
+assert(appRouteSource.includes('IslandAreaPlaceholderScene'), 'AREA placeholder route is not wired', {
+  appRoutePath,
+})
+assert(missingAreaNos.length === 0, 'Frontend zone data must include AREA-01 through AREA-15', {
+  requiredAreaNos,
+  missingAreaNos,
+})
+
 console.log(JSON.stringify({
   ok: true,
   apiUrl,
@@ -99,6 +128,8 @@ console.log(JSON.stringify({
   legacyStateApiRemoved: health.migration.legacyStateApiRemoved,
   repositoryBackend: health.migration.repositories.backend,
   dedicatedModuleIds,
+  myIslandAreaRoutesChecked: requiredAreaRoutes,
+  myIslandAreaNosChecked: requiredAreaNos,
 }, null, 2))
 
 

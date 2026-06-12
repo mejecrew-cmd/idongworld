@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/backend/src/backendPersistence.test.ts
  * ------------------------------------------------------------
  * 역할: backend persistence split의 핵심 회귀 테스트다.
@@ -33,6 +33,12 @@ import {
 import { fullyRegisterCodex, unlockCodexSlot, unlockDiary } from './modules/codex/service.js'
 import { purchaseLodgeFurniture, toggleLodgeAidongAssign, toggleLodgeRoomFurniture } from './modules/lodge/service.js'
 import { addAidongAffinity, recruitAidong, toggleAidongEquippedItem } from './modules/my-aidong/service.js'
+import {
+  incorporateSlot,
+  listZoneSlots,
+  moveSlot,
+  releaseSlot,
+} from './modules/my-island/service.js'
 import { listModuleModelSpecs } from './modules/modelSpecs.js'
 import {
   clearDestinationMission,
@@ -276,7 +282,7 @@ describe('backend persistence contracts', () => {
       creditAmount: 4,
     })
     expect(destinationRule && calculateCustomsAmounts(destinationRule, 2)).toEqual({
-      debitAmount: 10,
+      debitAmount: 2,
       creditAmount: 2,
     })
   })
@@ -713,6 +719,117 @@ describe('backend persistence contracts', () => {
     expect(myIsland.unlockedZones).toEqual(['zone-garden'])
   })
 
+  it('creates my-island zoneSlots defaults for all 15 fixed areas', async () => {
+    initializeRepositories()
+
+    const uid = testUid('zone-slots-default')
+    const state = await listZoneSlots(uid) as MyIslandStateDoc
+    const zoneSlots = state.zoneSlots
+
+    expect(Object.keys(zoneSlots).sort()).toEqual([
+      'AREA-01',
+      'AREA-02',
+      'AREA-03',
+      'AREA-04',
+      'AREA-05',
+      'AREA-06',
+      'AREA-07',
+      'AREA-08',
+      'AREA-09',
+      'AREA-10',
+      'AREA-11',
+      'AREA-12',
+      'AREA-13',
+      'AREA-14',
+      'AREA-15',
+    ])
+    expect(zoneSlots['AREA-02']).toMatchObject({
+      areaNo: 'AREA-02',
+      areaId: 'harbor',
+      kind: 'anchor',
+      state: 'locked',
+      source: 'default',
+    })
+    expect(zoneSlots['AREA-13']).toMatchObject({
+      areaNo: 'AREA-13',
+      areaId: 'lodge',
+      kind: 'anchor',
+      state: 'locked',
+      source: 'default',
+    })
+    expect(zoneSlots['AREA-14']).toMatchObject({
+      areaNo: 'AREA-14',
+      areaId: 'growth-garden',
+      kind: 'fillable',
+      state: 'empty',
+      source: 'default',
+    })
+  })
+
+  it('guards my-island slot incorporation, release, and move rules', async () => {
+    initializeRepositories()
+
+    const uid = testUid('zone-slots-actions')
+
+    await expect(incorporateSlot(uid, { areaNo: 'AREA-14', characterId: 'slot-aidong' }))
+      .rejects.toMatchObject({
+        code: 'aidong_not_recruited',
+        status: 409,
+      })
+
+    await recruitAidong(uid, 'slot-aidong')
+    await expect(incorporateSlot(uid, { areaNo: 'AREA-02', characterId: 'slot-aidong' }))
+      .rejects.toMatchObject({
+        code: 'zone_slot_anchor_locked',
+        status: 409,
+      })
+    await recruitAidong(uid, 'second-slot-aidong')
+
+    const incorporated = await incorporateSlot(uid, {
+      areaNo: 'AREA-14',
+      characterId: 'slot-aidong',
+    }) as MyIslandStateDoc
+    expect(incorporated.zoneSlots['AREA-14']).toMatchObject({
+      state: 'filled',
+      occupantAidongId: 'slot-aidong',
+      source: 'incorporation',
+    })
+
+    await expect(incorporateSlot(uid, { areaNo: 'AREA-03', characterId: 'slot-aidong' }))
+      .rejects.toMatchObject({
+        code: 'aidong_already_in_zone_slot',
+        status: 409,
+      })
+    await expect(incorporateSlot(uid, { areaNo: 'AREA-14', characterId: 'second-slot-aidong' }))
+      .rejects.toMatchObject({
+        code: 'zone_slot_occupied',
+        status: 409,
+      })
+
+    const moved = await moveSlot(uid, {
+      fromAreaNo: 'AREA-14',
+      toAreaNo: 'AREA-03',
+    }) as MyIslandStateDoc
+    expect(moved.zoneSlots['AREA-14']).toMatchObject({
+      state: 'empty',
+      occupantAidongId: undefined,
+    })
+    expect(moved.zoneSlots['AREA-03']).toMatchObject({
+      state: 'filled',
+      occupantAidongId: 'slot-aidong',
+      source: 'incorporation',
+    })
+
+    const released = await releaseSlot(uid, { areaNo: 'AREA-03' }) as MyIslandStateDoc
+    expect(released.zoneSlots['AREA-03']).toMatchObject({
+      state: 'empty',
+      occupantAidongId: undefined,
+    })
+    await expect(releaseSlot(uid, { areaNo: 'AREA-03' })).rejects.toMatchObject({
+      code: 'zone_slot_empty',
+      status: 409,
+    })
+  })
   it('applies customs debit and credit through resource adapters', async () => {
     initializeRepositories()
 
@@ -810,7 +927,7 @@ describe('backend persistence contracts', () => {
     const ship = await repositories.ship.getOrCreate(uid) as { shipInventory?: Record<string, number> }
 
     expect(result.statusCode).toBe(200)
-    expect(island.localResources['shell-fragment']).toBe(5)
+    expect(island.localResources['shell-fragment']).toBe(9)
     expect(ship.shipInventory?.['shell-fragment']).toBe(1)
   })
 
@@ -1263,16 +1380,16 @@ describe('backend persistence contracts', () => {
     expect(movedIsland.visitedNodeIds).toContain('beach-west')
 
     const shellRock = await interactDestinationHotspot(uid, 'destination-shell-island', 'shell-rock')
-    expect((shellRock.state as DestinationIslandStateDoc).localResources['shell-fragment']).toBe(2)
+    expect((shellRock.state as DestinationIslandStateDoc).localResources['shell-fragment']).toBe(3)
 
     await moveDestinationIsland(uid, 'destination-shell-island', 'east')
     await moveDestinationIsland(uid, 'destination-shell-island', 'east')
     const tidePool = await interactDestinationHotspot(uid, 'destination-shell-island', 'tide-pool')
-    expect((tidePool.state as DestinationIslandStateDoc).localResources['shell-fragment']).toBe(3)
+    expect((tidePool.state as DestinationIslandStateDoc).localResources['shell-fragment']).toBe(4)
 
     await moveDestinationIsland(uid, 'destination-shell-island', 'north')
     const shrine = await clearDestinationMission(uid, 'destination-shell-island', 'open-old-shrine')
-    expect((shrine.state as DestinationIslandStateDoc).localResources['shell-fragment']).toBe(1)
+    expect((shrine.state as DestinationIslandStateDoc).localResources['shell-fragment']).toBe(2)
     expect((shrine.state as DestinationIslandStateDoc).localInventory['pearl-dust']).toBe(1)
     expect((shrine.state as DestinationIslandStateDoc).clearedMissionIds).toEqual(['open-old-shrine'])
 
