@@ -1,0 +1,7 @@
+{
+  "name": "VN 재생기",
+  "sample.action": "VN 재생기 액션 라벨",
+  "sample.greeting": "VN 재생기 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "VN 재생기 툴팁 텍스트 (PM 검수 대기)",
+  "title": "VN 재생기 (모듈 표시명)"
+}

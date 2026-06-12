@@ -1,0 +1,10 @@
+{
+  "back_to_full_map": "← Full Map",
+  "name": "Mine",
+  "phase_note": "Activated after Phase 2 designer delivery",
+  "placeholder": "Mini-game coming soon",
+  "sample.action": "Mine action label",
+  "sample.greeting": "Mine module i18n sample — key 1",
+  "sample.tooltip": "Mine tooltip text (TBD)",
+  "title": "⛏️ 도전의 절벽"
+}

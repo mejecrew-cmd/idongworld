@@ -1,0 +1,39 @@
+{
+  "name": "backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false --ignore '../../node_modules/**' --ignore './node_modules/**' src/index.ts",
+    "dev:mongo:local": "node scripts/dev-local-mongo.mjs",
+    "dev:local-mongo": "node scripts/dev-backend-local-mongo.mjs",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "check:mongo": "node scripts/check-mongo-readiness.mjs",
+    "check:mongo:atlas": "node scripts/check-mongo-atlas-readiness.mjs",
+    "check:auth-production": "node scripts/check-auth-production.mjs",
+    "check:auth-firebase-token": "node scripts/check-auth-firebase-token.mjs",
+    "check:model-specs": "node scripts/check-module-model-specs.mjs",
+    "check:module-actions-smoke": "node scripts/smoke-module-actions.mjs",
+    "check:migration": "node scripts/check-backend-migration.mjs",
+    "check:migration:local-mongo": "node scripts/check-backend-migration.mjs --local-mongo",
+    "smoke:persistence": "node scripts/smoke-persistence.mjs",
+    "smoke:state-route-removed": "node scripts/smoke-state-route-removed.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@idongworld/core": "workspace:*",
+    "express": "^4.21.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "firebase-admin": "^12.4.0",
+    "mongoose": "^8.8.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.7.4",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "계정",
+  "sample.action": "계정 액션 라벨",
+  "sample.greeting": "계정 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "계정 툴팁 텍스트 (PM 검수 대기)",
+  "title": "계정 (모듈 표시명)"
+}

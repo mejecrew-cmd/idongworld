@@ -1,0 +1,10 @@
+{
+  "back_to_full_map": "← Full Map",
+  "name": "Oasis",
+  "phase_note": "Activated after Phase 2 designer delivery",
+  "placeholder": "Mini-game coming soon",
+  "sample.action": "Oasis action label",
+  "sample.greeting": "Oasis module i18n sample — key 1",
+  "sample.tooltip": "Oasis tooltip text (TBD)",
+  "title": "🏖️ 오아시스"
+}

@@ -1,0 +1,24 @@
+// 📁 vn-runner/tsconfig.json — VN Runner 시스템 모듈 TypeScript 설정 (JSONC)
+// ───────────────────────────────────────────────
+// 📌 역할: 비주얼노벨 시나리오 재생 엔진. frontend 가 직접 src 참조.
+// 🔗 연결: @idongworld/core (manifests·bus 등) + react/MUI (peer)
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src", "manifest.ts"]
+}

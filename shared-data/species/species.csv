@@ -1,0 +1,9 @@
+# shared-data/species/species.csv — 5종 마스터 (작가·디자이너·코드 공유)
+# 헌법: 시각 변별 보장 (5종 다른 실루엣). 영감원 식별어 0 매치.
+# 헤더: speciesId,name,emoji,silhouettePriority,defaultIdleAnim,defaultPoseRefPx,canvasWidthPx,canvasHeightPx,baselineY,partTypes,note
+speciesId,name,emoji,silhouettePriority,defaultIdleAnim,defaultPoseRefPx,canvasWidthPx,canvasHeightPx,baselineY,partTypes,note
+dog,강아지,🐶,1,tail-wag,1024x1024,1024,1024,920,body;face;ear;tail;outfit,꼬리 흔들기 시그니처
+cat,고양이,🐱,2,paw-flick,1024x1024,1024,1024,920,body;face;ear;tail;whisker;outfit,발끝 절제
+bear,곰돌이,🐻,3,slow-blink,1024x1024,1024,1024,920,body;face;ear;outfit,큰 손·낮은 음성
+hamster,햄스터,🐹,4,cheek-puff,1024x1024,1024,1024,920,body;face;cheek;tail;outfit,볼주머니 시그니처
+fox,여우,🦊,5,tail-flick,1024x1024,1024,1024,920,body;face;ear;tail;outfit,꼬리 살짝

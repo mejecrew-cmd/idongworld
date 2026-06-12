@@ -1,0 +1,7 @@
+{
+  "name": "Account",
+  "sample.action": "Account action label",
+  "sample.greeting": "Account module i18n sample — key 1",
+  "sample.tooltip": "Account tooltip text (TBD)",
+  "title": "Account (module display name)"
+}

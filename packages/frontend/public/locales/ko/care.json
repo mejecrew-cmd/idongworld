@@ -1,0 +1,16 @@
+{
+  "tab_basic": "기본 케어",
+  "tab_free": "자유 케어",
+  "hint_basic": "시간대에 맞는 케어만 활성됩니다",
+  "hint_free": "시간 무관·쿨다운·일일 캡 적용",
+  "err_wrong_zone": "지금 시간대엔 안 돼요.",
+  "err_cooldown": "아직 쉬어야 해요.",
+  "err_cap": "오늘 충분해요.",
+  "err_no_coins": "코인이 부족해요.",
+  "ok_feedback": "{{delta}} 친밀도 · 욕구 회복",
+  "zone_0": "낮 (휴식)",
+  "zone_1": "🌅 기상·아침",
+  "zone_2": "☀️ 점심",
+  "zone_3": "🌆 저녁",
+  "zone_4": "🌙 밤·잠"
+}

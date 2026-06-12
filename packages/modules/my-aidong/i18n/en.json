@@ -1,0 +1,7 @@
+{
+  "name": "My Aidong",
+  "sample.action": "My Aidong action label",
+  "sample.greeting": "My Aidong module i18n sample — key 1",
+  "sample.tooltip": "My Aidong tooltip text (TBD)",
+  "title": "My Aidong (module display name)"
+}

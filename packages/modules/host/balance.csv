@@ -1,0 +1,14 @@
+# host/balance.csv — 호스트 자원·재화 밸런스 파라미터 (PM 조정)
+# 헤더: paramId,value,type,description,phase
+paramId,value,type,description,phase
+initial_coins,100,number,게임 시작 시 코인 (1주차 케어 액션 검증용),Phase 1
+initial_gems,0,number,게임 시작 시 보석,Phase 1
+initial_diamonds,0,number,게임 시작 시 다이아 (BM 재화),Phase 2
+initial_dice,6,number,게임 시작 시 주사위 잔량,Phase 1
+max_inventory_per_item,999,number,자재 슬롯당 최대 보유 개수,Phase 1
+dice_max_capacity,30,number,항구 충전 시 다이스 최대 누적,Phase 1.5
+dice_charge_per_hour,1,number,항구 배치 캐릭터당 시간당 다이스 충전,Phase 1.5
+care_default_cost,5,number,케어 액션 1회 기본 코인 비용 (action 별 override 가능),Phase 1
+care_food_cost,10,number,음식 케어 코인 비용,Phase 1
+care_play_cost,3,number,놀이 케어 코인 비용,Phase 1
+sync_debounce_ms,5000,number,backend sync 디바운스 (ms),Phase 1

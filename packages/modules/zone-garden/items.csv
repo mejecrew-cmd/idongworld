@@ -1,0 +1,4 @@
+# zone-garden/items.csv - 정원 모듈 item/resource catalog
+itemId,name,kind,stackable,maxStack,scope,description,phase
+acorn,도토리,resource,true,999,module-local,정원에서 수집하는 기본 자원. customs로 host 또는 다른 모듈로 이동할 수 있다.,Phase 1
+flower,꽃,resource,true,999,module-local,정원에서 수집하는 희귀 자원. customs로 보석 교환 후보가 된다.,Phase 1

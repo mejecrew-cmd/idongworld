@@ -1,0 +1,226 @@
+﻿---
+version: v0.1.0
+last_updated: 2026-05-10
+status: ?쒖꽦
+type: ?곗씠???곌껐 SoT 留ㅽ븨
+reviewed_at: 2026-05-11
+
+---
+
+# ?곗씠???곌껐 ?ㅼ씠?닿렇????DB쨌JSON쨌CSV쨌湲고쉷 SoT 留ㅽ븨
+
+> 寃뚯엫 ?곗씠?곗쓽 異쒖쿂(SoT) ??肄붾뱶 ???붾㈃源뚯? ???먮쫫????怨녹뿉 ?뺣━.
+> ?붿옄?대꼫쨌湲고쉷?먭? "???곗씠?곕뒗 ?대뵒??????대뵒濡?媛?붿?" ?쒕늿???뚯븙.
+
+---
+
+## 0. ?꾩껜 ?곗씠???먮쫫
+
+```
+[湲고쉷 SoT (紐⑤뱢쨌留ㅻ돱?셋텰SV)]
+        ??[罹먮┃?곗뿏吏?(a~e ?쒗듃)]
+        ??[frontend data/* (TS ?뺤쟻 ?곗씠??]
+        ??[stores/userStore (Zustand state)]   ?먥넂   [backend memoryStore (UserDoc)]
+        ??                                         ??[components/screens (UI)]                  [routes/* (API)]
+        ??[??댁뼱?꾨젅??assets-dummy (PNG)]  ??Phase 2 ??PNG濡?援먯껜
+```
+
+---
+
+## 1. 移댄뀒怨좊━蹂??곗씠??異쒖쿂 留ㅽ븨
+
+### 1.1 蹂몄쭊 5紐?罹먮┃??(#56쨌#75쨌#24쨌#7쨌#19)
+
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?렞 SoT | 湲고쉷/紐⑤뱢/蹂몄쭊5紐낆꽑??md v0.3 | 5醫?5洹몃９ ?뺤젙 (PM 寃곗젙) |
+| ?뱤 留덉뒪??CSV | [罹먮┃?곕찓?댄궧?붿쭊]/c_?꾩씠???섎Ⅴ?뚮굹/?섎Ⅴ?뚮굹由ъ뒪??csv | ?섎Ⅴ?뚮굹 # 쨌 洹몃９ 쨌 硫ㅻ쾭 쨌 ?쒗듃寃쎈줈 |
+| ?뱤 ?뷀뤃?몄씠由?CSV | [罹먮┃?곕찓?댄궧?붿쭊]/c_?꾩씠???섎Ⅴ?뚮굹/?섎Ⅴ?뚮굹?뷀뤃?몄씠由?csv | # 쨌 ?뷀뤃?몄씠由?쨌 醫?|
+| ?뱞 c ?쒗듃 | [罹먮┃?곕찓?댄궧?붿쭊]/c_?꾩씠???섎Ⅴ?뚮굹/{洹몃９}/{硫ㅻ쾭}_?섎Ⅴ?뚮굹?쒗듃.md | Part 1 (?곴컧?? 湲덉?/?덉쟾?? + Part 2 (?꾩씠???섎Ⅴ?뚮굹) |
+| ?뱞 d ?쒗듃 | [罹먮┃?곕찓?댄궧?붿쭊]/d_罹먮┃???쇱?而?{醫?.md | 醫낅퀎 留덉뒪??(?섏긽 ?щ’쨌6臾대뱶쨌?섎Ⅴ?뚮굹 ?뚯툩) |
+| ?뱞 e ?쒗듃 | [罹먮┃?곕찓?댄궧?붿쭊]/e_?꾩씠?숈틦由?꽣/{醫?/{N1}_{N2}_{?대쫫}.md | ?섎Ⅴ?뚮굹 + ?쇱?而??⑹꽦 寃곌낵 (?붿옄?대꼫 紐낆꽭) |
+| ?뮲 肄붾뱶 ?곗씠??| frontend/src/components/AidongSprite.tsx (SPECIES_MAP) | ?쒓? 罹먮┃?곕챸 ??醫?留ㅽ븨 |
+| ?뮲 frontend store | stores/userStore.ts (recruitedAidongs쨌affinities쨌needs) | ?곸엯쨌移쒕??꽷? ?뺢뎄 |
+| ?뮶 backend store | backend/store/memoryStore.ts UserDoc | in-memory (Phase 1.5 ??MongoDB) |
+| ?렓 ?붾? ?먯궛 | ??댁뼱?꾨젅??assets-dummy/罹먮┃??{醫?_{?대쫫}/*.png | 8 PNG/罹먮┃??|
+| ?뼹截??붾㈃ | HubHeartScene쨌LodgeScene쨌CareModal쨌VNPlayer쨌DebutStageScene | UI ?ъ슜 ?꾨컲 |
+
+### 1.2 留덉씠??15援ъ뿭
+
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?렞 SoT | 湲고쉷/紐⑤뱢/留덉씠??md 짠4 + ?섎룄臾몄꽌.md 짠5 | 泥?냼???뺤꽌 ?띻꼍 |
+| ?뮲 肄붾뱶 ?곗씠??| frontend/src/data/zones.ts (ZONES, PHASE_LABEL) | 15 zone ?뺤쟻 移댄깉濡쒓렇 |
+| ?뮲 frontend store | stores/userStore.ts (unlockedZones[]) | ?닿툑 ?곹깭 |
+| ?뼹截??붾㈃ | screens/IslandFullMapScreen.tsx | ?留?洹몃━??|
+| ?렜 誘몃땲寃뚯엫 留ㅽ븨 | IslandFullMapScreen.tsx (ZONE_TO_GAME) | 4 zone ??4 誘몃땲寃뚯엫 |
+
+### 1.3 遺猷⑤쭏釉?蹂대뱶쨌??줈
+
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?렞 SoT | 湲고쉷/紐⑤뱢/遺猷⑤쭏釉붾낫??md v0.2 + ?ъ뒳濡?md v0.1 | 30移맞룻빆濡?移댄깉濡쒓렇 |
+| ?뮲 肄붾뱶 ?곗씠??| frontend/src/data/board.ts (NEIGHBOR_SLOT_TEMPLATE쨌ROUTE_CATALOG) | 30移?+ ??줈 3醫?|
+| ?뮲 ?숈쟻 留ㅽ븨 | data/board.ts buildNeighborRoute(recruited) | ?곸엯 ????4紐???4 移?|
+| ?뮲 frontend store | stores/userStore.ts (boardPosition쨌diceCount쨌currentRoute) | ??빐 ?곹깭 |
+| ?뼹截??붾㈃ | screens/NavigationBoardScene.tsx | 6횞5 洹몃━??+ 二쇱궗??|
+
+### 1.4 6 ?뺢뎄 + 14 耳??
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?렞 SoT | 湲고쉷/紐⑤뱢/?ㅻ쭏怨좎튂肄붿뼱.md 짠5쨌짠6 + ?λ젰移섑뙆?쇰찓??md 짠3 | ?뺢뎄쨌耳??移댄깉濡쒓렇 |
+| ?뮲 肄붾뱶 ?곗씠??| frontend/src/data/needs.ts (NeedKey쨌INITIAL_NEEDS쨌moodFromScore) | ?뺢뎄 紐⑤뜽 |
+| ?뮲 肄붾뱶 ?곗씠??| frontend/src/data/careActions.ts (CARE_ACTIONS) | 14 ?≪뀡 |
+| ?뮲 frontend store | stores/userStore.ts (needs쨌careLog쨌tickSequenceDecay쨌applyCareAction) | ?ㅽ뻾 |
+| ?뮶 backend store | backend/store/memoryStore.ts (needs쨌affinities) | sync 誘몃윭 |
+| ?뼹截??붾㈃ | components/CareModal.tsx | 6 寃뚯씠吏 + 14 ?≪뀡 洹몃━??|
+
+### 1.5 ?쒓렇?덉쿂 5醫?
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?렞 SoT | [罹먮┃?곕찓?댄궧?붿쭊]/e_?꾩씠?숈틦由?꽣/{醫?/*.md 짠6-3 | ?쒓렇?덉쿂 ID쨌?대쫫쨌zone쨌蹂대꼫??|
+| ?뮲 肄붾뱶 ?곗씠??| frontend/src/data/signatures.ts (SIGNATURES) | 5醫?移댄깉濡쒓렇 |
+| ?뼹截??붾㈃ | screens/DebutStageScene.tsx | ?곕퇃 ?ㅽ뀒?댁? 5?④퀎 |
+
+### 1.6 ?쒓컙? (5議?
+
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?렞 SoT | 湲고쉷/紐⑤뱢/?ㅻ쭏怨좎튂肄붿뼱.md 짠7-1 | ?쒓컙? ?뺤쓽 |
+| ?뮲 frontend ?ы띁 | data/schedZone.ts (getCurrentZone쨌getZoneIdx) | ?대씪 痢?zone ?먯젙 |
+| ?뮶 backend 濡쒖쭅 | backend/utils/scheduler.ts (getSchedule쨌getSchedIdx) | VVNS scheduler.js ??.ts |
+| ?뮲 ?ъ슜 | careActions.ts (zones ?쒖젙) 쨌 CareModal 쨌 HUD 쨌 userStore.tickSequenceDecay |
+
+### 1.7 ?쒕굹由ъ삤 (VN)
+
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?렞 SoT | 湲고쉷/留ㅻ돱???쒖뒪??S09_VN_Runner.md | ?ㅽ궎留?|
+| ?뱞 ?쒕굹由ъ삤 JSON | 湲고쉷/?쒕굹由ъ삤/*.json (13?? | recruit쨌settle쨌diary쨌cutscene |
+| ?뵕 frontend symlink | packages/frontend/public/scenarios ??湲고쉷/?쒕굹由ъ삤/ | fetch 媛??|
+| ?뮲 ???| packages/modules/vn-runner/src/types.ts | TS ????뺤쓽 (Phase 1.5-1 遺꾨━) |
+| ?뮲 templating | packages/modules/vn-runner/src/template.ts | {{蹂??} 移섑솚 |
+| ?뮲 trigger ?몃뱾??| packages/modules/vn-runner/src/trigger.ts | userStore쨌module actions ?몄텧 |
+| ?뮲 ?ъ깮湲?| packages/modules/vn-runner/src/VNPlayer.tsx | 而력룻뀓?ㅽ듃쨌?좏깮吏 |
+
+### 1.8 ?붾? ?먯궛 (PNG)
+
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?렓 ?앹꽦 ?ㅽ겕由쏀듃 | 湲고쉷/??댁뼱?꾨젅??assets-dummy/gen_dummy.sh | ffmpeg drawtext ?쇨큵 |
+| ?렓 ?먯궛 | 湲고쉷/??댁뼱?꾨젅??assets-dummy/{罹먮┃?걔룸같寃승톃I}/*.png | 69 PNG (Phase 1) |
+| ?뵕 frontend symlink | packages/frontend/public/assets ??assets-dummy/ | dev ??fetch |
+| ?뵕 backend ?뺤쟻 | backend/index.ts express.static('/assets', ASSET_ROOT) | Asset 2?④퀎 |
+| ?렓 ???먯궛 (Phase 2~) | R07 ?ъ뼇??湲곕컲 ?붿옄?대꼫 ?묓솕 ??1:1 援먯껜 | 5/22~6/12 諛쒖＜ |
+
+### 1.9 i18n ?ㅺ뎅??
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?뱞 locale JSON | packages/frontend/public/locales/ko/*.json (4 namespace) | common쨌opening쨌island쨌care |
+| ?뮲 ?뗭뾽 | frontend/src/i18n/index.ts | i18next + react-i18next + http-backend |
+| ?뮲 ?ъ슜 (?먯쭊) | useTranslation() ??| ?띿뒪???먯쭊 ???댁＜ (Phase 1.5) |
+| ?뙋 ?ㅺ뎅??(Phase 3) | locales/{en,ja,zh,...}/ + VVNS sync-i18n.js | 49?몄뼱 AI 踰덉뿭 |
+
+### 1.10 backend ??frontend sync
+
+| ?④퀎 | ?꾩튂 | ??븷 |
+|---|---|---|
+| ?뮲 ?대씪 ?숆린??| frontend/src/lib/syncStore.ts | Zustand subscribe + 5珥??붾컮?댁뒪 |
+| ?뮲 API ?대씪?댁뼵??| frontend/src/lib/api.ts | fetch wrapper |
+| ?뮶 backend ?쇱슦??| backend/src/routes/*.ts | auth쨌state쨌gacha쨌care |
+| ?뮶 backend ???| backend/src/store/memoryStore.ts | in-memory Map<uid, UserDoc> |
+
+---
+
+## 2. ?곗씠???먮쫫 ?덉떆 ??"?⑷툑硫??곸엯"
+
+```
+?좎? ?대┃ "?④퍡 媛묐땲?? (recruit_hwanggumeong scene_05_settle)
+  ??VNPlayer.tsx ??choices[0].trigger 泥섎━
+  ??lib/vnTrigger.ts handleTriggers([
+  "unlock_aidong:?⑷툑硫?,      ??store.recruitAidong('?⑷툑硫?)
+  "unlock_diary:?⑷툑硫?day1",  ??store.unlockDiary(...)
+  "navigate:settle_hwanggumeong" ???ㅼ쓬 ?쒕굹由ъ삤
+])
+  ??stores/userStore.ts recruitAidong:
+  - recruitedAidongs.push('?⑷툑硫?)
+  - needs[?⑷툑硫? = INITIAL_NEEDS (data/needs.ts)
+  - careLog[?⑷툑硫? = {}
+  ??zustand subscribe ??lib/syncStore.ts (5s debounce)
+  ??api.patchState(uid, { recruitedAidongs, needs, ... })
+  ??backend POST /api/state ??routes/state.ts
+  ??store/memoryStore.ts updateUser(uid, patch)
+  ??UserDoc { recruitedAidongs: ['?⑷툑硫?], ... } ?곸냽
+  ??[?ㅼ쓬 吏꾩엯 ??GET /api/state濡?hydration 媛??
+```
+
+---
+
+## 3. 誘몄뿰寃??곗씠??(媛쒖꽑 ?꾩슂)
+
+| ?곗씠??| ?꾩옱 ?꾩튂 | 誘몄뿰寃?| 媛쒖꽑 ?꾩슂 |
+|---|---|---|---|
+| **罹먮┃???λ젰移?* | ?λ젰移섑뙆?쇰찓??md | data/characterStats.ts ?놁쓬 | Phase 1.5: data 異붿텧 + ?뚯씪 ?좎꽕 |
+| **泥?媛梨??** | 媛梨?md 짠5.2 | ??packages/modules/gacha/src/pools.ts (Phase 1.5-2 遺꾨━) | shared-data/aidong-master ?숆린??5/14 ?붿뿬 |
+| **??줈 移?? ?ㅼ뼇??* | 遺猷⑤쭏釉붾낫??md | NEIGHBOR_SLOT_TEMPLATE??Cat Ear쨌Starlight 誘몄젙??| Phase 2 ????줈 異붽? ??|
+| **K-POP ?곴컧??grep 寃??* | ??tools/audit/checkPersonaLeak.sh (5/10 ?뗭뾽, 0 留ㅼ튂) | ??| CI ?먮룞?붾뒗 Phase 2 |
+| **R04 ?ъ슫??移댄깉濡쒓렇** | ?쒕굹由ъ삤 JSON??BGM쨌SFX ID留?| ???ъ슫???뚯씪 X | Week 6~7 Kenney/Pixabay ?먮젅?댁뀡 |
+
+---
+
+## 4. CSV쨌DB ?ν썑 吏꾪솕
+
+### Phase 1 (?꾩옱)
+- in-memory Map (backend/store/memoryStore.ts)
+- localStorage (frontend persist)
+- CSV: ?섎Ⅴ?뚮굹由ъ뒪?맞룸뵒?댄듃?대쫫 (媛쒕컻 以??뺤쟻 李몄“留?
+
+### Phase 1.5 (5/14~)
+- MongoDB local-first + Mongoose/Mongo driver, Atlas later
+- 紐⑤뜽: User 쨌 Aidong (?뺤쟻 ?쒕뱶) 쨌 Diary 쨌 Codex
+- frontend persist + 5珥?sync??洹몃?濡?
+### Phase 3 (踰좏?)
+- MongoDB Atlas production target
+- AI ?섎Ⅴ?뚮굹 ?숈뒿 ?곗씠??(M3+)
+- i18n CSV 留덉뒪????JSON ?먮룞 ?숆린??(sync-i18n.js)
+
+---
+
+## 5. ?먯궛 ?뚯씪 移댄깉濡쒓렇
+
+```
+??댁뼱?꾨젅??assets-dummy/
+?쒋? 罹먮┃??{醫?_{?대쫫}/        ??蹂몄쭊 5紐?횞 8 PNG = 40 PNG
+??  ?쒋? body.png             (1024횞1024, 蹂몄껜+normal ?쇨뎬)
+??  ?쒋? face_*.png 횞 5       (?쒖젙 ?ㅻ쾭?덉씠)
+??  ?쒋? signature_*.png      (?쒓렇?덉쿂 而?
+??  ?붴? board_icon.png       (256횞256, 蹂대뱶 ?꾩씠肄?
+?쒋? 諛곌꼍/                     ??13 PNG (1920횞1080)
+??  ?쒋? island_*.png 횞 5     (?곸엯 ?쒕굹由ъ삤)
+??  ?쒋? myisland_harbor_*.png 횞 5 (?쒓컙?蹂?
+??  ?붴? ocean_*.png 횞 3      (媛梨졖룸컮??
+?붴? UI/
+    ?쒋? HUD/*.png 횞 7        (肄붿씤쨌?ㅼ씠?꽷룸낫?씲룹튇諛?꽷룹＜?ъ쐞쨌?쒓컙쨌硫붾돱)
+    ?쒋? ?ㅻ퉬/*.png 횞 5       (留덉씠??룻빆?는룸룄媛먃룹긽?먃룹꽕??
+    ?붴? 踰꾪듉/*.png 횞 4       (primary쨌secondary쨌close쨌modal_frame)
+```
+
+**?⑷퀎: 69 PNG 쨌 ??800KB 쨌 ffmpeg drawtext ?먮룞 ?앹꽦**
+???먯궛 ?꾩갑 ??媛숈? 寃쎈줈쨌媛숈? ?뚯씪紐낆쑝濡?1:1 援먯껜 ??肄붾뱶 蹂寃?0.
+
+---
+
+## Backend Persistence Update 2026-05-24
+
+- The old Zustand -> backend state sync diagram remains useful only as a compatibility path.
+- Current backend persistence is split by ownership: account/user, host, module-local states, generic module state, ship/zone/route state, and customs audit logs.
+- New module data flow should be: frontend module action -> module API -> module service -> module repository/model.
+- Cross-module resource movement should be: frontend customs request -> customs API -> resource adapters -> module/host repositories -> customs log.
+- MongoDB development is local-first and should later move to Atlas by changing `MONGO_URI`/deployment secrets.
+
+## Changelog
+
+- **v0.1.1 (2026-05-24)**: Added backend persistence update for module-owned API/repository flow, local MongoDB first policy, and customs-based cross-module resource movement.
+- **v0.1.0 (2026-05-10)**: 珥덉븞. 16 移댄뀒怨좊━ 횞 SoT/CSV/肄붾뱶/store/?붾㈃/?먯궛 留ㅽ븨. ?곗씠???먮쫫 ?덉떆 (?⑷툑硫??곸엯). 誘몄뿰寃??곗씠??5嫄??앸퀎.
+
+

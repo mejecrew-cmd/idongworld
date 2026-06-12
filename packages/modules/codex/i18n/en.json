@@ -1,0 +1,7 @@
+{
+  "name": "Codex",
+  "sample.action": "Codex action label",
+  "sample.greeting": "Codex module i18n sample — key 1",
+  "sample.tooltip": "Codex tooltip text (TBD)",
+  "title": "Codex (module display name)"
+}

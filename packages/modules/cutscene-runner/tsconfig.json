@@ -1,0 +1,23 @@
+// 📁 cutscene-runner/tsconfig.json — 컷신 디스패처 시스템 모듈 TS 설정 (JSONC)
+// ───────────────────────────────────────────────
+// 📌 역할: 호출 지점(callSiteId) → 시나리오ID 매핑·재생 위임 (vn-runner 사용).
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src", "manifest.ts"]
+}

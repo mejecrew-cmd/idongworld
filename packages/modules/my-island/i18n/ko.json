@@ -1,0 +1,12 @@
+{
+  "name": "마이섬",
+  "sample.action": "마이섬 액션 라벨",
+  "sample.greeting": "마이섬 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "마이섬 툴팁 텍스트 (PM 검수 대기)",
+  "title": "마이섬 (모듈 표시명)",
+  "zone.locked.prev_zone_clear": "이전 구역을 먼저 클리어해 주세요",
+  "zone.locked.recruited_count_ge": "친구 {{count}}명 이상 영입 후 열려요",
+  "zone.locked.season": "시즌 한정",
+  "zone.locked.tutorial_complete": "튜토리얼 완료 후 열려요",
+  "zone.locked.update": "다음 업데이트에 열려요"
+}

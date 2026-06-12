@@ -1,0 +1,22 @@
+// 📁 customs/tsconfig.json — 세관 시스템 모듈 TS 설정 (JSONC)
+// ───────────────────────────────────────────────
+// 📌 역할: 자원 변환 룰·신고·적용 엔진. 순수 TS (DOM core console 호환을 위해 DOM 포함).
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src", "manifest.ts"]
+}

@@ -1,0 +1,4 @@
+# my-aidong/items.csv - Aidong 소지/착용 가능 item catalog
+itemId,name,kind,stackable,maxStack,scope,description,phase
+aidong-ribbon,Aidong 리본,aidong-item,false,1,aidong-global,Aidong이 착용할 수 있는 전역 보관 아이템. hostStates.inventory에 보관하고 myAidongStates.equippedItems가 장착 상태를 참조한다.,Phase 2
+smoke_outfit,Smoke 테스트 의상,aidong-item,false,1,aidong-global,backend smoke와 회귀 테스트에서 사용하는 Aidong 착용 아이템.,Test

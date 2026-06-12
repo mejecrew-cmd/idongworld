@@ -1,0 +1,32 @@
+// 📁 frontend/tsconfig.json — TypeScript 컴파일러 설정 (JSONC: 주석 허용)
+// ───────────────────────────────────────────────
+// 📌 역할: Vite + React + TS strict 모드 설정.
+// 🔗 연결: src/* 모든 .ts/.tsx 컴파일 대상 + @/* alias (vite.config.ts 정합)
+{
+  "compilerOptions": {
+    "target": "ES2022",                 // 최신 JS 출력 (Vite는 추가 transpile)
+    "useDefineForClassFields": true,    // 클래스 필드 표준 동작
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],  // 브라우저 + ES2022 API
+    "module": "ESNext",                 // ESM 모듈
+    "skipLibCheck": true,               // node_modules 타입 검사 스킵 (빌드 속도)
+    "moduleResolution": "bundler",      // Vite 호환 (extensionless import OK)
+    "allowImportingTsExtensions": true, // import './foo.ts' 허용
+    "resolveJsonModule": true,          // import json 허용
+    "isolatedModules": true,            // 단일 파일 컴파일 가능 보장
+    "noEmit": true,                     // tsc는 검사만, 출력은 vite가
+    "jsx": "react-jsx",                 // React 17+ 자동 JSX (import React 불필요)
+
+    // strict 옵션 — 모두 ON (안전한 코드 강제)
+    "strict": true,
+    "noUnusedLocals": true,             // 미사용 변수 에러
+    "noUnusedParameters": true,         // 미사용 파라미터 에러
+    "noFallthroughCasesInSwitch": true, // switch fallthrough 방지
+
+    // 경로 alias — '@/*' 로 src 단축 import
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,6 @@
+nodeId,label,backgroundAssetId,north,south,east,west,initial,description
+beach-center,중앙 해변,scene.shell.beach-center,grove-entrance,,beach-east,beach-west,true,처음 도착하는 조개빛 섬의 해변
+beach-west,서쪽 해변,scene.shell.beach-west,,,beach-center,,false,조개 바위가 많은 서쪽 해변
+beach-east,동쪽 해변,scene.shell.beach-east,,,,beach-center,false,조수 웅덩이가 있는 동쪽 해변
+grove-entrance,숲 입구,scene.shell.grove-entrance,old-shrine,beach-center,,,false,낡은 사당으로 이어지는 숲 입구
+old-shrine,낡은 사당,scene.shell.old-shrine,,grove-entrance,,,false,첫 미션 후보 지점

@@ -1,0 +1,5 @@
+hotspotId,nodeId,label,kind,x,y,width,height,rewardTableId,missionId,riveAssetId,once,description
+shell-rock,beach-west,조개 바위,collect,0.42,0.66,0.18,0.16,hotspot.shell-rock.reward,,rive.hotspot.sparkle,true,조개 조각을 얻는 1회성 수집 hotspot
+tide-pool,beach-east,조수 웅덩이,collect,0.58,0.72,0.22,0.14,hotspot.tide-pool.reward,,rive.hotspot.ripple,false,반복 조사 가능한 웅덩이
+old-shrine-door,old-shrine,사당 문,mission,0.5,0.46,0.2,0.28,,open-old-shrine,rive.hotspot.glow,true,낡은 사당 미션 시작 지점
+wind-shell,beach-center,바람 조개,decorative,0.28,0.52,0.12,0.12,,,rive.hotspot.breathe,false,상태 변경 없는 장식 반응 hotspot

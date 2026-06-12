@@ -1,0 +1,5 @@
+{
+  "name": "숙소",
+  "description": "Aidong 휴식과 숙소 인벤토리를 관리합니다.",
+  "actions.assignAidong": "숙소 배치"
+}

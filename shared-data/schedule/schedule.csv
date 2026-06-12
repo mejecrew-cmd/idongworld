@@ -1,0 +1,9 @@
+# shared-data/schedule/schedule.csv — 5존 시간대 마스터 (VVNS scheduler·needs decay 트리거)
+# 헌법: 5존 = 새벽·아침·오후·저녁·밤. 시퀀스 단위 needs -1·zone unlock 시점 결정.
+# 헤더: zoneId,name,emoji,startHour,endHour,moodModifier,bgmCategory,defaultExpression,note
+zoneId,name,emoji,startHour,endHour,moodModifier,bgmCategory,defaultExpression,note
+dawn,새벽,🌅,5,9,sleepy,bgm_dawn,sleepy,깨어나는 분위기
+morning,아침,☀️,9,13,happy,bgm_morning,happy,활기·활동
+afternoon,오후,🌤️,13,17,normal,bgm_afternoon,normal,일상·작업
+evening,저녁,🌇,17,21,worried,bgm_evening,normal,되새김·정서
+night,밤,🌙,21,5,sleepy,bgm_night,sleepy,차분·정리

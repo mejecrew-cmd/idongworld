@@ -1,0 +1,33 @@
+{
+  "name": "@idongworld/cutscene-runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./manifest": "./manifest.ts",
+    "./types": "./src/types.ts",
+    "./registry": "./src/registry.ts",
+    "./CutscenePlayer": "./src/CutscenePlayer.tsx",
+    "./i18n": "./i18n/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@idongworld/core": "workspace:*",
+    "@idongworld/vn-runner": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-router-dom": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "react": "^18.3.1",
+    "react-router-dom": "^6.27.0",
+    "typescript": "^5.6.0"
+  }
+}

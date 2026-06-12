@@ -1,0 +1,134 @@
+/**
+ * 📁 App.tsx — 화면 라우터 (앱 전체 화면 지도)
+ * ───────────────────────────────────────────────
+ * 📌 역할: URL 경로(/login, /island ...)에 따라 어떤 화면을 보여줄지 정한다.
+ *           화면 그룹별로 공통 레이아웃(HUD·하단네비 유무)을 씌운다.
+ *
+ * 🔗 연결:
+ *   - 기획 SoT: 매뉴얼/시스템/S07_화면라우팅.md (13 화면 카탈로그)
+ *   - components/Layouts.tsx → 3종 레이아웃 (FullScreen·MyIsland·Voyage)
+ *   - screens/* → 각 화면 컴포넌트
+ *   - stores/userStore.ts → 로그인·온보딩 진행도 (EntryGuard 분기 기준)
+ *
+ * 💡 초보자 안내:
+ *   - <Routes>: 여러 <Route> 중 URL과 일치하는 것을 골라 element 렌더.
+ *   - <Outlet>: 부모 Layout 안에 자식 Route 화면이 끼워지는 자리 (Layouts.tsx 참고).
+ *   - EntryGuard: "/" 진입 시 사용자 상태 보고 알맞은 곳으로 보내는 자동 분기.
+ *     ① 미로그인 → /login
+ *     ② 로그인+미온보딩 → /title
+ *     ③ 로그인+온보딩완료 → /island (마이섬 본 게임)
+ *   - "*" Route: 위에서 어디에도 매칭 안 되면 "/"로 되돌림 (404 방지).
+ */
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { usePageTracking } from './lib/usePageTracking'
+import { accountStoreFacade } from './lib/storeFacades'
+
+import { LoginScreen } from './screens/LoginScreen'
+import { TitleScreen } from './screens/TitleScreen'
+import { OpeningScreen } from './screens/OpeningScreen'
+import { OpeningPart2Screen } from './screens/OpeningPart2Screen'
+import { FirstMeetingScreen } from './screens/FirstMeetingScreen'
+import { HeartIslandFirstScreen } from './screens/HeartIslandFirstScreen'
+import { CleaningLoopScreen } from './screens/CleaningLoopScreen'
+import { NamingToHeartScreen } from './screens/NamingToHeartScreen'
+import { HubHeartScene } from './screens/HubHeartScene'
+import { HarborScene } from './screens/HarborScene'
+import { NavigationBoardScene } from './screens/NavigationBoardScene'
+import { IslandMapScene } from './screens/IslandMapScene'
+import { IslandLandingScene } from './screens/IslandLandingScene'
+import { LodgeScene } from './screens/LodgeScene'
+import { IslandFullMapScreen } from './screens/IslandFullMapScreen'
+import { IslandAreaPlaceholderScene } from './screens/IslandAreaPlaceholderScene'
+import { DebutStageScene } from './screens/DebutStageScene'
+import { AssetCatalogScreen } from './screens/dev/AssetCatalogScreen'
+import { CodexScreen } from './screens/CodexScreen'
+
+import { MyIslandLayout, VoyageLayout, FullScreenLayout } from './components/Layouts'
+import { DebugPanel } from './components/DebugPanel'
+import { CustomsConfirmModal } from './components/CustomsConfirmModal'
+import { renderModuleRoutes } from './lib/moduleRoutes'
+
+const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
+
+/**
+ * 진입 가드(EntryGuard)
+ * "/"로 들어왔을 때 사용자 상태에 따라 적절한 화면으로 자동 이동시킨다.
+ */
+const EntryGuard = () => {
+  const firebaseUid = accountStoreFacade.useFirebaseUid()
+  const openingSeen = accountStoreFacade.useOpeningSeen()
+  const onboardingComplete = accountStoreFacade.useOnboardingComplete()
+  if (!firebaseUid) return <Navigate to="/login" replace />          // 미로그인 → 로그인
+  if (onboardingComplete || openingSeen) return <Navigate to="/island" replace />
+  if (!onboardingComplete) return <Navigate to="/title" replace />   // 미온보딩 → 타이틀
+  return <Navigate to="/island" replace />                           // 정상 → 마이섬
+}
+
+export const App = () => {
+  usePageTracking()  // GA4 SPA page view (env 미설정 시 no-op)
+  return (
+  <>
+  <Routes>
+    {/* "/" 루트 — 자동 분기 (EntryGuard) */}
+    <Route path="/" element={<EntryGuard />} />
+
+    {/* 인증 화면 — 레이아웃 없음 */}
+    <Route path="/login" element={<LoginScreen />} />
+
+    {/* 모듈이 제공하는 독립 라우트. 예: /voyage/island/shell */}
+    {renderModuleRoutes()}
+
+    {/* 온보딩 시퀀스 — 풀스크린 시네마틱 (HUD/네비 X) */}
+    <Route element={<FullScreenLayout />}>
+      <Route path="/title" element={<TitleScreen />} />
+      <Route path="/opening" element={<OpeningScreen />} />
+      <Route path="/opening/part2" element={<OpeningPart2Screen />} />
+      <Route path="/first-meeting" element={<FirstMeetingScreen />} />
+      <Route path="/heart-island/first" element={<HeartIslandFirstScreen />} />
+      <Route path="/heart-island/cleaning" element={<CleaningLoopScreen />} />
+      <Route path="/heart-island/naming" element={<NamingToHeartScreen />} />
+    </Route>
+
+    {/* 마이섬 본 게임 — HUD + 하단 네비 */}
+    <Route path="/island" element={<MyIslandLayout />}>
+      <Route index element={<HubHeartScene />} />              {/* /island */}
+      <Route path="full-map" element={<IslandFullMapScreen />} />  {/* /island/full-map */}
+      <Route path="area/02" element={<Navigate to="/island/harbor" replace />} />
+      <Route path="area/03" element={<Navigate to="/island/memory" replace />} />
+      <Route path="area/06" element={<Navigate to="/island/oasis" replace />} />
+      <Route path="area/12" element={<Navigate to="/island/mine" replace />} />
+      <Route path="area/13" element={<Navigate to="/island/lodge" replace />} />
+      <Route path="area/14" element={<Navigate to="/island/garden" replace />} />
+      <Route path="area/:areaNo" element={<IslandAreaPlaceholderScene />} />
+      <Route path="harbor" element={<HarborScene />} />             {/* /island/harbor */}
+      <Route path="lodge" element={<LodgeScene />} />               {/* /island/lodge */}
+    </Route>
+
+    {/* 도감 — HUD + 하단 네비 (마이섬 레이아웃 재사용) */}
+    <Route path="/codex" element={<MyIslandLayout />}>
+      <Route index element={<CodexScreen />} />
+    </Route>
+
+    {/* 항해 — HUD만 (하단 네비 X, 항해 중단 방지) */}
+    <Route path="/voyage" element={<VoyageLayout />}>
+      <Route path="board" element={<NavigationBoardScene />} />            {/* 부루마블 보드 */}
+      <Route path="island/:id" element={<IslandMapScene />} />             {/* 칸 도착 (예비) */}
+      <Route path="island/:id/landing" element={<IslandLandingScene />} /> {/* 캐릭터 영입 */}
+    </Route>
+
+    {/* 데뷔 스테이지 — 풀스크린 (시그니처 발화 화면) */}
+    <Route path="/debut/:id" element={<DebutStageScene />} />
+
+    {/* 개발자·디자이너용 에셋 카탈로그 (개발 빌드만 권장) */}
+    <Route path="/dev/catalog" element={<AssetCatalogScreen />} />
+
+    {/* 그 외 모든 경로 → 루트로 되돌림 */}
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes>
+  {/* 모든 화면 위 — 개발 빌드에서만 표시 (production 자동 숨김) */}
+  <DebugPanel />
+  {/* customs 변환 확인 모달 — Phase 1 기본 UX에서는 비활성화 */}
+  {CUSTOMS_UI_ENABLED && <CustomsConfirmModal />}
+  </>
+  )
+}

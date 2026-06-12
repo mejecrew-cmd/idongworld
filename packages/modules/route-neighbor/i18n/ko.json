@@ -1,0 +1,10 @@
+{
+  "back_to_harbor": "← 항구",
+  "cta_to_board": "보드로 진입",
+  "name": "이웃섬 항로",
+  "placeholder": "항해 보드는 /voyage/board 에서",
+  "sample.action": "이웃섬 항로 액션 라벨",
+  "sample.greeting": "이웃섬 항로 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "이웃섬 항로 툴팁 텍스트 (PM 검수 대기)",
+  "title": "🚢 이웃섬 항로"
+}

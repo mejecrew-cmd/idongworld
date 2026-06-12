@@ -1,0 +1,4 @@
+# zone-memory/customs.csv — 기억의 숲 (Memory Forest) 자원 변환 룰 (PM 더미 — Phase 1.5+ 검수)
+ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+memory-piece-to-coins,zone-memory,memory_piece,global,,coins,4,1,,기억 조각 → 코인,4,400,기억 조각 → 코인 (TBD 검수)
+memory-piece-to-gems,zone-memory,memory_piece,global,,gems,8,1,,기억 조각 → 보석,8,800,기억 조각 → 보석 (TBD 검수)

@@ -1,0 +1,104 @@
+# shared-data/cutscene-catalog/diaries.csv — 일기 100편 메타 SoT
+# 5명 × day1~20 = 100편. 표는 PM 관리·실 텍스트는 기획/시나리오/diary_*.json
+# 헤더: diaryId,characterId,personaNumber,day,layer,unlockCondition,motif,status,writer,expectedDelivery
+diaryId,characterId,personaNumber,day,layer,unlockCondition,motif,status,writer,expectedDelivery
+diary_hwanggumeong_day1,황금멍,56,1,surface,영입 즉시,TBD-day1,written,PM·작가,2026-05-09
+diary_hwanggumeong_day2,황금멍,56,2,surface,영입 즉시,이름,written,PM·작가,2026-05-10
+diary_hwanggumeong_day3,황금멍,56,3,surface,영입 즉시,발자국,written,PM·작가,2026-05-10
+diary_hwanggumeong_day4,황금멍,56,4,surface,영입 즉시,TBD-day4,planned,TBD,Phase 1~2
+diary_hwanggumeong_day5,황금멍,56,5,surface,영입 즉시,TBD-day5,planned,TBD,Phase 1~2
+diary_hwanggumeong_day6,황금멍,56,6,surface,친밀도 ≥50,TBD-day6,planned,TBD,Phase 1~2
+diary_hwanggumeong_day7,황금멍,56,7,surface,친밀도 ≥50,TBD-day7,planned,TBD,Phase 1~2
+diary_hwanggumeong_day8,황금멍,56,8,surface,친밀도 ≥50,TBD-day8,planned,TBD,Phase 1~2
+diary_hwanggumeong_day9,황금멍,56,9,surface,친밀도 ≥50,TBD-day9,planned,TBD,Phase 1~2
+diary_hwanggumeong_day10,황금멍,56,10,deep,친밀도 ≥100,TBD-day10,planned,TBD,Phase 1~2
+diary_hwanggumeong_day11,황금멍,56,11,deep,친밀도 ≥100,TBD-day11,planned,TBD,Phase 1~2
+diary_hwanggumeong_day12,황금멍,56,12,deep,친밀도 ≥100,TBD-day12,planned,TBD,Phase 1~2
+diary_hwanggumeong_day13,황금멍,56,13,deep,친밀도 ≥100,TBD-day13,planned,TBD,Phase 1~2
+diary_hwanggumeong_day14,황금멍,56,14,deep,친밀도 ≥100,TBD-day14,planned,TBD,Phase 1~2
+diary_hwanggumeong_day15,황금멍,56,15,deep,시즌·기념,TBD-day15,planned,TBD,Phase 1~2
+diary_hwanggumeong_day16,황금멍,56,16,deep,시즌·기념,TBD-day16,planned,TBD,Phase 1~2
+diary_hwanggumeong_day17,황금멍,56,17,deep,시즌·기념,TBD-day17,planned,TBD,Phase 1~2
+diary_hwanggumeong_day18,황금멍,56,18,deep,시즌·기념,TBD-day18,planned,TBD,Phase 1~2
+diary_hwanggumeong_day19,황금멍,56,19,deep,시즌·기념,TBD-day19,planned,TBD,Phase 1~2
+diary_hwanggumeong_day20,황금멍,56,20,deep,시즌·기념,TBD-day20,planned,TBD,Phase 1~2
+diary_chumnyang_day1,춤냥,75,1,surface,영입 즉시,TBD-day1,written,PM·작가,2026-05-09
+diary_chumnyang_day2,춤냥,75,2,surface,영입 즉시,TBD-day2,planned,TBD,Phase 1~2
+diary_chumnyang_day3,춤냥,75,3,surface,영입 즉시,TBD-day3,planned,TBD,Phase 1~2
+diary_chumnyang_day4,춤냥,75,4,surface,영입 즉시,TBD-day4,planned,TBD,Phase 1~2
+diary_chumnyang_day5,춤냥,75,5,surface,영입 즉시,TBD-day5,planned,TBD,Phase 1~2
+diary_chumnyang_day6,춤냥,75,6,surface,친밀도 ≥50,TBD-day6,planned,TBD,Phase 1~2
+diary_chumnyang_day7,춤냥,75,7,surface,친밀도 ≥50,TBD-day7,planned,TBD,Phase 1~2
+diary_chumnyang_day8,춤냥,75,8,surface,친밀도 ≥50,TBD-day8,planned,TBD,Phase 1~2
+diary_chumnyang_day9,춤냥,75,9,surface,친밀도 ≥50,TBD-day9,planned,TBD,Phase 1~2
+diary_chumnyang_day10,춤냥,75,10,deep,친밀도 ≥100,TBD-day10,planned,TBD,Phase 1~2
+diary_chumnyang_day11,춤냥,75,11,deep,친밀도 ≥100,TBD-day11,planned,TBD,Phase 1~2
+diary_chumnyang_day12,춤냥,75,12,deep,친밀도 ≥100,TBD-day12,planned,TBD,Phase 1~2
+diary_chumnyang_day13,춤냥,75,13,deep,친밀도 ≥100,TBD-day13,planned,TBD,Phase 1~2
+diary_chumnyang_day14,춤냥,75,14,deep,친밀도 ≥100,TBD-day14,planned,TBD,Phase 1~2
+diary_chumnyang_day15,춤냥,75,15,deep,시즌·기념,TBD-day15,planned,TBD,Phase 1~2
+diary_chumnyang_day16,춤냥,75,16,deep,시즌·기념,TBD-day16,planned,TBD,Phase 1~2
+diary_chumnyang_day17,춤냥,75,17,deep,시즌·기념,TBD-day17,planned,TBD,Phase 1~2
+diary_chumnyang_day18,춤냥,75,18,deep,시즌·기념,TBD-day18,planned,TBD,Phase 1~2
+diary_chumnyang_day19,춤냥,75,19,deep,시즌·기념,TBD-day19,planned,TBD,Phase 1~2
+diary_chumnyang_day20,춤냥,75,20,deep,시즌·기념,TBD-day20,planned,TBD,Phase 1~2
+diary_yangteolgom_day1,양털곰,24,1,surface,영입 즉시,TBD-day1,written,PM·작가,2026-05-09
+diary_yangteolgom_day2,양털곰,24,2,surface,영입 즉시,TBD-day2,planned,TBD,Phase 1~2
+diary_yangteolgom_day3,양털곰,24,3,surface,영입 즉시,TBD-day3,planned,TBD,Phase 1~2
+diary_yangteolgom_day4,양털곰,24,4,surface,영입 즉시,TBD-day4,planned,TBD,Phase 1~2
+diary_yangteolgom_day5,양털곰,24,5,surface,영입 즉시,TBD-day5,planned,TBD,Phase 1~2
+diary_yangteolgom_day6,양털곰,24,6,surface,친밀도 ≥50,TBD-day6,planned,TBD,Phase 1~2
+diary_yangteolgom_day7,양털곰,24,7,surface,친밀도 ≥50,TBD-day7,planned,TBD,Phase 1~2
+diary_yangteolgom_day8,양털곰,24,8,surface,친밀도 ≥50,TBD-day8,planned,TBD,Phase 1~2
+diary_yangteolgom_day9,양털곰,24,9,surface,친밀도 ≥50,TBD-day9,planned,TBD,Phase 1~2
+diary_yangteolgom_day10,양털곰,24,10,deep,친밀도 ≥100,TBD-day10,planned,TBD,Phase 1~2
+diary_yangteolgom_day11,양털곰,24,11,deep,친밀도 ≥100,TBD-day11,planned,TBD,Phase 1~2
+diary_yangteolgom_day12,양털곰,24,12,deep,친밀도 ≥100,TBD-day12,planned,TBD,Phase 1~2
+diary_yangteolgom_day13,양털곰,24,13,deep,친밀도 ≥100,TBD-day13,planned,TBD,Phase 1~2
+diary_yangteolgom_day14,양털곰,24,14,deep,친밀도 ≥100,TBD-day14,planned,TBD,Phase 1~2
+diary_yangteolgom_day15,양털곰,24,15,deep,시즌·기념,TBD-day15,planned,TBD,Phase 1~2
+diary_yangteolgom_day16,양털곰,24,16,deep,시즌·기념,TBD-day16,planned,TBD,Phase 1~2
+diary_yangteolgom_day17,양털곰,24,17,deep,시즌·기념,TBD-day17,planned,TBD,Phase 1~2
+diary_yangteolgom_day18,양털곰,24,18,deep,시즌·기념,TBD-day18,planned,TBD,Phase 1~2
+diary_yangteolgom_day19,양털곰,24,19,deep,시즌·기념,TBD-day19,planned,TBD,Phase 1~2
+diary_yangteolgom_day20,양털곰,24,20,deep,시즌·기념,TBD-day20,planned,TBD,Phase 1~2
+diary_danpungbol_day1,단풍볼,7,1,surface,영입 즉시,TBD-day1,written,PM·작가,2026-05-09
+diary_danpungbol_day2,단풍볼,7,2,surface,영입 즉시,TBD-day2,planned,TBD,Phase 1~2
+diary_danpungbol_day3,단풍볼,7,3,surface,영입 즉시,TBD-day3,planned,TBD,Phase 1~2
+diary_danpungbol_day4,단풍볼,7,4,surface,영입 즉시,TBD-day4,planned,TBD,Phase 1~2
+diary_danpungbol_day5,단풍볼,7,5,surface,영입 즉시,TBD-day5,planned,TBD,Phase 1~2
+diary_danpungbol_day6,단풍볼,7,6,surface,친밀도 ≥50,TBD-day6,planned,TBD,Phase 1~2
+diary_danpungbol_day7,단풍볼,7,7,surface,친밀도 ≥50,TBD-day7,planned,TBD,Phase 1~2
+diary_danpungbol_day8,단풍볼,7,8,surface,친밀도 ≥50,TBD-day8,planned,TBD,Phase 1~2
+diary_danpungbol_day9,단풍볼,7,9,surface,친밀도 ≥50,TBD-day9,planned,TBD,Phase 1~2
+diary_danpungbol_day10,단풍볼,7,10,deep,친밀도 ≥100,TBD-day10,planned,TBD,Phase 1~2
+diary_danpungbol_day11,단풍볼,7,11,deep,친밀도 ≥100,TBD-day11,planned,TBD,Phase 1~2
+diary_danpungbol_day12,단풍볼,7,12,deep,친밀도 ≥100,TBD-day12,planned,TBD,Phase 1~2
+diary_danpungbol_day13,단풍볼,7,13,deep,친밀도 ≥100,TBD-day13,planned,TBD,Phase 1~2
+diary_danpungbol_day14,단풍볼,7,14,deep,친밀도 ≥100,TBD-day14,planned,TBD,Phase 1~2
+diary_danpungbol_day15,단풍볼,7,15,deep,시즌·기념,TBD-day15,planned,TBD,Phase 1~2
+diary_danpungbol_day16,단풍볼,7,16,deep,시즌·기념,TBD-day16,planned,TBD,Phase 1~2
+diary_danpungbol_day17,단풍볼,7,17,deep,시즌·기념,TBD-day17,planned,TBD,Phase 1~2
+diary_danpungbol_day18,단풍볼,7,18,deep,시즌·기념,TBD-day18,planned,TBD,Phase 1~2
+diary_danpungbol_day19,단풍볼,7,19,deep,시즌·기념,TBD-day19,planned,TBD,Phase 1~2
+diary_danpungbol_day20,단풍볼,7,20,deep,시즌·기념,TBD-day20,planned,TBD,Phase 1~2
+diary_nalkayeou_day1,날카여우,19,1,surface,영입 즉시,TBD-day1,written,PM·작가,2026-05-09
+diary_nalkayeou_day2,날카여우,19,2,surface,영입 즉시,TBD-day2,planned,TBD,Phase 1~2
+diary_nalkayeou_day3,날카여우,19,3,surface,영입 즉시,TBD-day3,planned,TBD,Phase 1~2
+diary_nalkayeou_day4,날카여우,19,4,surface,영입 즉시,TBD-day4,planned,TBD,Phase 1~2
+diary_nalkayeou_day5,날카여우,19,5,surface,영입 즉시,TBD-day5,planned,TBD,Phase 1~2
+diary_nalkayeou_day6,날카여우,19,6,surface,친밀도 ≥50,TBD-day6,planned,TBD,Phase 1~2
+diary_nalkayeou_day7,날카여우,19,7,surface,친밀도 ≥50,TBD-day7,planned,TBD,Phase 1~2
+diary_nalkayeou_day8,날카여우,19,8,surface,친밀도 ≥50,TBD-day8,planned,TBD,Phase 1~2
+diary_nalkayeou_day9,날카여우,19,9,surface,친밀도 ≥50,TBD-day9,planned,TBD,Phase 1~2
+diary_nalkayeou_day10,날카여우,19,10,deep,친밀도 ≥100,TBD-day10,planned,TBD,Phase 1~2
+diary_nalkayeou_day11,날카여우,19,11,deep,친밀도 ≥100,TBD-day11,planned,TBD,Phase 1~2
+diary_nalkayeou_day12,날카여우,19,12,deep,친밀도 ≥100,TBD-day12,planned,TBD,Phase 1~2
+diary_nalkayeou_day13,날카여우,19,13,deep,친밀도 ≥100,TBD-day13,planned,TBD,Phase 1~2
+diary_nalkayeou_day14,날카여우,19,14,deep,친밀도 ≥100,TBD-day14,planned,TBD,Phase 1~2
+diary_nalkayeou_day15,날카여우,19,15,deep,시즌·기념,TBD-day15,planned,TBD,Phase 1~2
+diary_nalkayeou_day16,날카여우,19,16,deep,시즌·기념,TBD-day16,planned,TBD,Phase 1~2
+diary_nalkayeou_day17,날카여우,19,17,deep,시즌·기념,TBD-day17,planned,TBD,Phase 1~2
+diary_nalkayeou_day18,날카여우,19,18,deep,시즌·기념,TBD-day18,planned,TBD,Phase 1~2
+diary_nalkayeou_day19,날카여우,19,19,deep,시즌·기념,TBD-day19,planned,TBD,Phase 1~2
+diary_nalkayeou_day20,날카여우,19,20,deep,시즌·기념,TBD-day20,planned,TBD,Phase 1~2

@@ -1,0 +1,13 @@
+# zone-oasis/balance.csv — oasis 밸런스 (PM 더미)
+# 정책: zone 해금 2단계 — Gate A (빌드·업데이트 phase) + Gate B (모듈 unlock_condition).
+# 사용자 친밀도와는 무관 (친밀도는 일기·도감 해금에만 영향).
+paramId,value,type,description,phase
+zone_unlock_phase,1,number,Gate A: 게임 업데이트 phase (1=Phase 1·2=Phase 1.5·...),Phase 1
+zone_unlock_required_update,update_v0_1,string,Gate A: 해금 트리거 업데이트 ID (시즌·패치·빌드),Phase 1
+zone_unlock_condition,prev_zone_clear:garden,string,Gate B: 모듈별 노출 조건 — 정원 1회 수확 후 노출 (always·tutorial_complete·prev_zone_clear:X·recruited_count_ge:N·season:X·update:vX 등),Phase 1
+zone_active,true,boolean,현재 빌드에서 본 zone 노출 가능 여부 (PM 토글),Phase 1
+zone_collect_resources,rest_token,string,backend collect allowlist — 세미콜론 구분,Phase 1
+zone_clear_ids,oasis-rest,string,backend clearId allowlist — 세미콜론 구분,Phase 1
+minigame_play_cooldown_ms,0,number,미니게임 쿨다운 (0=제한 없음),Phase 1
+minigame_reward_coins,10,number,1회 보상 코인 (TBD 검수),Phase 1
+minigame_reward_primary,2,number,1회 보상 주요 자원 개수,Phase 1

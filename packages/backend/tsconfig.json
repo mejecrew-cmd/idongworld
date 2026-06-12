@@ -1,0 +1,20 @@
+// 📁 backend/tsconfig.json — Backend Express TypeScript 설정 (JSONC)
+// ───────────────────────────────────────────────
+// 📌 역할: Node.js ESM + Express 4 + tsx watch 호환.
+// 🔗 연결: src/index.ts 진입 + routes/*.ts (.js import 가능)
+{
+  "compilerOptions": {
+    "target": "ES2022",                       // Node 20+ 호환
+    "module": "ESNext",                       // ESM (package.json "type": "module" 필수)
+    "moduleResolution": "bundler",            // 모던 해석
+    "esModuleInterop": true,                  // CommonJS 패키지 import 호환 (express 등)
+    "skipLibCheck": true,                     // 빌드 속도
+    "strict": true,                           // 모든 strict ON
+    "forceConsistentCasingInFileNames": true, // 대소문자 정합
+    "outDir": "dist",                         // 빌드 산출물
+    "resolveJsonModule": true,                // import json 허용
+    "noUnusedLocals": true,                   // 미사용 변수 에러
+    "noUnusedParameters": true                // 미사용 파라미터 에러
+  },
+  "include": ["src"]
+}

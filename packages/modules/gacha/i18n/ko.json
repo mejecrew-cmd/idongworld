@@ -1,0 +1,7 @@
+{
+  "name": "가챠",
+  "sample.action": "가챠 액션 라벨",
+  "sample.greeting": "가챠 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "가챠 툴팁 텍스트 (PM 검수 대기)",
+  "title": "가챠 (모듈 표시명)"
+}

@@ -1,0 +1,23 @@
+// 📁 gacha/tsconfig.json — 가챠 시스템 모듈 TypeScript 설정 (JSONC)
+// ───────────────────────────────────────────────
+// 📌 역할: 가챠 풀·픽·확률 엔진. frontend 가 직접 src 참조.
+// 🔗 연결: @idongworld/core (manifests). DOM 없음 — 순수 TS 로직.
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src", "manifest.ts", "../../../shared-data/aidong-master/characters.json"]
+}

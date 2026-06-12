@@ -1,0 +1,25 @@
+# my-aidong/balance.csv — 친밀도·욕구·케어 밸런스 (PM·QA 조정)
+# 헤더: paramId,value,type,description,phase
+paramId,value,type,description,phase
+affinity_lvl_0_threshold,0,number,Lv0 누적 점수 임계,Phase 1
+affinity_lvl_1_threshold,10,number,Lv1,Phase 1
+affinity_lvl_2_threshold,25,number,Lv2,Phase 1
+affinity_lvl_3_threshold,50,number,Lv3 — 일기 day6+ 해금 시작,Phase 1
+affinity_lvl_4_threshold,100,number,Lv4 — 일기 day10+ 해금,Phase 1
+affinity_lvl_5_threshold,175,number,Lv5,Phase 1
+affinity_lvl_6_threshold,275,number,Lv6,Phase 1.5
+affinity_lvl_7_threshold,400,number,Lv7,Phase 1.5
+affinity_lvl_8_threshold,550,number,Lv8,Phase 2
+affinity_lvl_9_threshold,750,number,Lv9,Phase 2
+affinity_lvl_10_threshold,1000,number,Lv10 (max),Phase 2
+need_initial,7,number,영입 시 모든 욕구 초기값 (0~10 중),Phase 1
+need_decay_per_sequence,1,number,시퀀스 단위 -N (5존 시간대 변화),Phase 1
+need_min,0,number,욕구 최소,Phase 1
+need_max,10,number,욕구 최대,Phase 1
+care_cooldown_ms,300000,number,케어 액션 동일 종류 쿨다운 (5분),Phase 1
+care_daily_cap,3,number,1일 동일 종류 케어 최대 횟수,Phase 1
+record_break_penalty,-1,number,잘못된 케어 친밀도 차감 (끊김 record),Phase 1.5
+mood_excited_threshold,8,number,평균 욕구 ≥N → excited 표정,Phase 1
+mood_happy_threshold,6,number,평균 욕구 ≥N → happy 표정,Phase 1
+mood_normal_threshold,4,number,평균 욕구 ≥N → normal 표정,Phase 1
+mood_worried_threshold,2,number,평균 욕구 ≥N → worried 표정,Phase 1

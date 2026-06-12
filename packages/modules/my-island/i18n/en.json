@@ -1,0 +1,12 @@
+{
+  "name": "My Island",
+  "sample.action": "My Island action label",
+  "sample.greeting": "My Island module i18n sample — key 1",
+  "sample.tooltip": "My Island tooltip text (TBD)",
+  "title": "My Island (module display name)",
+  "zone.locked.prev_zone_clear": "Clear the previous zone first",
+  "zone.locked.recruited_count_ge": "Unlocks after recruiting {{count}}+ friends",
+  "zone.locked.season": "Season exclusive",
+  "zone.locked.tutorial_complete": "Unlocks after tutorial",
+  "zone.locked.update": "Coming in next update"
+}

@@ -1,0 +1,10 @@
+{
+  "back_to_full_map": "← 풀맵",
+  "name": "도전의 절벽",
+  "phase_note": "Phase 2 디자이너 발주 후 활성",
+  "placeholder": "미니게임 준비 중",
+  "sample.action": "도전의 절벽 액션 라벨",
+  "sample.greeting": "도전의 절벽 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "도전의 절벽 툴팁 텍스트 (PM 검수 대기)",
+  "title": "⛏️ 도전의 절벽"
+}

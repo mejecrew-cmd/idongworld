@@ -1,0 +1,4 @@
+# lodge/balance.csv - 숙소 모듈 밸런스 초안
+key,value,description
+max_assigned_aidongs,5,숙소에 동시에 배치할 수 있는 Aidong 수. 추후 방/가구 기획에 맞춰 세분화한다.
+default_room_id,main-room,기본 숙소 방 ID.

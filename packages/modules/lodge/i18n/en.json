@@ -1,0 +1,5 @@
+{
+  "name": "Lodge",
+  "description": "Manage Aidong rest and lodge inventory.",
+  "actions.assignAidong": "Assign to lodge"
+}

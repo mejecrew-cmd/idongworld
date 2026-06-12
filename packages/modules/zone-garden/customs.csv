@@ -1,0 +1,6 @@
+# zone-garden/customs.csv — 정원 구역 자원 변환 룰 (헌법 §3.2 세관)
+# 헤더: ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+garden-acorn-to-coins,zone-garden,acorn,global,,coins,5,1,,도토리 → 코인,5,500,5 도토리를 1 코인으로 환전
+garden-flower-to-gems,zone-garden,flower,global,,gems,3,1,,꽃 → 보석,3,300,3 꽃을 1 보석으로 환전
+garden-acorn-to-deck,zone-garden,acorn,module,route-neighbor,deck-cargo,10,1,,도토리 → 갑판 적재,10,1000,10 도토리를 1 갑판 자원으로 적재

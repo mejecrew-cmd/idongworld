@@ -1,0 +1,3 @@
+# zone-oasis/items.csv - 오아시스 모듈 item/resource catalog
+itemId,name,kind,stackable,maxStack,scope,description,phase
+rest_token,휴식 토큰,resource,true,999,module-local,오아시스 미션/휴식 결과로 얻는 모듈 전용 자원.,Phase 1

@@ -1,0 +1,4 @@
+# zone-oasis/customs.csv — 오아시스 (Oasis) 자원 변환 룰 (PM 더미 — Phase 1.5+ 검수)
+ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+oasis-rest-to-coins,zone-oasis,rest_token,global,,coins,3,1,,휴식 토큰 → 코인,3,300,휴식 토큰 → 코인 (TBD 검수)
+oasis-rest-to-energy,zone-oasis,rest_token,host,,energy_orb,1,1,,휴식 토큰 → 에너지 (host 인벤토리),1,100,휴식 토큰 → 에너지 (host 인벤토리) (TBD 검수)

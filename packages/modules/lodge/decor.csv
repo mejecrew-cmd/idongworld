@@ -1,0 +1,7 @@
+# lodge/decor.csv - 숙소 꾸미기 아이템 catalog
+# 헤더: itemId,label,cost,defaultOwned,placementScope,description,phase
+itemId,label,cost,defaultOwned,placementScope,description,phase
+bed,침대,0,1,lodge-room,기본 숙소 침대.,Phase 1
+desk,책상,0,1,lodge-room,기본 숙소 책상.,Phase 1
+plant,화분,30,0,lodge-room,숙소 방에 놓는 작은 화분.,Phase 1
+rug,카펫,50,0,lodge-room,숙소 방 바닥 장식.,Phase 1

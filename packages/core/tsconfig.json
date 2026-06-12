@@ -1,0 +1,25 @@
+// 📁 core/tsconfig.json — 공통 코어 패키지 TypeScript 설정 (JSONC)
+// ───────────────────────────────────────────────
+// 📌 역할: 모듈 시스템 골격 (manifest·registry·bus·router·i18n·asset).
+//          frontend·backend 모두에서 import 가능 (DOM lib 포함하지만 런타임 분기로 SSR 안전).
+// 🔗 연결: frontend·backend tsconfig 에서 noEmit + 직접 src 참조 방식.
+{
+  "compilerOptions": {
+    "target": "ES2022",                       // Node 20+ / 모던 브라우저
+    "module": "ESNext",                       // ESM
+    "moduleResolution": "bundler",            // Vite·tsx 모두 호환
+    "lib": ["ES2022", "DOM", "DOM.Iterable"], // fetch·window 옵셔널 사용
+    "jsx": "react-jsx",                       // router.ts에서 JSX 사용 가능
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,                           // 빌드 산출물 생성 X (소비자가 직접 src 참조)
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["src"]
+}

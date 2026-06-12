@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<!--
+  📁 frontend/index.html — 브라우저 진입점 HTML
+  ───────────────────────────────────────────────
+  📌 역할: 브라우저가 처음 받는 HTML.
+            <div id="root">에 React 앱이 그려지고, main.tsx가 실행됨.
+
+  🔗 연결:
+    - src/main.tsx → ReactDOM.createRoot(#root).render(<App />)
+    - vite가 빌드 시 자동으로 다른 자산 (CSS·JS) 주입
+
+  💡 초보자 안내:
+    - lang="ko" → 한국어 우선
+    - viewport → 모바일 브라우저 1:1 픽셀 (PWA 호환)
+    - 제목·favicon 추가는 Phase 1.5 폴리시에서.
+-->
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>아이동월드</title>
+  </head>
+  <body>
+    <!-- React 앱이 이 div 안에 렌더링됨 -->
+    <div id="root"></div>
+    <!-- ESM 모듈 진입점. vite가 dev/build 시점에 자동 처리 -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

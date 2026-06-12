@@ -1,0 +1,13 @@
+{
+  "action.close": "닫기",
+  "action.growing": "자라는 중...",
+  "action.harvest": "수확하기 (🥐 +2 · 🪙 +15)",
+  "action.plant": "씨앗 심기",
+  "back_to_full_map": "← 풀맵",
+  "name": "정원",
+  "sample.action": "정원 액션 라벨",
+  "sample.greeting": "정원 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "정원 툴팁 텍스트 (PM 검수 대기)",
+  "subtitle": "씨앗을 심고 30초 기다리면 식물이 자라요.",
+  "title": "🌱 성장의 정원"
+}

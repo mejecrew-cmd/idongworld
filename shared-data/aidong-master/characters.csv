@@ -1,0 +1,10 @@
+# 본진 5명 마스터 데이터 — shared-data/aidong-master/characters.csv
+# 헌법: 모듈분리작업계획_v1_260510.md §3 (5분류 — 공유 데이터 풀)
+# 정책: 영감원 식별어 0 매치 (PM SoT 본진5명선정.md 만 영감원 보유 — 본 CSV·코드는 비공개)
+# 헤더: id,scenarioId,species,personaNumber,gachaPool,assetCategory,description,signatureWords,voicePattern,avoidPattern,boardIconExposure,bodyExposure,defaultExpression
+id,scenarioId,species,personaNumber,gachaPool,assetCategory,description,signatureWords,voicePattern,avoidPattern,boardIconExposure,bodyExposure,defaultExpression
+황금멍,hwanggumeong,강아지,56,first-meeting,aidong,다정·정직·꼬리 흔들기 — 첫 영입의 따뜻함,"꼬리;좋아;고마워;흔들리네",친근/직접 표현/감정 솔직,비꼬는 말/체념,public,protected,normal
+춤냥,chumnyang,고양이,75,first-meeting,aidong,우아·도도·표현 절제 — 작은 움직임의 카리스마,"흠.;...뭐, 나쁘지 않네;그렇구나",절제/관찰/간접 표현,큰 감정 폭발/찐 외향,public,protected,normal
+양털곰,yangteolgom,곰돌이,24,first-meeting,aidong,묵직·부끄럼·따뜻함 — 천천히 길게 말하는 신뢰감,"...음.;그러게.;응. 좋아.",느림/길게/낮은 음성,빠른 말투/공격성,public,protected,normal
+단풍볼,danpungbol,햄스터,7,first-meeting,aidong,호기심·작은 용기·재잘 — 발견의 기쁨,"잠깐만!;어어 이거 봐봐!;응응응",빠름/작은 발견 큰 반응,음울/늘어지는 독백,public,protected,normal
+날카여우,nalkayeou,여우,19,first-meeting,aidong,영민·날카·장난기 — 살짝 비틀어도 따뜻한 거리,"...글쎄?;그럴까;재밌네",영민/살짝 비틀기/여운,무자비한 비꼬기/관계 거부 톤,public,protected,normal

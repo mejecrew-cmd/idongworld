@@ -1,0 +1,4 @@
+# zone-mine/customs.csv — 도전의 절벽 (Mine) 자원 변환 룰 (PM 더미 — Phase 1.5+ 검수)
+ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+mine-ore-to-coins,zone-mine,ore,global,,coins,2,1,,광석 → 코인,2,200,광석 → 코인 (TBD 검수)
+mine-ore-to-stone,zone-mine,ore,module,craft,stone,1,1,,광석 → 가공석 (craft 모듈 — Phase 2),1,100,광석 → 가공석 (craft 모듈 — Phase 2) (TBD 검수)

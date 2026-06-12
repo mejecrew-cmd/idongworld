@@ -1,0 +1,74 @@
+{
+  "$schema": "5종 마스터 — species.csv 와 1:1 정합 (machine-readable mirror)",
+  "version": "1.0.0",
+  "lastUpdated": "2026-05-10",
+  "species": [
+    {
+      "speciesId": "dog",
+      "name": "강아지",
+      "emoji": "🐶",
+      "silhouettePriority": 1,
+      "defaultIdleAnim": "tail-wag",
+      "canvasWidthPx": 1024,
+      "canvasHeightPx": 1024,
+      "baselineY": 920,
+      "partTypes": ["body", "face", "ear", "tail", "outfit"],
+      "note": "꼬리 흔들기 시그니처"
+    },
+    {
+      "speciesId": "cat",
+      "name": "고양이",
+      "emoji": "🐱",
+      "silhouettePriority": 2,
+      "defaultIdleAnim": "paw-flick",
+      "canvasWidthPx": 1024,
+      "canvasHeightPx": 1024,
+      "baselineY": 920,
+      "partTypes": ["body", "face", "ear", "tail", "whisker", "outfit"],
+      "note": "발끝 절제"
+    },
+    {
+      "speciesId": "bear",
+      "name": "곰돌이",
+      "emoji": "🐻",
+      "silhouettePriority": 3,
+      "defaultIdleAnim": "slow-blink",
+      "canvasWidthPx": 1024,
+      "canvasHeightPx": 1024,
+      "baselineY": 920,
+      "partTypes": ["body", "face", "ear", "outfit"],
+      "note": "큰 손·낮은 음성"
+    },
+    {
+      "speciesId": "hamster",
+      "name": "햄스터",
+      "emoji": "🐹",
+      "silhouettePriority": 4,
+      "defaultIdleAnim": "cheek-puff",
+      "canvasWidthPx": 1024,
+      "canvasHeightPx": 1024,
+      "baselineY": 920,
+      "partTypes": ["body", "face", "cheek", "tail", "outfit"],
+      "note": "볼주머니 시그니처"
+    },
+    {
+      "speciesId": "fox",
+      "name": "여우",
+      "emoji": "🦊",
+      "silhouettePriority": 5,
+      "defaultIdleAnim": "tail-flick",
+      "canvasWidthPx": 1024,
+      "canvasHeightPx": 1024,
+      "baselineY": 920,
+      "partTypes": ["body", "face", "ear", "tail", "outfit"],
+      "note": "꼬리 살짝"
+    }
+  ],
+  "characterToSpecies": {
+    "황금멍": "dog",
+    "춤냥": "cat",
+    "양털곰": "bear",
+    "단풍볼": "hamster",
+    "날카여우": "fox"
+  }
+}

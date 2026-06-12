@@ -1,0 +1,7 @@
+{
+  "name": "컷신 디스패처",
+  "sample.action": "컷신 디스패처 액션 라벨",
+  "sample.greeting": "컷신 디스패처 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "컷신 디스패처 툴팁 텍스트 (PM 검수 대기)",
+  "title": "컷신 디스패처 (모듈 표시명)"
+}

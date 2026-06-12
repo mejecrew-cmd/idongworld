@@ -1,0 +1,15 @@
+# 📁 pnpm-workspace.yaml — pnpm 모노레포 설정
+# ───────────────────────────────────────────────
+# 📌 역할: workspace 패키지 위치 정의
+# 🔗 연결: root package.json scripts (pnpm --filter 으로 패키지 지정)
+
+packages:
+  # packages/ 하위 (frontend·backend·core)
+  - 'packages/*'
+  # packages/modules/ 하위 (system·content 모듈 — vn-runner·gacha 등)
+  - 'packages/modules/*'
+
+# 빌드 스크립트 실행 허용 (esbuild 등 native 빌드 필요 패키지)
+allowBuilds:
+  esbuild: true
+  protobufjs: true

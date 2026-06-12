@@ -1,0 +1,7 @@
+{
+  "name": "세관",
+  "sample.action": "세관 액션 라벨",
+  "sample.greeting": "세관 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "세관 툴팁 텍스트 (PM 검수 대기)",
+  "title": "세관 (모듈 표시명)"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "도감·일기",
+  "sample.action": "도감·일기 액션 라벨",
+  "sample.greeting": "도감·일기 모듈 i18n 샘플 — 1번째 키",
+  "sample.tooltip": "도감·일기 툴팁 텍스트 (PM 검수 대기)",
+  "title": "도감·일기 (모듈 표시명)"
+}

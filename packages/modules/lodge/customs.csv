@@ -1,0 +1,4 @@
+# lodge/customs.csv - 숙소 인벤토리 반출 규칙
+# 헤더: ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+lodge-aidong-ribbon-to-host,lodge,aidong-ribbon,global,,aidong-ribbon,1,1,,Aidong 리본 → 전역 보관소,1,1,Aidong 소지/착용 가능 아이템을 전역 보관소로 보낸다

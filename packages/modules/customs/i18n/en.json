@@ -1,0 +1,7 @@
+{
+  "name": "Customs",
+  "sample.action": "Customs action label",
+  "sample.greeting": "Customs module i18n sample — key 1",
+  "sample.tooltip": "Customs tooltip text (TBD)",
+  "title": "Customs (module display name)"
+}

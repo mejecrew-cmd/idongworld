@@ -1,0 +1,7 @@
+{
+  "name": "VN Runner",
+  "sample.action": "VN Runner action label",
+  "sample.greeting": "VN Runner module i18n sample — key 1",
+  "sample.tooltip": "VN Runner tooltip text (TBD)",
+  "title": "VN Runner (module display name)"
+}

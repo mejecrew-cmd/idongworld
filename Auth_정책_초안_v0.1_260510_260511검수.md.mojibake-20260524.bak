@@ -1,0 +1,198 @@
+﻿---
+version: v1.0.0
+last_updated: 2026-05-11
+status: Q1쨌Q2 PM ?듬? ??(PM_寃곗젙?ы빆 v1.0) + Phase 1.5-13 Step 1-3 ?ъ쟾 援ы쁽 ?꾨즺
+type: ?뺤콉 寃곗젙 臾몄꽌 (Decision Record)
+target_decision_date: 2026-05-14 (紐?
+purpose: 5/14 Backend Firebase Auth 寃곗젙 ???듭뀡쨌?몃젅?대뱶?ㅽ봽쨌沅뚯옣??reviewed_at: 2026-05-11
+
+---
+
+# ?뵍 Backend Auth ?뺤콉 v1.0
+
+> ??**PM ?듬? ??(2026-05-11)**: Q1 ?듭뀡 A 梨꾪깮쨌Q2 寃뚯뒪??臾댄븳 + Google/Twitter placeholder (PM_寃곗젙?ы빆 v1.0).
+> ??**Phase 1.5-13 ?ъ쟾 援ы쁽 (2026-05-10)**: Step 1-3 怨④꺽 ?꾨즺. ?ㅽ궎 ?낅젰? 5/12 ?붿뿬.
+
+---
+
+## 0. 寃곕줎 沅뚯옣 (??以?
+
+> **沅뚯옣**: Firebase Auth (寃뚯뒪??+ Google) + backend session 寃利?
+> **?댁쑀**: 1二쇱감???대? sync ?숈옉 以뫢룰쾶?ㅽ듃 fallback ?덉쓬쨌?몃? ?쒕퉬??遺??理쒖냼.
+
+---
+
+## 1. ???곹깭 (2026-05-11 媛깆떊)
+
+| ?곸뿭 | ?곹깭 |
+|---|---|
+| frontend account 紐⑤뱢 | ??kind:'global' 遺꾨━ ?꾨즺 (loginGuest쨌logout쨌setNickname) |
+| backend `/api/auth` ?쇱슦??| ??memory/Mongo repository + middleware/auth verifyIdToken (DUMMY fallback) |
+| Firebase ?섏〈??| ??frontend `firebase` + backend `firebase-admin` ?ㅼ튂쨌`.env.example` ???⑦궎吏 |
+| sync (frontend?봟ackend) | ??5珥?debounce PATCH ?숈옉 |
+| session ?좏겙 | ??Firebase ID Token (?ㅽ궎 ?낅젰 ???쒖꽦)쨌DUMMY 媛??fallback |
+| Google쨌Twitter 濡쒓렇??踰꾪듉 | ?윞 LoginScreen placeholder (PM Q2: 6?붾쭚源뚯? 寃뚯뒪??臾댄븳쨌?뚯뀥? placeholder) |
+| GA4 遺꾩꽍 (PM Q1) | ??`lib/analytics.ts` + `usePageTracking` + LoginScreen trackEvent |
+
+??**?붿뿬**: 5/12 ????Firebase 肄섏넄 ?꾨줈?앺듃 ?앹꽦쨌API ??諛쒓툒쨌`.env.local` ?낅젰 ??Google ???묐룞 ?쒖꽦.
+
+---
+
+## 2. ?듭뀡 鍮꾧탳
+
+### ?듭뀡 A ??Firebase Auth (沅뚯옣)
+```
+Frontend
+  - firebase/app + firebase/auth (npm install)
+  - signInAnonymously / signInWithPopup(GoogleAuthProvider)
+  - getIdToken() ??Authorization: Bearer ?ㅻ뜑濡?backend ?꾩넚
+
+Backend
+  - firebase-admin (Node) ??verifyIdToken
+  - middleware: req.uid 二쇱엯
+  - 湲곗〈 /api/state PATCH 媛 req.uid ?ъ슜
+```
+
+| ??ぉ | ?됯? |
+|---|---|
+| 援ы쁽 ?쒖씠??| ?윟 ??쓬 ??Firebase 媛?대뱶 1?쒓컙 |
+| 鍮꾩슜 | ?윟 臾대즺 (50K MAU 源뚯?) |
+| 寃뚯뒪??吏??| ?윟 signInAnonymously ?쒖? |
+| 5/14 留덇컧 ?곹빀??| ?윟 ?곹빀 |
+| Phase 2 ?뺤옣??| ?윟 Apple쨌Kakao 異붽? ?ъ? |
+| 醫낆냽??| ?윞 Google ?명봽???섏〈 |
+
+### ?듭뀡 B ??JWT ?먯껜 諛쒓툒
+```
+Frontend
+  - 寃뚯뒪??ID ?앹꽦 ??backend 濡?send
+  - backend 媛 JWT 諛쒓툒 ??localStorage ???
+Backend
+  - jsonwebtoken ?쇱씠釉뚮윭由?  - ?먯껜 secret (env)
+  - 誘몃뱾?⑥뼱 verify
+```
+
+| ??ぉ | ?됯? |
+|---|---|
+| 援ы쁽 ?쒖씠??| ?윞 以묎컙 ??secret 愿由?톜efresh ?좏겙 蹂꾨룄 |
+| 鍮꾩슜 | ?윟 0 |
+| 寃뚯뒪??吏??| ?윟 ?먯껜 |
+| 5/14 留덇컧 ?곹빀??| ?윞 ?곹빀?섎굹 蹂댁븞 寃??異붽? |
+| Phase 2 ?뺤옣??| ?뵶 Google쨌Apple ??異붽? ??OAuth 蹂꾨룄 援ы쁽 |
+| 醫낆냽??| ?윟 ?몃? ?쒕퉬??X |
+
+### ?듭뀡 C ??NextAuth / Auth.js
+```
+Frontend쨌Backend ?듯빀 ?몄쬆 ?쇱씠釉뚮윭由?```
+
+| ??ぉ | ?됯? |
+|---|---|
+| 援ы쁽 ?쒖씠??| ?윞 以묎컙 ??Vite ?듯빀 ?몃젰 (Next 媛 ?꾨떂) |
+| 鍮꾩슜 | ?윟 0 |
+| 5/14 留덇컧 ?곹빀??| ?뵶 1二쇱감 ?숈뒿 鍮꾩슜 |
+
+??**A 沅뚯옣 / B 李⑥꽑 / C 鍮꾧텒??**
+
+---
+
+## 3. 沅뚯옣??(?듭뀡 A) 援ы쁽 ?④퀎
+
+### Step 1 (5/12 ?? ??Firebase ?뗭뾽
+- [ ] Firebase ?꾨줈?앺듃 ?앹꽦 (肄섏넄)
+- [ ] Auth ?쒖꽦?? ?듬챸쨌Google
+- [x] `.env.example` ???⑦궎吏 ?쒖꽦 (5/10) ????`.env.local`? 5/12??肄섏넄 ???낅젰
+- [ ] `frontend` `.env.local`:
+  ```
+  VITE_FIREBASE_API_KEY=...
+  VITE_FIREBASE_AUTH_DOMAIN=...
+  VITE_FIREBASE_PROJECT_ID=...
+  ```
+- [ ] `backend` `.env.local`:
+  ```
+  FIREBASE_PROJECT_ID=...
+  FIREBASE_CLIENT_EMAIL=...
+  FIREBASE_PRIVATE_KEY=...
+  SESSION_SECRET=...
+  ```
+
+### Step 2 (5/13 ?? ??Frontend ?듯빀
+- [x] `pnpm --filter frontend add firebase` ??5/10
+- [x] `lib/firebase.ts` ??initializeApp + getAuth ??5/10
+- [ ] `lib/accountBootstrap.ts` 媛깆떊 ??Firebase Auth 諛깆뾽 (Q2: 寃뚯뒪?몃쭔 ?쒖꽦쨌?뚯뀥 placeholder)
+  ```ts
+  // 寃뚯뒪????signInAnonymously
+  // Google ??signInWithPopup(GoogleAuthProvider)
+  ```
+- [ ] `lib/api.ts` ??紐⑤뱺 ?붿껌??`Authorization: Bearer ${idToken}` ?ㅻ뜑
+- [x] `account` 紐⑤뱢 manifest `api: '/api/auth'` ?쒖꽦 ??2026-05-24 ?뺤씤
+
+### Step 3 (5/14 紐? ??Backend ?듯빀
+- [x] `pnpm --filter backend add firebase-admin` ??5/10
+- [x] `lib/firebaseAdmin.ts` ??initializeApp + getAuth ??5/10
+- [x] `middleware/auth.ts` ??verifyIdToken ??req.uid (DUMMY fallback) ??5/10
+- [x] `routes/state.ts` ??uid 寃利???PATCH (?ㅽ궎 ?쒖꽦 ?? ??2026-05-24 `getRequestUid()` 湲곕컲 ?뺤씤
+- [x] `routes/auth.ts` ??`/me` ?붾뱶?ъ씤??(???ъ슜???뺣낫) ??2026-05-24 ?뺤씤
+
+### Step 4 (5/14 紐?EOD) ??寃利?- [ ] 寃뚯뒪??濡쒓렇????uid 蹂댁〈 ???덈줈怨좎묠 ???щ줈洹몄씤 ?숈옉
+- [ ] Google 濡쒓렇?????대찓???쒖떆
+- [ ] Logout ??state 珥덇린??- [x] PATCH /api/state ???몄쬆 ?ㅻ뜑 ?놁쑝硫?401 ??2026-05-24 uid ?놁쓬 401 / no-legacy 410 寃利?- [x] 紐⑤뱢 遺꾨━ ?뚭? (account.loginGuest 媛 firebase ?몄텧?섎뒗吏) ??2026-05-24 account/auth route 諛?module split gate ?뺤씤
+
+### Step 5 (5/15+) ???꾩냽 (Phase 1.5)
+- [ ] Apple Sign In (iOS Safari)
+- [ ] Kakao 濡쒓렇??(?쒓뎅 ?ъ슜??
+- [ ] Email/Password (?됰꽕???깅줉 ?먮쫫)
+- [ ] Anonymous ??Google 怨꾩젙 ?곌껐 (link)
+
+---
+
+## 4. 蹂댁븞 泥댄겕由ъ뒪??
+```
+??idToken 留뚮즺 泥섎━ (1?쒓컙) ???먮룞 refresh ?뺤씤
+??session_secret ?섍꼍蹂??(.env.local ???덈? 而ㅻ컠 X)
+??CORS ???꾨줈?뺤뀡 ?꾨찓?몃쭔 ?덉슜
+??rate limit (express-rate-limit) ??Phase 1.5
+??logout ??idToken revoke
+???꾨줈???ъ쭊쨌?대찓???몄텧 ?뺤콉 (i18n 紐⑤떖)
+??GDPR / 媛쒖씤?뺣낫 ???쒓뎅 異쒖떆 ?곗꽑?댁?留??쒖? 以??```
+
+---
+
+## 5. 鍮꾩슜쨌?뺤옣???쒕?
+
+| ?④퀎 | ?ъ슜??| Firebase Auth 鍮꾩슜 | DB | CDN |
+|---|---|---|---|---|
+| 1二쇱감 踰좏? | 5~10 | 臾대즺 | Atlas free | Cloudflare free |
+| Phase 1 POC (6/23) | ~100 | 臾대즺 | Atlas free | Cloudflare free |
+| Phase 2 異쒖떆 | ~10K | 臾대즺 (50K MAU) | Atlas $9 | Cloudflare $0 |
+| ?깆닕 | 100K | 臾대즺 | Atlas $57 | Cloudflare Pro $20 |
+
+??**Auth ?먯껜??50K MAU 源뚯? 臾대즺**. 異쒖떆 1????異붽? 鍮꾩슜 嫄곗쓽 ?놁쓬.
+
+---
+
+## 6. PM 寃곗젙 ?ы빆
+
+- [x] **寃곗젙 1**: ??**?듭뀡 A** (Firebase Auth + GA4 ?쒓렇) ??PM_寃곗젙?ы빆 v1.0 Q1
+- [x] **寃곗젙 2**: ??**POC(6?붾쭚)源뚯? 寃뚯뒪??臾댄븳 + Google/Twitter 踰꾪듉 placeholder** ??PM_寃곗젙?ы빆 v1.0 Q2
+- [ ] **寃곗젙 3**: Apple쨌Kakao Phase 1.5 ?쒖젏 紐낆떆 (PM 蹂대쪟 ??Q3 ?몄뒪??寃곗젙 ??
+  - 沅뚯옣: Phase 1.5-12 (5/22 ?댄썑)
+- [ ] **寃곗젙 4**: ?몄뒪????Vercel쨌Netlify쨌Cloudflare Pages ?먮뒗 ?ㅼ씠踰??대씪?곕뱶 (PM_寃곗젙?ы빆 Q3 蹂대쪟)
+- [x] **寃곗젙 5**: DB ??MongoDB Atlas vs Firebase Firestore ??2026-05-24 MongoDB ?좏깮. 媛쒕컻? local MongoDB first, ?댄썑 MongoDB Atlas ?꾪솚.
+
+---
+
+## 7. ?섏〈 臾몄꽌
+
+- [紐⑤뱢遺꾨━?묒뾽怨꾪쉷_v1_260510.md](紐⑤뱢遺꾨━?묒뾽怨꾪쉷_v1_260510_260511寃??md) ??account 紐⑤뱢 遺꾨━ ?꾨즺
+- [媛쒕컻怨꾪쉷.md](媛쒕컻怨꾪쉷_260511寃??md) ???명봽??SoT
+- [SETTINGS_?덈궡.md](SETTINGS_?덈궡_260511寃??md) 짠6 ??.env ?덈궡
+- [packages/modules/account/](packages/modules/account/) ??肄붾뱶
+
+---
+
+## Changelog
+
+- **v1.0.1 (2026-05-24)**: backend/module DB split 諛섏쁺 ?곹깭 ?먭?. `account` manifest `/api/auth`, `routes/state.ts` uid 寃利? `routes/auth.ts` `/me`, `/api/state` ?몄쬆/legacy gate, MongoDB ?좏깮(local first -> Atlas ?꾪솚) 泥댄겕由ъ뒪???꾨즺 ?쒖떆.
+- **v1.0.0 (2026-05-11)**: PM 寃곗젙 Q1쨌Q2 ??諛섏쁺 (PM_寃곗젙?ы빆 v1.0). 짠1 ???곹깭 媛깆떊 (Firebase ?ㅼ튂쨌middleware쨌DUMMY fallback ?끒텴A4 ??. 짠3 Step 1-3 ?ъ쟾 ?꾨즺 泥댄겕. 짠6 寃곗젙 1쨌2 ?끒?쨌4쨌5 蹂대쪟.
+- **v0.1.0 (2026-05-10)**: 珥덉븞. ?듭뀡 A쨌B쨌C 鍮꾧탳쨌援ы쁽 4?④퀎쨌蹂댁븞 泥댄겕쨌鍮꾩슜 ?쒕?쨌PM 寃곗젙 5嫄?
+

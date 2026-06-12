@@ -1,0 +1,104 @@
+{
+  "$schema": "본진 5명 마스터 — characters.csv 와 1:1 정합 (machine-readable mirror)",
+  "$policy": "영감원 식별어 0 매치. PM SoT 본진5명선정.md 만 외부 IP 영감원 보유.",
+  "version": "1.0.0",
+  "lastUpdated": "2026-05-10",
+  "characters": [
+    {
+      "id": "황금멍",
+      "scenarioId": "hwanggumeong",
+      "species": "강아지",
+      "personaNumber": 56,
+      "gachaPool": "first-meeting",
+      "assetCategory": "aidong",
+      "description": "다정·정직·꼬리 흔들기 — 첫 영입의 따뜻함",
+      "signatureWords": [
+        "꼬리",
+        "좋아",
+        "고마워",
+        "흔들리네"
+      ],
+      "voicePattern": "친근/직접 표현/감정 솔직",
+      "avoidPattern": "비꼬는 말/체념",
+      "boardIconExposure": "public",
+      "bodyExposure": "protected",
+      "defaultExpression": "normal"
+    },
+    {
+      "id": "춤냥",
+      "scenarioId": "chumnyang",
+      "species": "고양이",
+      "personaNumber": 75,
+      "gachaPool": "first-meeting",
+      "assetCategory": "aidong",
+      "description": "우아·도도·표현 절제 — 작은 움직임의 카리스마",
+      "signatureWords": [
+        "흠.",
+        "...뭐, 나쁘지 않네",
+        "그렇구나"
+      ],
+      "voicePattern": "절제/관찰/간접 표현",
+      "avoidPattern": "큰 감정 폭발/찐 외향",
+      "boardIconExposure": "public",
+      "bodyExposure": "protected",
+      "defaultExpression": "normal"
+    },
+    {
+      "id": "양털곰",
+      "scenarioId": "yangteolgom",
+      "species": "곰돌이",
+      "personaNumber": 24,
+      "gachaPool": "first-meeting",
+      "assetCategory": "aidong",
+      "description": "묵직·부끄럼·따뜻함 — 천천히 길게 말하는 신뢰감",
+      "signatureWords": [
+        "...음.",
+        "그러게.",
+        "응. 좋아."
+      ],
+      "voicePattern": "느림/길게/낮은 음성",
+      "avoidPattern": "빠른 말투/공격성",
+      "boardIconExposure": "public",
+      "bodyExposure": "protected",
+      "defaultExpression": "normal"
+    },
+    {
+      "id": "단풍볼",
+      "scenarioId": "danpungbol",
+      "species": "햄스터",
+      "personaNumber": 7,
+      "gachaPool": "first-meeting",
+      "assetCategory": "aidong",
+      "description": "호기심·작은 용기·재잘 — 발견의 기쁨",
+      "signatureWords": [
+        "잠깐만!",
+        "어어 이거 봐봐!",
+        "응응응"
+      ],
+      "voicePattern": "빠름/작은 발견 큰 반응",
+      "avoidPattern": "음울/늘어지는 독백",
+      "boardIconExposure": "public",
+      "bodyExposure": "protected",
+      "defaultExpression": "normal"
+    },
+    {
+      "id": "날카여우",
+      "scenarioId": "nalkayeou",
+      "species": "여우",
+      "personaNumber": 19,
+      "gachaPool": "first-meeting",
+      "assetCategory": "aidong",
+      "description": "영민·날카·장난기 — 살짝 비틀어도 따뜻한 거리",
+      "signatureWords": [
+        "...글쎄?",
+        "그럴까",
+        "재밌네"
+      ],
+      "voicePattern": "영민/살짝 비틀기/여운",
+      "avoidPattern": "무자비한 비꼬기/관계 거부 톤",
+      "boardIconExposure": "public",
+      "bodyExposure": "protected",
+      "defaultExpression": "normal"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "hub_subtitle": "영입한 아이동들",
+  "hub_empty": "아직 친구가 없어요. 항해를 떠나보세요.",
+  "hub_diary_title": "📔 일기",
+  "fullmap_title": "마이섬 전체 지도",
+  "fullmap_subtitle": "15구역 · 청소년의 정서·고민·희망의 풍경",
+  "fullmap_locked": "아직 잠겨있어요",
+  "fullmap_move": "이동",
+  "harbor_title": "⛵ 08 항구 · 출항 준비",
+  "harbor_assign_title": "🐾 항구 친구 배치 (시간당 1d6 / 친구)",
+  "harbor_assign_empty": "영입한 친구가 없어요. 가챠 또는 항해를 통해 영입해 보세요.",
+  "harbor_voyage_title": "출항 메뉴",
+  "harbor_voyage_desc": "항로를 선택해 떠날 수 있어요. 새 항로는 가챠나 시즌으로 풀려요.",
+  "lodge_empty": "아직 친구가 없어요."
+}

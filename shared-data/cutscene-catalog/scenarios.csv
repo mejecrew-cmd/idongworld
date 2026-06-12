@@ -1,0 +1,28 @@
+# shared-data/cutscene-catalog/scenarios.csv — 시나리오·컷신 메타 SoT
+# 11편 작성 완료 + Phase 2 데뷔 5편 + 시즌 (TBD)
+# 헤더: scenarioId,type,callSite,characterIds,status,writer,expectedDelivery,length,note
+scenarioId,type,callSite,characterIds,status,writer,expectedDelivery,length,note
+cutscene_first_gacha,cutscene,FirstMeetingScreen.gacha,,written,PM,2026-05-09,3 scene,첫 만남 가챠 컷씬
+recruit_hwanggumeong,recruit,after-gacha:황금멍,황금멍,written,PM,2026-05-09,10 scene,영입
+recruit_chumnyang,recruit,after-gacha:춤냥,춤냥,written,PM,2026-05-09,10 scene,영입
+recruit_yangteolgom,recruit,after-gacha:양털곰,양털곰,written,PM,2026-05-09,10 scene,영입
+recruit_danpungbol,recruit,after-gacha:단풍볼,단풍볼,written,PM,2026-05-09,10 scene,영입
+recruit_nalkayeou,recruit,after-gacha:날카여우,날카여우,written,PM,2026-05-09,10 scene,영입
+settle_hwanggumeong,settle,after-recruit:황금멍,황금멍,written,PM,2026-05-09,5 scene,정착
+settle_chumnyang,settle,after-recruit:춤냥,춤냥,written,PM,2026-05-09,5 scene,정착
+settle_yangteolgom,settle,after-recruit:양털곰,양털곰,written,PM,2026-05-09,5 scene,정착
+settle_danpungbol,settle,after-recruit:단풍볼,단풍볼,written,PM,2026-05-09,5 scene,정착
+settle_nalkayeou,settle,after-recruit:날카여우,날카여우,written,PM,2026-05-09,5 scene,정착
+debut_hwanggumeong,debut,debut-stage,황금멍,planned,TBD,Phase 2,1-2 scene,데뷔 시그니처
+debut_chumnyang,debut,debut-stage,춤냥,planned,TBD,Phase 2,1-2 scene,데뷔 시그니처
+debut_yangteolgom,debut,debut-stage,양털곰,planned,TBD,Phase 2,1-2 scene,데뷔 시그니처
+debut_danpungbol,debut,debut-stage,단풍볼,planned,TBD,Phase 2,1-2 scene,데뷔 시그니처
+debut_nalkayeou,debut,debut-stage,날카여우,planned,TBD,Phase 2,1-2 scene,데뷔 시그니처
+cutscene_island_welcome,cutscene,island-first-visit,,planned,TBD,Phase 1.5,2 scene,마이섬 첫 진입 환영
+cutscene_route_scenic_9,cutscene,route-neighbor:scenic-9,,planned,TBD,Phase 1.5,1 scene,바다 풍경
+cutscene_route_scenic_23,cutscene,route-neighbor:scenic-23,,planned,TBD,Phase 1.5,1 scene,바다 신비
+cutscene_zone_unlock_garden,cutscene,zone-unlock:garden,,planned,TBD,Phase 1.5,1 scene,정원 첫 해금
+cutscene_zone_unlock_oasis,cutscene,zone-unlock:oasis,,planned,TBD,Phase 1.5,1 scene,오아시스 첫 해금
+cutscene_zone_unlock_memory,cutscene,zone-unlock:memory,,planned,TBD,Phase 1.5,1 scene,기억 숲 첫 해금
+cutscene_zone_unlock_mine,cutscene,zone-unlock:mine,,planned,TBD,Phase 1.5,1 scene,절벽 첫 해금
+cutscene_season_summer_2026,cutscene,season-start:summer-2026,,planned,TBD,Phase 2,3 scene,여름 수박 시즌

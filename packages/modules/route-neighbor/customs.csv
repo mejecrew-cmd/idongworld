@@ -1,0 +1,4 @@
+# route-neighbor/customs.csv — 갑판 자원 환전 (이웃섬 도착 시)
+ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+deck-to-coins,route-neighbor,deck-cargo,global,,coins,1,2,,갑판 → 코인,1,500,갑판 자원 1 = 코인 2 (귀항 환전)
+deck-to-gems,route-neighbor,deck-cargo,global,,gems,5,1,,갑판 → 보석,1,200,갑판 자원 5 = 보석 1 (드물게)

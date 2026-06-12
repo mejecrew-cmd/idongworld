@@ -1,0 +1,10 @@
+{
+  "back_to_harbor": "← Harbor",
+  "cta_to_board": "Open Board",
+  "name": "Neighbor Route",
+  "placeholder": "Board UI at /voyage/board",
+  "sample.action": "Neighbor Route action label",
+  "sample.greeting": "Neighbor Route module i18n sample — key 1",
+  "sample.tooltip": "Neighbor Route tooltip text (TBD)",
+  "title": "🚢 Neighbor Route"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Host",
+  "sample.action": "Host action label",
+  "sample.greeting": "Host module i18n sample — key 1",
+  "sample.tooltip": "Host tooltip text (TBD)",
+  "title": "Host (module display name)"
+}

@@ -1,0 +1,27 @@
+# 📁 .gitignore — git 추적 제외 패턴
+# ───────────────────────────────────────────────
+# 📌 역할: git에 커밋되면 안 되는 파일·폴더.
+# 🔗 Drive 동기화 제외도 동일 패턴 권장 (SETTINGS_안내.md §5)
+
+# 의존성 (pnpm 설치 시 생성, 수만 파일)
+node_modules/
+
+# 빌드 산출물
+dist/
+.vite/
+.turbo/
+
+# 로그
+*.log
+
+# 로컬 MongoDB 임시 데이터
+.mongo-local-data/
+
+# 로컬 환경변수 (Phase 1.5에 .env.local 활성)
+.env.local
+.env.*.local
+
+# OS·IDE
+.DS_Store
+.idea/
+.vscode/settings.json

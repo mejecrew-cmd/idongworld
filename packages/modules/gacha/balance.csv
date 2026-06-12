@@ -1,0 +1,12 @@
+# gacha/balance.csv — 가챠 풀·확률·비용 밸런스 (PM 조정)
+# 헤더: paramId,value,type,description,phase
+paramId,value,type,description,phase
+first_gacha_free,1,number,첫 가챠 무료 횟수,Phase 1
+first_gacha_retry_cost,150,number,재추첨 비용 (보석),Phase 1
+first_gacha_max_attempts,3,number,첫 가챠 최대 시도 (이후 강제 결과),Phase 1
+season_gacha_cost,300,number,시즌 가챠 1회 비용 (보석),Phase 2
+season_gacha_pity_count,30,number,확정 5★ 천장,Phase 2
+weight_5star,1,number,5성 가중치 (Phase 2 풀),Phase 2
+weight_4star,10,number,4성 가중치,Phase 2
+weight_3star,89,number,3성 가중치,Phase 2
+first_meeting_uniform,1,number,첫 가챠 균등 1/5 — 5명 모두 weight 1,Phase 1

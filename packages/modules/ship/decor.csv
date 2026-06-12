@@ -1,0 +1,7 @@
+# ship/decor.csv - 선실 꾸미기 아이템 catalog
+# 헤더: itemId,label,cost,defaultOwned,placementScope,description,phase
+itemId,label,cost,defaultOwned,placementScope,description,phase
+hammock,해먹,0,1,ship-cabin,기본 선실 해먹.,Phase 1
+lamp,선실등,0,1,ship-cabin,기본 선실 조명.,Phase 1
+window,둥근 창,35,0,ship-cabin,선실에 설치하는 둥근 창.,Phase 1
+rug,작은 러그,45,0,ship-cabin,선실 바닥 장식.,Phase 1

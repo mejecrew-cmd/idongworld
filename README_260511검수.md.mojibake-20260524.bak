@@ -1,0 +1,182 @@
+﻿---
+version: v0.2.0
+last_updated: 2026-05-11
+status: ?쒖꽦
+reviewed_at: 2026-05-11
+
+---
+
+# ?꾩씠?숈썡??v1_260509
+
+> Phase 1 POC 肄붾뱶 鍮뚮뱶. 8二?踰좏? (6/23) 紐⑺몴.
+
+---
+
+## 鍮좊Ⅸ ?쒖옉
+
+```bash
+# 1. corepack?쇰줈 pnpm ?쒖꽦??(理쒖큹 1??
+corepack enable
+corepack prepare pnpm@latest --activate
+
+# 2. ?섏〈???ㅼ튂
+pnpm install
+
+# 3. ?숈떆 ?ㅽ뻾 (frontend 5173 + backend 4000)
+pnpm dev
+
+# ?먮뒗 媛쒕퀎 ?ㅽ뻾
+pnpm dev:fe   # Frontend留?pnpm dev:be   # Backend留?```
+
+---
+
+## 吏꾩엯??
+- **Frontend**: http://localhost:5173/
+  - `/login` ??寃뚯뒪??濡쒓렇????`/title` ??`/island` (留덉씠??
+  - ?붾쾭洹? `/island` 吏곸젒 吏꾩엯 ??5紐?鍮좊Ⅸ ?곸엯 媛??- **Backend**: http://localhost:4000/health ??`{"status":"ok"}`
+
+---
+
+## ?붾젆?좊━
+
+```
+v1_260509/
+?쒋? 媛쒕컻怨꾪쉷.md / COMPACT_?몄닔?멸퀎 / 紐⑤뱢遺꾨━?묒뾽怨꾪쉷 ??SoT
+?쒋? packages/
+?? ?쒋? core/             狩?manifest쨌registry쨌bus쨌router쨌i18n쨌asset (Phase 0)
+?? ?쒋? frontend/         Vite + React 18 + TS + MUI 5 + Zustand
+?? ?쒋? backend/          Express 4 + TS + firebase-admin
+?? ?쒋? i18n-source/      狩?i18n.csv (RFC 4180쨌?묎? export ?듯빀)
+?? ?붴? modules/          狩?14 肄붾뱶 紐⑤뱢 (愿묒뿭 5쨌?쒖뒪??4쨌肄섑뀗痢?5)
+??    ?쒋? host쨌account쨌my-aidong쨌my-island쨌codex   (愿묒뿭 5)
+??    ?쒋? vn-runner쨌gacha쨌cutscene-runner쨌customs   (?쒖뒪??4)
+??    ?붴? zone-{garden,oasis,memory,mine}쨌route-neighbor  (肄섑뀗痢?5)
+?쒋? shared-data/         狩?怨듭쑀 ?곗씠??? (aidong-master쨌cutscene-catalog쨌species쨌schedule)
+?쒋? resources/           狩??먯궛 ? (aidong쨌cutscenes쨌backgrounds쨌audio 횞 public/protected)
+?쒋? vvns-source/         (symlink) VVNS ?먮낯 ?먯궛
+?붴? tools/
+   ?쒋? audit/            checkPersonaLeak.sh (P0 ?곴컧??寃??
+   ?붴? i18n/             exportCsv쨌importCsv쨌validate (.py + .sh)
+```
+
+### Frontend
+```
+packages/frontend/
+?쒋? vite.config.ts
+?쒋? public/
+?? ?쒋? assets ??../../../../../湲고쉷/??댁뼱?꾨젅??assets-dummy   (symlink)
+?? ?붴? scenarios ??../../../../../湲고쉷/?쒕굹由ъ삤/                 (symlink)
+?붴? src/
+   ?쒋? main.tsx (bootstrap 9嫄? account쨌host쨌myAidong쨌myIsland쨌codex쨌vn쨌gacha쨌customs쨌cutscene)
+   ?쒋? App.tsx
+   ?쒋? stores/userStore.ts       Zustand + localStorage persist + 5s sync
+   ?쒋? lib/
+   ?? ?쒋? firebase.ts            ??Firebase Auth client
+   ?? ?쒋? analytics.ts           ??GA4 gtag.js (PM_寃곗젙 Q1)
+   ?? ?쒋? usePageTracking.ts     ??SPA pageview
+   ?? ?쒋? moduleRegistry.ts      14 紐⑤뱢 manifest ?깅줉쨌validate
+   ?? ?붴? {account,host,myAidong,myIsland,codex,vn,gacha,customs,cutscene}Bootstrap.ts
+   ?쒋? components/               HUD쨌BottomNav쨌AidongSprite쨌CustomsConfirmModal쨌...
+   ?쒋? screens/                  14+ ?붾㈃ (S07 移댄깉濡쒓렇)
+   ?붴? i18n/                     14 紐⑤뱢 횞 ko/en ?듯빀 namespace
+```
+
+### Backend
+```
+packages/backend/
+?쒋? src/
+?? ?쒋? index.ts                Express + CORS + /health
+?? ?쒋? lib/firebaseAdmin.ts    ??Firebase Admin SDK
+?? ?쒋? middleware/auth.ts      ??verifyIdToken ??req.uid (DUMMY fallback)
+?? ?쒋? routes/                 legacy state, auth, host, module, customs routes
+?? ?붴? utils/scheduler.ts      ??VVNS 吏곸씠???꾨즺
+?붴? tsconfig.json (strict)
+```
+
+---
+
+## ?듭떖 猷?
+### Drive ?숆린???쒖쇅 (?꾩닔)
+?ㅼ쓬? Mac Google Drive ?대씪?댁뼵???숆린?붿뿉???쒖쇅?댁빞 ??
+- `node_modules/`
+- `dist/`
+- `.vite/`
+- `.turbo/`
+- `*.log`
+
+???숆린????Drive ?대씪?댁뼵??OOM쨌CPU ??＜ ?꾪뿕.
+
+### Asset Sync ?④퀎 (媛쒕컻怨꾪쉷 짠5)
+- **1?④퀎 (?꾩옱, 1二쇱감)**: Frontend `public/assets` symlink ??Drive `assets-dummy`
+- **2?④퀎 (5/14 ?댄썑)**: Backend Express ?뺤쟻 ?쒕튃
+- **3?④퀎 (踰좏?)**: `tools/sync-assets.js` build ??蹂듭궗 ??CDN
+
+### VVNS 留덉씠洹몃젅?댁뀡 (?듭뀡 A ??肄붾뱶 吏곸젒 蹂듭궗)
+- ??`scheduler.js` ??`scheduler.ts` (?꾨즺)
+- ??`useSequencedModals.js` (?댁쟾쨌?ъ옉???꾨즺)
+- ??`firebase.js` + `firebase-admin` (5/10 Phase 1.5-13 Step 1-3 ?ъ쟾 ?꾨즺 ??frontend firebase쨌backend firebase-admin쨌env.example쨌middleware/auth쨌DUMMY 媛??fallback)
+- ??`i18n.js` (i18n-source/i18n.csv + 14 紐⑤뱢 namespace ?듯빀)
+
+---
+
+## ?붾㈃ ?쇱슦??(S07)
+
+| 寃쎈줈 | 而댄룷?뚰듃 | ?덉씠?꾩썐 |
+|---|---|---|
+| `/login` | LoginScreen | FullScreen |
+| `/title` | TitleScreen | FullScreen |
+| `/opening` | OpeningScreen | FullScreen |
+| `/first-meeting` | FirstMeetingScreen | FullScreen |
+| `/heart-island/first` | HeartIslandFirstScreen | FullScreen |
+| `/heart-island/cleaning` | CleaningLoopScreen | FullScreen |
+| `/heart-island/naming` | NamingToHeartScreen | FullScreen |
+| `/island` | HubHeartScene | MyIsland (HUD + ?ㅻ퉬) |
+| `/island/harbor` | HarborScene | MyIsland |
+| `/island/lodge` | LodgeScene | MyIsland |
+| `/voyage/board` | NavigationBoardScene | Voyage (HUD only) |
+| `/voyage/island/:id` | IslandMapScene | Voyage |
+| `/voyage/island/:id/landing` | IslandLandingScene | Voyage |
+
+---
+
+## ?곹깭 (Zustand)
+
+User store (`stores/userStore.ts`) ??localStorage ?곸냽:
+- Auth: `firebaseUid` `nickname` `isGuest`
+- ?먯썝: `coins` `diamonds` `gems`
+- 吏꾪뻾: `onboardingComplete` `hostName`
+- 罹먮┃?? `recruitedAidongs[]` `affinities{}` `firstGachaCandidate` `firstGachaAttempts`
+- 留덉씠?? `unlockedZones[]` `unlockedDiaries[]` `unlockedCodexEntries[]` `codexFullyRegistered[]` `inventory{}`
+
+Actions: `loginGuest` 쨌 `recruitAidong` 쨌 `addAffinity` 쨌 `completeOnboarding` 쨌 `unlockZone` 쨌 `unlockDiary` 쨌 `unlockCodexSlot` 쨌 `fullyRegisterCodex`
+
+---
+
+## ?섏〈 臾몄꽌
+
+| 臾몄꽌 | ?⑸룄 |
+|---|---|
+| [媛쒕컻怨꾪쉷.md](媛쒕컻怨꾪쉷_260511寃??md) | 肄붾뱶 鍮뚮뱶 SoT |
+| [湲고쉷/02_湲곗닠?ㅽ깮.md](../../湲고쉷/02_湲곗닠?ㅽ깮_260511寃??md) | 湲곗닠 ?ㅽ깮 ?뚮쾿 |
+| [湲고쉷/留ㅻ돱???쒖뒪??S07 ?붾㈃?쇱슦??(../../湲고쉷/留ㅻ돱???쒖뒪??S07_?붾㈃?쇱슦??260511寃??md) | 13 ?붾㈃ 留ㅽ븨 |
+| [湲고쉷/留ㅻ돱???쒖뒪??S08 AidongSprite](../../湲고쉷/留ㅻ돱???쒖뒪??S08_AidongSprite_260511寃??md) | PNG z-order |
+| [湲고쉷/留ㅻ돱???쒖뒪??S09 VN Runner](../../湲고쉷/留ㅻ돱???쒖뒪??S09_VN_Runner_260511寃??md) | ?쒕굹由ъ삤 ?곕꼫 |
+| [湲고쉷/二쇨컙?쇱젙李⑦듃/1二쇱감_?쇱젙李⑦듃.md](../../湲고쉷/二쇨컙?쇱젙李⑦듃/1二쇱감_?쇱젙李⑦듃_260511寃??md) | 1二쇱감 ???곗꽑 |
+
+---
+
+## Backend Persistence Update 2026-05-24
+
+- Backend persistence split Phase 1 is complete: one Express server remains, but storage ownership is now separated by repository/model/module route boundaries.
+- MongoDB development policy is local-first. Atlas migration should be done by changing `MONGO_URI` and deployment secrets, not by rewriting module services.
+- Current backend persistence includes `users`, `hostStates`, dedicated module state collections, generic `moduleStates`, and `customsLogs`.
+- New module backend work should use module-owned APIs and repositories. Do not add new behavior to the legacy whole-user-state sync path.
+- Customs is the boundary for cross-module resource movement. Direct writes from one module into another module document are not allowed.
+
+## Changelog
+
+- **v0.2.1 (2026-05-24)**: Backend persistence split Phase 1 documented. Added local MongoDB first -> Atlas later policy, module-owned API/repository guidance, and customs ownership boundary.
+- **v0.2.0 (2026-05-11)**: 紐⑤뱢 遺꾨━ 14嫄는톝hared-data쨌resources쨌i18n-source ?붾젆?좊━ 諛섏쁺. Firebase Auth Step 1-3 ?ъ쟾 ?꾨즺쨌VVNS 吏곸씠??4嫄?紐⑤몢 ?? bootstrap 9嫄는톋nalytics(GA4)쨌moduleRegistry 異붽?.
+- **v0.1.0 (2026-05-09)**: 珥덉븞. ?뗭뾽쨌援ъ“쨌?ㅽ뻾 媛?대뱶.
+
+

@@ -1,0 +1,7 @@
+# ship/balance.csv — 배 종류와 기본 slot/cargo 밸런스
+# 정책: 유저는 배를 여러 척 보유하지 않고, 현재 사용하는 shipTypeId만 바꾼다.
+# 헤더: shipTypeId,name,cabinSlots,deckSlots,cargoCapacity,diceBonus,isDefault,description,phase
+shipTypeId,name,cabinSlots,deckSlots,cargoCapacity,diceBonus,isDefault,description,phase
+dinghy,작은 나룻배,1,1,10,0,true,기본 항해용 소형 선박,Phase 1
+sloop,돛단배,2,2,25,1,false,선실과 갑판이 늘어난 1차 확장 선박,Phase 1.5
+cutter,커터선,3,3,40,1,false,항해 미션과 배치 효과 확장 후보,Phase 2

@@ -1,0 +1,94 @@
+module,key,ko,en,description,status
+account,name,계정,Account,,draft
+account,sample.action,계정 액션 라벨,Account action label,,draft
+account,sample.greeting,계정 모듈 i18n 샘플 — 1번째 키,Account module i18n sample — key 1,,draft
+account,sample.tooltip,계정 툴팁 텍스트 (PM 검수 대기),Account tooltip text (TBD),,draft
+account,title,계정 (모듈 표시명),Account (module display name),,draft
+codex,name,도감·일기,Codex,,draft
+codex,sample.action,도감·일기 액션 라벨,Codex action label,,draft
+codex,sample.greeting,도감·일기 모듈 i18n 샘플 — 1번째 키,Codex module i18n sample — key 1,,draft
+codex,sample.tooltip,도감·일기 툴팁 텍스트 (PM 검수 대기),Codex tooltip text (TBD),,draft
+codex,title,도감·일기 (모듈 표시명),Codex (module display name),,draft
+customs,name,세관,Customs,,draft
+customs,sample.action,세관 액션 라벨,Customs action label,,draft
+customs,sample.greeting,세관 모듈 i18n 샘플 — 1번째 키,Customs module i18n sample — key 1,,draft
+customs,sample.tooltip,세관 툴팁 텍스트 (PM 검수 대기),Customs tooltip text (TBD),,draft
+customs,title,세관 (모듈 표시명),Customs (module display name),,draft
+cutscene-runner,name,컷신 디스패처,Cutscene Runner,,draft
+cutscene-runner,sample.action,컷신 디스패처 액션 라벨,Cutscene Runner action label,,draft
+cutscene-runner,sample.greeting,컷신 디스패처 모듈 i18n 샘플 — 1번째 키,Cutscene Runner module i18n sample — key 1,,draft
+cutscene-runner,sample.tooltip,컷신 디스패처 툴팁 텍스트 (PM 검수 대기),Cutscene Runner tooltip text (TBD),,draft
+cutscene-runner,title,컷신 디스패처 (모듈 표시명),Cutscene Runner (module display name),,draft
+gacha,name,가챠,Gacha,,draft
+gacha,sample.action,가챠 액션 라벨,Gacha action label,,draft
+gacha,sample.greeting,가챠 모듈 i18n 샘플 — 1번째 키,Gacha module i18n sample — key 1,,draft
+gacha,sample.tooltip,가챠 툴팁 텍스트 (PM 검수 대기),Gacha tooltip text (TBD),,draft
+gacha,title,가챠 (모듈 표시명),Gacha (module display name),,draft
+host,name,호스트,Host,,draft
+host,sample.action,호스트 액션 라벨,Host action label,,draft
+host,sample.greeting,호스트 모듈 i18n 샘플 — 1번째 키,Host module i18n sample — key 1,,draft
+host,sample.tooltip,호스트 툴팁 텍스트 (PM 검수 대기),Host tooltip text (TBD),,draft
+host,title,호스트 (모듈 표시명),Host (module display name),,draft
+my-aidong,name,마이아이동,My Aidong,,draft
+my-aidong,sample.action,마이아이동 액션 라벨,My Aidong action label,,draft
+my-aidong,sample.greeting,마이아이동 모듈 i18n 샘플 — 1번째 키,My Aidong module i18n sample — key 1,,draft
+my-aidong,sample.tooltip,마이아이동 툴팁 텍스트 (PM 검수 대기),My Aidong tooltip text (TBD),,draft
+my-aidong,title,마이아이동 (모듈 표시명),My Aidong (module display name),,draft
+my-island,name,마이섬,My Island,,draft
+my-island,sample.action,마이섬 액션 라벨,My Island action label,,draft
+my-island,sample.greeting,마이섬 모듈 i18n 샘플 — 1번째 키,My Island module i18n sample — key 1,,draft
+my-island,sample.tooltip,마이섬 툴팁 텍스트 (PM 검수 대기),My Island tooltip text (TBD),,draft
+my-island,title,마이섬 (모듈 표시명),My Island (module display name),,draft
+my-island,zone.locked.prev_zone_clear,이전 구역을 먼저 클리어해 주세요,Clear the previous zone first,,draft
+my-island,zone.locked.recruited_count_ge,친구 {{count}}명 이상 영입 후 열려요,Unlocks after recruiting {{count}}+ friends,,draft
+my-island,zone.locked.season,시즌 한정,Season exclusive,,draft
+my-island,zone.locked.tutorial_complete,튜토리얼 완료 후 열려요,Unlocks after tutorial,,draft
+my-island,zone.locked.update,다음 업데이트에 열려요,Coming in next update,,draft
+route-neighbor,back_to_harbor,← 항구,← Harbor,,draft
+route-neighbor,cta_to_board,보드로 진입,Open Board,,draft
+route-neighbor,name,이웃섬 항로,Neighbor Route,,draft
+route-neighbor,placeholder,항해 보드는 /voyage/board 에서,Board UI at /voyage/board,,draft
+route-neighbor,sample.action,이웃섬 항로 액션 라벨,Neighbor Route action label,,draft
+route-neighbor,sample.greeting,이웃섬 항로 모듈 i18n 샘플 — 1번째 키,Neighbor Route module i18n sample — key 1,,draft
+route-neighbor,sample.tooltip,이웃섬 항로 툴팁 텍스트 (PM 검수 대기),Neighbor Route tooltip text (TBD),,draft
+route-neighbor,title,🚢 이웃섬 항로,🚢 Neighbor Route,,draft
+vn-runner,name,VN 재생기,VN Runner,,draft
+vn-runner,sample.action,VN 재생기 액션 라벨,VN Runner action label,,draft
+vn-runner,sample.greeting,VN 재생기 모듈 i18n 샘플 — 1번째 키,VN Runner module i18n sample — key 1,,draft
+vn-runner,sample.tooltip,VN 재생기 툴팁 텍스트 (PM 검수 대기),VN Runner tooltip text (TBD),,draft
+vn-runner,title,VN 재생기 (모듈 표시명),VN Runner (module display name),,draft
+zone-garden,action.close,닫기,Close,,draft
+zone-garden,action.growing,자라는 중...,Growing...,,draft
+zone-garden,action.harvest,수확하기 (🥐 +2 · 🪙 +15),Harvest (🥐 +2 · 🪙 +15),,draft
+zone-garden,action.plant,씨앗 심기,Plant Seed,,draft
+zone-garden,back_to_full_map,← 풀맵,← Full Map,,draft
+zone-garden,name,정원,Garden,,draft
+zone-garden,sample.action,정원 액션 라벨,Garden action label,,draft
+zone-garden,sample.greeting,정원 모듈 i18n 샘플 — 1번째 키,Garden module i18n sample — key 1,,draft
+zone-garden,sample.tooltip,정원 툴팁 텍스트 (PM 검수 대기),Garden tooltip text (TBD),,draft
+zone-garden,subtitle,씨앗을 심고 30초 기다리면 식물이 자라요.,Plant a seed and wait 30s for it to grow.,,draft
+zone-garden,title,🌱 성장의 정원,🌱 Growth Garden,,draft
+zone-memory,back_to_full_map,← 풀맵,← Full Map,,draft
+zone-memory,name,기억의 숲,Memory Forest,,draft
+zone-memory,phase_note,Phase 2 디자이너 발주 후 활성,Activated after Phase 2 designer delivery,,draft
+zone-memory,placeholder,미니게임 준비 중,Mini-game coming soon,,draft
+zone-memory,sample.action,기억의 숲 액션 라벨,Memory Forest action label,,draft
+zone-memory,sample.greeting,기억의 숲 모듈 i18n 샘플 — 1번째 키,Memory Forest module i18n sample — key 1,,draft
+zone-memory,sample.tooltip,기억의 숲 툴팁 텍스트 (PM 검수 대기),Memory Forest tooltip text (TBD),,draft
+zone-memory,title,🌳 기억의 숲,🌳 기억의 숲,,draft
+zone-mine,back_to_full_map,← 풀맵,← Full Map,,draft
+zone-mine,name,도전의 절벽,Mine,,draft
+zone-mine,phase_note,Phase 2 디자이너 발주 후 활성,Activated after Phase 2 designer delivery,,draft
+zone-mine,placeholder,미니게임 준비 중,Mini-game coming soon,,draft
+zone-mine,sample.action,도전의 절벽 액션 라벨,Mine action label,,draft
+zone-mine,sample.greeting,도전의 절벽 모듈 i18n 샘플 — 1번째 키,Mine module i18n sample — key 1,,draft
+zone-mine,sample.tooltip,도전의 절벽 툴팁 텍스트 (PM 검수 대기),Mine tooltip text (TBD),,draft
+zone-mine,title,⛏️ 도전의 절벽,⛏️ 도전의 절벽,,draft
+zone-oasis,back_to_full_map,← 풀맵,← Full Map,,draft
+zone-oasis,name,오아시스,Oasis,,draft
+zone-oasis,phase_note,Phase 2 디자이너 발주 후 활성,Activated after Phase 2 designer delivery,,draft
+zone-oasis,placeholder,미니게임 준비 중,Mini-game coming soon,,draft
+zone-oasis,sample.action,오아시스 액션 라벨,Oasis action label,,draft
+zone-oasis,sample.greeting,오아시스 모듈 i18n 샘플 — 1번째 키,Oasis module i18n sample — key 1,,draft
+zone-oasis,sample.tooltip,오아시스 툴팁 텍스트 (PM 검수 대기),Oasis tooltip text (TBD),,draft
+zone-oasis,title,🏖️ 오아시스,🏖️ 오아시스,,draft

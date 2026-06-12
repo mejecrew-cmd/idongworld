@@ -1,0 +1,14 @@
+# zone-mine/balance.csv — mine 밸런스 (PM 더미)
+# 정책: zone 해금 2단계 — Gate A (빌드·업데이트 phase) + Gate B (모듈 unlock_condition).
+# 사용자 친밀도와는 무관 (친밀도는 일기·도감 해금에만 영향).
+paramId,value,type,description,phase
+zone_unlock_phase,1,number,Gate A: 게임 업데이트 phase (1=Phase 1·2=Phase 1.5·...),Phase 1
+zone_unlock_required_update,update_v0_1,string,Gate A: 해금 트리거 업데이트 ID (시즌·패치·빌드),Phase 1
+zone_unlock_condition,recruited_count_ge:3,string,Gate B: 모듈별 노출 조건 — 본진 3명 이상 영입 후 노출 (always·tutorial_complete·prev_zone_clear:X·recruited_count_ge:N·season:X·update:vX 등),Phase 1
+zone_active,true,boolean,현재 빌드에서 본 zone 노출 가능 여부 (PM 토글),Phase 1
+zone_collect_resources,ore,string,backend collect allowlist — 세미콜론 구분,Phase 1
+zone_clear_ids,mine-dig,string,backend clearId allowlist — 세미콜론 구분,Phase 1
+minigame_play_cooldown_ms,60000,number,미니게임 쿨다운 (1분),Phase 1
+minigame_reward_coins,30,number,1회 보상 코인 (mine 보상 높음),Phase 1
+minigame_reward_primary,3,number,1회 보상 광석 +N,Phase 1
+mine_reward_coins_per_ore_found,10,number,backend clear 보상 공식: oreFound * N coins,Phase 1

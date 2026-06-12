@@ -1,0 +1,19 @@
+{
+  "$schema": "5존 시간대 마스터 — schedule.csv 와 1:1 정합",
+  "version": "1.0.0",
+  "lastUpdated": "2026-05-10",
+  "zones": [
+    { "zoneId": "dawn", "name": "새벽", "emoji": "🌅", "startHour": 5, "endHour": 9, "moodModifier": "sleepy", "bgmCategory": "bgm_dawn", "defaultExpression": "sleepy", "note": "깨어나는 분위기" },
+    { "zoneId": "morning", "name": "아침", "emoji": "☀️", "startHour": 9, "endHour": 13, "moodModifier": "happy", "bgmCategory": "bgm_morning", "defaultExpression": "happy", "note": "활기·활동" },
+    { "zoneId": "afternoon", "name": "오후", "emoji": "🌤️", "startHour": 13, "endHour": 17, "moodModifier": "normal", "bgmCategory": "bgm_afternoon", "defaultExpression": "normal", "note": "일상·작업" },
+    { "zoneId": "evening", "name": "저녁", "emoji": "🌇", "startHour": 17, "endHour": 21, "moodModifier": "worried", "bgmCategory": "bgm_evening", "defaultExpression": "normal", "note": "되새김·정서" },
+    { "zoneId": "night", "name": "밤", "emoji": "🌙", "startHour": 21, "endHour": 5, "moodModifier": "sleepy", "bgmCategory": "bgm_night", "defaultExpression": "sleepy", "note": "차분·정리 (자정 통과)" }
+  ],
+  "diarySlotMapping": {
+    "wake": "dawn",
+    "morning": "morning",
+    "noon": "afternoon",
+    "evening": "evening",
+    "night": "night"
+  }
+}

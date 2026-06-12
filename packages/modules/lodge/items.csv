@@ -1,0 +1,11 @@
+# lodge/items.csv - 숙소 모듈 item/resource catalog
+itemId,name,kind,stackable,maxStack,scope,description,phase
+deck-cargo,갑판 적재물,cargo,true,999,lodge-inventory,배에서 숙소로 옮겨 보관할 수 있는 기존 호환 cargo 후보.,Phase 1.5
+acorn,도토리,resource,true,999,lodge-inventory,배에서 숙소로 옮겨 보관할 수 있는 정원 자원 후보.,Phase 1.5
+flower,꽃,resource,true,999,lodge-inventory,배에서 숙소로 옮겨 보관할 수 있는 정원 희귀 자원 후보.,Phase 1.5
+rest_token,휴식 토큰,resource,true,999,lodge-inventory,배에서 숙소로 옮겨 보관할 수 있는 오아시스 자원 후보.,Phase 1.5
+memory_piece,기억 조각,resource,true,999,lodge-inventory,배에서 숙소로 옮겨 보관할 수 있는 기억 자원 후보.,Phase 1.5
+ore,광석,resource,true,999,lodge-inventory,배에서 숙소로 옮겨 보관할 수 있는 채굴 자원 후보.,Phase 1.5
+shell-fragment,조개 조각,resource,true,999,lodge-inventory,배에서 숙소로 옮겨 보관할 수 있는 도착 섬 자원 후보.,Phase 1.5
+blanket,담요,furniture,false,1,lodge-inventory,숙소 가구/편의 아이템 후보. 배치 효과는 후속 기획에서 확정한다.,Phase 2
+aidong-ribbon,Aidong 리본,aidong-item,false,1,lodge-inventory,Aidong 소지/착용 가능 아이템의 전역 보관소 이동 테스트용 후보.,Phase 2

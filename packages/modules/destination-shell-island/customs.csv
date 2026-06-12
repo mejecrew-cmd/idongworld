@@ -1,0 +1,5 @@
+# destination-shell-island/customs.csv - 항해 도착 섬 전용 자원 반출 규칙
+# 헤더: ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+shell-fragment-to-ship,destination-shell-island,shell-fragment,module,ship,shell-fragment,1,1,,배에 싣기,1,500,조개 조각을 배 전용 인벤토리로 옮긴다
+shell-fragment-to-coins,destination-shell-island,shell-fragment,global,,coins,10,3,,전역 보관소 정산,10,500,조개 조각을 코인으로 정산한다

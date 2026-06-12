@@ -1,0 +1,4 @@
+itemId,label,kind,rarity,visibility,assetId,description
+shell-fragment,조개 조각,resource,common,public,item.shell-fragment,조개빛 섬에서 발견되는 작은 조개 조각
+pearl-dust,진주 가루,material,uncommon,protected,item.pearl-dust,낡은 사당 주변에서 얻을 수 있는 반짝이는 가루
+tidal-charm,조수 부적,quest,rare,protected,item.tidal-charm,조개빛 섬의 첫 미션에 사용되는 부적

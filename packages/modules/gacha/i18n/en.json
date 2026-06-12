@@ -1,0 +1,7 @@
+{
+  "name": "Gacha",
+  "sample.action": "Gacha action label",
+  "sample.greeting": "Gacha module i18n sample — key 1",
+  "sample.tooltip": "Gacha tooltip text (TBD)",
+  "title": "Gacha (module display name)"
+}

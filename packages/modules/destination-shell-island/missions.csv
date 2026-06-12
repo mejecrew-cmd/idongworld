@@ -1,0 +1,2 @@
+missionId,label,requiredHotspotIds,requiredResources,rewardTableId,resultSchemaId,description
+open-old-shrine,낡은 사당 열기,shell-rock,shell-fragment:2,mission.open-old-shrine.reward,mission.open-old-shrine,조개 조각을 사용해 낡은 사당 문을 여는 1차 미션

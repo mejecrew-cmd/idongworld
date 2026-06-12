@@ -1,0 +1,7 @@
+# my-island/balance.csv — 마이섬 광역 밸런스 (PM 더미)
+paramId,value,type,description,phase
+current_build_phase,1,number,현재 게임 빌드 phase (Gate A 평가 기준 — Phase 1·1.5·2·...),Phase 1
+current_update_id,update_v0_1,string,현재 빌드 업데이트 ID (Gate A 평가 기준),Phase 1
+unlocked_phase_max,1,number,해당 사용자에게 노출된 최대 phase (이벤트·BM 결제로 변경 가능),Phase 1
+zone_count_phase_1,4,number,Phase 1 노출 zone 수 (garden·oasis·memory·mine),Phase 1
+zone_count_target,15,number,최종 목표 zone 수 (마이섬 풀맵 15구역),Phase 2

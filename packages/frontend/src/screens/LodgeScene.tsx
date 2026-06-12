@@ -1,0 +1,734 @@
+/**
+ * packages/frontend/src/screens/LodgeScene.tsx
+ * ------------------------------------------------------------
+ * 역할: 내 섬 숙소 화면을 렌더링하고, 숙소 방 꾸미기와 Aidong 관리 메뉴를 연결한다.
+ *
+ * 숙소의 방 꾸미기는 lodge module backend가 권위 상태를 가진다.
+ * 이 화면은 /api/modules/lodge/config에서 가구 catalog를 읽고,
+ * 가구 구매와 방별 배치/해제는 lodge 전용 API로 처리한다.
+ *
+ * 방 꾸미기는 빈 방과 Aidong의 방 모두에서 가능하다.
+ * 다만 항해 중이거나 항구 지원 배치 중인 Aidong은 방 자체를 꾸밀 수는 있지만,
+ * 밥주기, 케어, 옷입히기 같은 Aidong 상태 변경 액션은 막는다.
+ */
+import { useEffect, useMemo, useState } from 'react'
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
+  Stack,
+  Tab,
+  Tabs,
+  Typography,
+} from '@mui/material'
+import { useNavigate } from 'react-router-dom'
+import type { AidongCharacterId } from '@/stores/userStore'
+import { AidongSprite, OUTFIT_OPTIONS } from '@/components/AidongSprite'
+import { CareModal } from '@/components/CareModal'
+import { CustomsTransferDialog } from '@/components/CustomsTransferDialog'
+import { ScreenHeader } from '@/components/ScreenHeader'
+import { INITIAL_NEEDS, calcMoodScore, moodFromScore, moodToExpression } from '@/data/needs'
+import { getCurrentZone } from '@/data/schedZone'
+import { api, type DecorItemConfig } from '@/lib/api'
+import { applyActionApiResponse, applyModuleActionState } from '@/lib/actionApiSync'
+import { accountStoreFacade, hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
+
+const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
+const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
+
+const EMPTY_ROOMS = [
+  { roomId: 'empty-room-1', label: '빈 방 1' },
+  { roomId: 'empty-room-2', label: '빈 방 2' },
+]
+
+const FALLBACK_FURNITURE: DecorItemConfig[] = [
+  { itemId: 'bed', label: '침대', cost: 0, defaultOwned: 1 },
+  { itemId: 'desk', label: '책상', cost: 0, defaultOwned: 1 },
+  { itemId: 'plant', label: '화분', cost: 30, defaultOwned: 0 },
+  { itemId: 'rug', label: '카펫', cost: 50, defaultOwned: 0 },
+]
+
+const FURNITURE_MARKS: Record<string, string> = {
+  bed: '침',
+  desk: '책',
+  plant: '화',
+  rug: '깔',
+}
+
+const FOODS = [
+  { id: 'rice', mark: '밥', label: '밥', cost: 15 },
+  { id: 'bread', mark: '빵', label: '빵', cost: 10 },
+  { id: 'fruit', mark: '과', label: '과일', cost: 8 },
+  { id: 'cake', mark: '케', label: '케이크', cost: 25 },
+]
+
+const AIDONG_ITEMS = [
+  { id: 'aidong-ribbon', mark: '리', label: 'Aidong 리본' },
+]
+
+const RESOURCE_LABELS: Record<string, string> = {
+  acorn: '도토리',
+  flower: '꽃',
+  ore: '광석',
+  sailcloth: '돛천',
+  'deck-cargo': '갑판 화물',
+  rest_token: '휴식권',
+  memory_piece: '기억 조각',
+  'shell-fragment': '조개 조각',
+  'aidong-ribbon': '아이동 리본',
+}
+
+type LodgeRoomState = { furniture: string[] }
+type RoomOption = {
+  roomId: string
+  label: string
+  characterId?: AidongCharacterId
+  empty?: boolean
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+}
+
+function getAssignedAidongs(value: unknown): string[] {
+  return Object.values(asRecord(value)).filter((characterId): characterId is string => (
+    typeof characterId === 'string' && characterId.length > 0
+  ))
+}
+
+function toNumberRecord(value: unknown): Record<string, number> {
+  const result: Record<string, number> = {}
+  for (const [key, raw] of Object.entries(asRecord(value))) {
+    const amount = Number(raw)
+    if (Number.isFinite(amount) && amount > 0) result[key] = amount
+  }
+  return result
+}
+
+function toRoomFurnitureRecord(value: unknown): Record<string, LodgeRoomState> {
+  const result: Record<string, LodgeRoomState> = {}
+  for (const [roomId, rawRoom] of Object.entries(asRecord(value))) {
+    const room = asRecord(rawRoom)
+    result[roomId] = {
+      furniture: Array.isArray(room.furniture)
+        ? room.furniture.filter((itemId): itemId is string => typeof itemId === 'string')
+        : [],
+    }
+  }
+  return result
+}
+
+function countPlacedFurniture(
+  rooms: Record<string, LodgeRoomState>,
+  itemId: string,
+  exceptRoomId?: string,
+): number {
+  return Object.entries(rooms).reduce((total, [roomId, room]) => (
+    roomId === exceptRoomId ? total : total + room.furniture.filter((entry) => entry === itemId).length
+  ), 0)
+}
+
+function getFurnitureLabel(furnitureItems: DecorItemConfig[], itemId: string): string {
+  return furnitureItems.find((item) => item.itemId === itemId)?.label ?? itemId
+}
+
+function resourceLabel(resource: string): string {
+  return RESOURCE_LABELS[resource] ?? resource
+}
+
+function renderInventoryList(items: Record<string, number>) {
+  const entries = Object.entries(items).filter(([, amount]) => amount > 0)
+  if (!entries.length) {
+    return <Typography variant="body2" sx={{ color: 'text.secondary' }}>비어 있음</Typography>
+  }
+  return (
+    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+      {entries.map(([itemId, amount]) => (
+        <Chip key={itemId} label={`${resourceLabel(itemId)} ${amount}`} />
+      ))}
+    </Stack>
+  )
+}
+
+export const LodgeScene = () => {
+  const navigate = useNavigate()
+  const uid = accountStoreFacade.useFirebaseUid()
+  const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
+  const hostName = accountStoreFacade.useHostName()
+  const needs = myAidongStoreFacade.useNeeds()
+  const coins = hostStoreFacade.useCoins()
+  const inventory = hostStoreFacade.useInventory()
+  const equippedOutfit = myAidongStoreFacade.useEquippedOutfit()
+  const equippedItems = myAidongStoreFacade.useEquippedItems()
+  const [tab, setTab] = useState<'rooms' | 'outfit' | 'food'>('rooms')
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('')
+  const [careTarget, setCareTarget] = useState<AidongCharacterId | null>(null)
+  const [sailingAidongs, setSailingAidongs] = useState<Set<string>>(new Set())
+  const [harborAidongs, setHarborAidongs] = useState<Set<string>>(new Set())
+  const [hasActiveVoyage, setHasActiveVoyage] = useState(false)
+  const [furnitureItems, setFurnitureItems] = useState<DecorItemConfig[]>(FALLBACK_FURNITURE)
+  const [lodgeInventory, setLodgeInventory] = useState<Record<string, number>>({})
+  const [lodgeFurniture, setLodgeFurniture] = useState<Record<string, number>>({})
+  const [lodgeRooms, setLodgeRooms] = useState<Record<string, LodgeRoomState>>({})
+  const [lodgeDecorLoading, setLodgeDecorLoading] = useState(false)
+  const [lodgeStateLoading, setLodgeStateLoading] = useState(false)
+  const [inventoryOpen, setInventoryOpen] = useState(false)
+  const [lodgeCustomsOpen, setLodgeCustomsOpen] = useState(false)
+
+  const curZone = getCurrentZone()
+  const unavailableAidongs = useMemo(
+    () => new Set([...sailingAidongs, ...harborAidongs]),
+    [harborAidongs, sailingAidongs],
+  )
+
+  const roomOptions = useMemo<RoomOption[]>(() => [
+    ...recruitedAidongs.map((characterId) => ({
+      roomId: characterId,
+      label: `${characterId}의 방`,
+      characterId,
+    })),
+    ...EMPTY_ROOMS.map((room) => ({ ...room, empty: true })),
+  ], [recruitedAidongs])
+
+  const selectedRoom = roomOptions.find((room) => room.roomId === selectedRoomId) ?? roomOptions[0] ?? null
+  const selectedChar = selectedRoom?.characterId ?? null
+  const selectedRoomFurniture = selectedRoom ? lodgeRooms[selectedRoom.roomId]?.furniture ?? [] : []
+  const selectedUnavailable = selectedChar ? unavailableAidongs.has(selectedChar) : false
+  const hasLodgeInventory = Object.values(lodgeInventory).some((amount) => amount > 0)
+
+  useEffect(() => {
+    if (!selectedRoomId && roomOptions.length > 0) {
+      setSelectedRoomId(roomOptions[0].roomId)
+      return
+    }
+    if (selectedRoomId && roomOptions.length > 0 && !roomOptions.some((room) => room.roomId === selectedRoomId)) {
+      setSelectedRoomId(roomOptions[0].roomId)
+    }
+  }, [roomOptions, selectedRoomId])
+
+  useEffect(() => {
+    if (!uid) return
+    let cancelled = false
+
+    const loadVoyageCrew = async () => {
+      try {
+        const [routeResponse, shipResponse] = await Promise.all([
+          api.getModuleState(uid, 'route-neighbor'),
+          api.getModuleState(uid, 'ship'),
+        ])
+        if (cancelled) return
+
+        const routeState = asRecord(routeResponse.state)
+        const active = typeof routeState.currentRoute === 'string' && routeState.currentRoute.length > 0
+        const shipState = asRecord(shipResponse.state)
+        const harborAssignedChars = Array.isArray(shipState.harborAssignedChars)
+          ? shipState.harborAssignedChars.filter((id): id is string => typeof id === 'string' && id.length > 0)
+          : []
+
+        setHasActiveVoyage(active)
+        setHarborAidongs(new Set(harborAssignedChars))
+        setSailingAidongs(active
+          ? new Set([
+            ...getAssignedAidongs(shipState.cabinAssignments),
+            ...getAssignedAidongs(shipState.deckAssignments),
+          ])
+          : new Set())
+      } catch (error) {
+        console.warn('[lodge] failed to load voyage crew state', error)
+      }
+    }
+
+    void loadVoyageCrew()
+
+    return () => {
+      cancelled = true
+    }
+  }, [uid])
+
+  const loadLodgeState = async () => {
+    if (!uid) return
+    setLodgeStateLoading(true)
+    try {
+      const [configResponse, stateResponse] = await Promise.all([
+        api.getLodgeConfig(),
+        api.getModuleState(uid, 'lodge'),
+      ])
+
+      if (Array.isArray(configResponse.furnitureItems) && configResponse.furnitureItems.length > 0) {
+        setFurnitureItems(configResponse.furnitureItems)
+      }
+
+      const state = asRecord(stateResponse.state)
+      setLodgeInventory(toNumberRecord(state.lodgeInventory))
+      setLodgeFurniture(toNumberRecord(state.furniture))
+      setLodgeRooms(toRoomFurnitureRecord(state.rooms))
+    } catch (error) {
+      console.warn('[lodge] failed to load lodge state', error)
+    } finally {
+      setLodgeStateLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadLodgeState()
+  }, [uid])
+
+  useEffect(() => {
+    if ((!selectedChar || selectedUnavailable) && tab !== 'rooms') {
+      setTab('rooms')
+    }
+  }, [selectedChar, selectedUnavailable, tab])
+
+  const purchaseFurniture = async (itemId: string) => {
+    const currentUid = accountStoreFacade.getFirebaseUid()
+    if (!currentUid || lodgeDecorLoading) return
+    setLodgeDecorLoading(true)
+    try {
+      const response = await api.purchaseLodgeFurniture(currentUid, itemId)
+      const state = asRecord(response.state)
+      setLodgeFurniture(toNumberRecord(state.furniture))
+      setLodgeRooms(toRoomFurnitureRecord(state.rooms))
+      applyActionApiResponse(response)
+    } catch (error) {
+      console.warn('[lodge] furniture purchase failed', error)
+      alert('가구를 구매하지 못했어요.')
+    } finally {
+      setLodgeDecorLoading(false)
+    }
+  }
+
+  const toggleRoomFurniture = async (roomId: string, itemId: string) => {
+    const currentUid = accountStoreFacade.getFirebaseUid()
+    if (!currentUid || lodgeDecorLoading) return
+    setLodgeDecorLoading(true)
+    try {
+      const response = await api.toggleLodgeRoomFurniture(currentUid, roomId, itemId)
+      const state = asRecord(response.state)
+      setLodgeFurniture(toNumberRecord(state.furniture))
+      setLodgeRooms(toRoomFurnitureRecord(state.rooms))
+      applyActionApiResponse(response)
+    } catch (error) {
+      console.warn('[lodge] room furniture toggle failed', error)
+      alert('가구를 배치하지 못했어요.')
+    } finally {
+      setLodgeDecorLoading(false)
+    }
+  }
+
+  const onFeed = (charId: AidongCharacterId, food: typeof FOODS[number]) => {
+    if (unavailableAidongs.has(charId)) {
+      alert('숙소에 없는 Aidong에게는 밥을 줄 수 없어요.')
+      return
+    }
+    if (coins < food.cost) {
+      alert('코인이 부족해요.')
+      return
+    }
+
+    hostStoreFacade.rewardCoins(-food.cost)
+    const actionId = curZone === 1 ? 'breakfast' : curZone === 2 ? 'lunch' : curZone === 3 ? 'dinner' : 'snack'
+    myAidongStoreFacade.applyCareAction(charId, actionId)
+  }
+
+  const onToggleAidongItem = (charId: AidongCharacterId, itemId: string) => {
+    if (unavailableAidongs.has(charId)) {
+      alert('숙소에 없는 Aidong은 착용 아이템을 바꿀 수 없어요.')
+      return
+    }
+    if (!MODULE_ACTION_API_SYNC) {
+      if ((inventory[itemId] ?? 0) <= 0) {
+        alert('전역 보관소에 아이템이 없어요.')
+        return
+      }
+      myAidongStoreFacade.toggleEquippedItemLocal(charId, itemId)
+      return
+    }
+
+    const currentUid = accountStoreFacade.getFirebaseUid()
+    if (!currentUid) return
+    void api.toggleAidongEquippedItem(currentUid, charId, itemId)
+      .then((response) => applyModuleActionState(response.state))
+      .catch((error) => {
+        console.warn('[my-aidong] equipped item action api failed', error)
+        alert('아이템을 착용하지 못했어요.')
+      })
+  }
+
+  const onSetOutfit = (charId: AidongCharacterId, outfitId: string) => {
+    if (unavailableAidongs.has(charId)) {
+      alert('숙소에 없는 Aidong은 옷을 갈아입힐 수 없어요.')
+      return
+    }
+
+    myAidongStoreFacade.setOutfit(charId, outfitId)
+    if (!MODULE_ACTION_API_SYNC) return
+
+    const currentUid = accountStoreFacade.getFirebaseUid()
+    if (!currentUid) return
+    void api.setAidongOutfit(currentUid, charId, outfitId)
+      .then((response) => applyModuleActionState(response.state))
+      .catch((error) => console.warn('[my-aidong] outfit action api failed', error))
+  }
+
+  return (
+    <Box sx={{ p: 0 }}>
+      <ScreenHeader category="마이섬" title="숙소" subtitle="방을 꾸미고 쉬는 Aidong을 돌봐요." />
+
+      <Box
+        sx={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: '16/6',
+          backgroundImage: 'url(/assets/배경/myisland_harbor_warm.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 16,
+            left: 16,
+            bgcolor: 'rgba(255,255,255,0.92)',
+            px: 1.5,
+            py: 0.75,
+            borderRadius: 2,
+            boxShadow: '0 10px 24px rgba(80, 57, 30, 0.16)',
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+            {hostName ? `${hostName}의 숙소` : 'Aidong 숙소'}
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            보유 코인 {coins}
+          </Typography>
+          <Button size="small" variant="outlined" sx={{ mt: 0.75 }} onClick={() => setInventoryOpen(true)}>
+            숙소 인벤토리
+          </Button>
+        </Box>
+      </Box>
+
+      <Box sx={{ p: 2 }}>
+        {lodgeStateLoading && <LinearProgress sx={{ mb: 2 }} />}
+
+        {(hasActiveVoyage && sailingAidongs.size > 0) || harborAidongs.size > 0 ? (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            항해 중이거나 항구 지원 배치 중인 Aidong의 방은 꾸밀 수 있지만,
+            밥주기, 케어, 옷입히기는 숙소에 있을 때만 가능해요.
+          </Alert>
+        ) : null}
+
+        <Stack direction="row" spacing={1.5} sx={{ overflowX: 'auto', pb: 2, mb: 2 }}>
+          {roomOptions.map((room) => {
+            const isSelected = selectedRoom?.roomId === room.roomId
+            const roomUnavailable = room.characterId ? unavailableAidongs.has(room.characterId) : false
+            const charNeeds = room.characterId ? needs[room.characterId] ?? INITIAL_NEEDS : null
+            const score = charNeeds ? calcMoodScore(charNeeds) : 0
+            const mood = charNeeds ? moodFromScore(score, curZone === 4) : null
+            const exp = mood ? moodToExpression(mood) : undefined
+
+            return (
+              <Box
+                key={room.roomId}
+                onClick={() => setSelectedRoomId(room.roomId)}
+                sx={{
+                  minWidth: 156,
+                  bgcolor: isSelected ? 'action.selected' : 'background.paper',
+                  border: '1px solid',
+                  borderColor: isSelected ? 'primary.main' : 'divider',
+                  borderRadius: 2,
+                  p: 1,
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  flex: '0 0 auto',
+                }}
+              >
+                <Typography variant="caption" sx={{ display: 'block', mb: 0.5, fontWeight: 700 }}>
+                  {room.label}
+                </Typography>
+                {room.characterId ? (
+                  <>
+                    <AidongSprite
+                      character={room.characterId}
+                      expression={exp}
+                      outfit={equippedOutfit[room.characterId]}
+                      size={112}
+                    />
+                    {mood && <Chip label={mood} size="small" sx={{ mt: 0.5, fontSize: 10 }} />}
+                    {roomUnavailable && (
+                      <Chip
+                        label={sailingAidongs.has(room.characterId) ? '항해 중' : '항구 지원'}
+                        size="small"
+                        color="warning"
+                        sx={{ mt: 0.5, ml: 0.5, fontSize: 10 }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <Box
+                    sx={{
+                      height: 124,
+                      display: 'grid',
+                      placeItems: 'center',
+                      borderRadius: 2,
+                      bgcolor: 'rgba(255, 247, 232, 0.85)',
+                      color: 'text.secondary',
+                    }}
+                  >
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                      비어 있음
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            )
+          })}
+        </Stack>
+
+        {!selectedRoom ? (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography sx={{ mb: 2 }}>아직 열 수 있는 방이 없어요.</Typography>
+            <Button onClick={() => navigate('/island/harbor')} variant="contained">
+              항구로 가기
+            </Button>
+          </Box>
+        ) : (
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, p: 2, mb: 2 }}>
+            {selectedUnavailable && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                {selectedChar}은 지금 {selectedChar && sailingAidongs.has(selectedChar) ? '항해 중' : '항구 지원 배치 중'}이라
+                이 방은 꾸밀 수 있지만 Aidong 관리 액션은 사용할 수 없어요.
+              </Alert>
+            )}
+
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+              <Box>
+                <Typography variant="h2" sx={{ fontSize: 17 }}>
+                  {selectedRoom.label}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  배치된 가구 {selectedRoomFurniture.length}개
+                </Typography>
+              </Box>
+              <Button
+                size="small"
+                variant="contained"
+                disabled={!selectedChar || selectedUnavailable}
+                onClick={() => selectedChar && setCareTarget(selectedChar)}
+              >
+                케어 메뉴
+              </Button>
+            </Stack>
+
+            <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mb: 1 }}>
+              <Tab value="rooms" label="방 꾸미기" />
+              <Tab value="outfit" label="옷" disabled={!selectedChar || selectedUnavailable} />
+              <Tab value="food" label="밥" disabled={!selectedChar || selectedUnavailable} />
+            </Tabs>
+
+            {tab === 'rooms' && (
+              <Box>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                  {selectedRoomFurniture.length > 0 ? selectedRoomFurniture.map((itemId) => (
+                    <Chip key={itemId} label={getFurnitureLabel(furnitureItems, itemId)} size="small" />
+                  )) : (
+                    <Chip label="아직 배치된 가구가 없어요" size="small" variant="outlined" />
+                  )}
+                </Stack>
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 1 }}>
+                  {furnitureItems.map((item) => {
+                    const placed = selectedRoomFurniture.includes(item.itemId)
+                    const owned = (lodgeFurniture[item.itemId] ?? 0) + item.defaultOwned
+                    const available = owned - countPlacedFurniture(lodgeRooms, item.itemId, selectedRoom.roomId)
+                    const canBuy = item.cost > 0 && coins >= item.cost
+
+                    return (
+                      <Box
+                        key={item.itemId}
+                        sx={{
+                          textAlign: 'center',
+                          p: 1,
+                          border: '1px solid',
+                          borderColor: placed ? 'primary.main' : 'divider',
+                          borderRadius: 1.5,
+                          bgcolor: placed ? 'rgba(255, 247, 232, 0.8)' : 'background.default',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            mx: 'auto',
+                            mb: 0.75,
+                            width: 42,
+                            height: 42,
+                            borderRadius: 2,
+                            display: 'grid',
+                            placeItems: 'center',
+                            bgcolor: 'rgba(255, 230, 190, 0.85)',
+                            fontWeight: 800,
+                          }}
+                        >
+                          {FURNITURE_MARKS[item.itemId] ?? item.label.slice(0, 1)}
+                        </Box>
+                        <Typography variant="caption" sx={{ display: 'block', fontWeight: 700 }}>
+                          {item.label}
+                        </Typography>
+                        <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 0.75 }}>
+                          보유 {owned} / 여유 {Math.max(available, 0)}
+                        </Typography>
+                        {placed ? (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            disabled={lodgeDecorLoading}
+                            onClick={() => toggleRoomFurniture(selectedRoom.roomId, item.itemId)}
+                          >
+                            해제
+                          </Button>
+                        ) : owned <= 0 ? (
+                          <Button
+                            size="small"
+                            disabled={lodgeDecorLoading || !canBuy}
+                            onClick={() => purchaseFurniture(item.itemId)}
+                          >
+                            {item.cost}코인 구매
+                          </Button>
+                        ) : (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            disabled={lodgeDecorLoading || available <= 0}
+                            onClick={() => toggleRoomFurniture(selectedRoom.roomId, item.itemId)}
+                          >
+                            배치
+                          </Button>
+                        )}
+                      </Box>
+                    )
+                  })}
+                </Box>
+              </Box>
+            )}
+
+            {tab === 'outfit' && selectedChar && (
+              <Box>
+                <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1 }}>
+                  착용 아이템은 전역 보관소에서 사용해요.
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 1 }}>
+                  {OUTFIT_OPTIONS.map((option) => {
+                    const isOn = (equippedOutfit[selectedChar] ?? 'none') === option.id
+                    return (
+                      <Button
+                        key={option.id}
+                        variant={isOn ? 'contained' : 'outlined'}
+                        onClick={() => onSetOutfit(selectedChar, option.id)}
+                        sx={{ flexDirection: 'column', py: 1 }}
+                      >
+                        <Box sx={{ fontSize: 24 }}>{option.emoji}</Box>
+                        <Typography variant="caption" sx={{ fontSize: 11 }}>{option.label}</Typography>
+                      </Button>
+                    )
+                  })}
+                </Box>
+
+                <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 2, mb: 1 }}>
+                  전역 보관소 아이템
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 1 }}>
+                  {AIDONG_ITEMS.map((item) => {
+                    const owned = inventory[item.id] ?? 0
+                    const isEquipped = (equippedItems[selectedChar] ?? []).includes(item.id)
+                    return (
+                      <Button
+                        key={item.id}
+                        variant={isEquipped ? 'contained' : 'outlined'}
+                        onClick={() => onToggleAidongItem(selectedChar, item.id)}
+                        disabled={!isEquipped && owned <= 0}
+                        sx={{ flexDirection: 'column', py: 1 }}
+                      >
+                        <Box sx={{ fontSize: 24 }}>{item.mark}</Box>
+                        <Typography variant="caption" sx={{ fontSize: 11 }}>{item.label}</Typography>
+                        <Typography variant="caption" sx={{ fontSize: 10 }}>보유 {owned}</Typography>
+                      </Button>
+                    )
+                  })}
+                </Box>
+              </Box>
+            )}
+
+            {tab === 'food' && selectedChar && (
+              <Box>
+                <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1 }}>
+                  보유 코인 {coins} / 현재 시간대 {['휴식', '아침', '점심', '저녁', '밤'][curZone]}
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 1 }}>
+                  {FOODS.map((food) => (
+                    <Button
+                      key={food.id}
+                      variant="outlined"
+                      onClick={() => onFeed(selectedChar, food)}
+                      disabled={coins < food.cost}
+                      sx={{ flexDirection: 'column', py: 1 }}
+                    >
+                      <Box sx={{ fontSize: 24 }}>{food.mark}</Box>
+                      <Typography variant="caption">{food.label}</Typography>
+                      <Typography variant="caption" sx={{ fontSize: 10 }}>{food.cost}코인</Typography>
+                    </Button>
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </Box>
+        )}
+      </Box>
+
+      <Dialog open={inventoryOpen} onClose={() => setInventoryOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>숙소 인벤토리</DialogTitle>
+        <DialogContent>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>보관 중인 자원</Typography>
+          <Box sx={{ mb: 2 }}>{renderInventoryList(lodgeInventory)}</Box>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            배에서 내린 자원과 숙소 보관 대상 아이템이 여기에 모입니다.
+            Phase 1에서는 세관 없이 통 인벤토리와 전용 action API 중심으로 정리할 예정입니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          {CUSTOMS_UI_ENABLED && hasLodgeInventory && (
+            <Button
+              variant="contained"
+              onClick={() => {
+                setInventoryOpen(false)
+                setLodgeCustomsOpen(true)
+              }}
+            >
+              세관
+            </Button>
+          )}
+          <Button onClick={() => setInventoryOpen(false)}>닫기</Button>
+        </DialogActions>
+      </Dialog>
+
+      {CUSTOMS_UI_ENABLED && (
+        <CustomsTransferDialog
+          open={lodgeCustomsOpen}
+          sourceModule="lodge"
+          onClose={() => {
+            setLodgeCustomsOpen(false)
+            void loadLodgeState()
+          }}
+        />
+      )}
+
+      <CareModal character={careTarget} onClose={() => setCareTarget(null)} />
+    </Box>
+  )
+}

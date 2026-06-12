@@ -1,0 +1,13 @@
+{
+  "action.close": "Close",
+  "action.growing": "Growing...",
+  "action.harvest": "Harvest (🥐 +2 · 🪙 +15)",
+  "action.plant": "Plant Seed",
+  "back_to_full_map": "← Full Map",
+  "name": "Garden",
+  "sample.action": "Garden action label",
+  "sample.greeting": "Garden module i18n sample — key 1",
+  "sample.tooltip": "Garden tooltip text (TBD)",
+  "subtitle": "Plant a seed and wait 30s for it to grow.",
+  "title": "🌱 Growth Garden"
+}

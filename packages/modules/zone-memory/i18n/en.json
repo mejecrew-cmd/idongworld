@@ -1,0 +1,10 @@
+{
+  "back_to_full_map": "← Full Map",
+  "name": "Memory Forest",
+  "phase_note": "Activated after Phase 2 designer delivery",
+  "placeholder": "Mini-game coming soon",
+  "sample.action": "Memory Forest action label",
+  "sample.greeting": "Memory Forest module i18n sample — key 1",
+  "sample.tooltip": "Memory Forest tooltip text (TBD)",
+  "title": "🌳 기억의 숲"
+}

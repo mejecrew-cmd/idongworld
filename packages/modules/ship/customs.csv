@@ -1,0 +1,11 @@
+# ship/customs.csv - 배 인벤토리 반출입 규칙
+# 헤더: ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+ruleId,fromModule,fromResource,toScope,toModule,toResource,debitAmount,creditAmount,ratio,label,minAmount,maxAmount,description
+ship-deck-cargo-to-lodge,ship,deck-cargo,module,lodge,deck-cargo,1,1,,갑판 화물 -> 숙소,1,999,배 적재물을 숙소 보관소로 내린다
+ship-acorn-to-lodge,ship,acorn,module,lodge,acorn,1,1,,도토리 -> 숙소,1,999,배에 실은 도토리를 숙소 보관소로 내린다
+ship-flower-to-lodge,ship,flower,module,lodge,flower,1,1,,꽃 -> 숙소,1,999,배에 실은 꽃을 숙소 보관소로 내린다
+ship-rest-token-to-lodge,ship,rest_token,module,lodge,rest_token,1,1,,휴식 토큰 -> 숙소,1,999,배에 실은 휴식 토큰을 숙소 보관소로 내린다
+ship-memory-piece-to-lodge,ship,memory_piece,module,lodge,memory_piece,1,1,,기억 조각 -> 숙소,1,999,배에 실은 기억 조각을 숙소 보관소로 내린다
+ship-ore-to-lodge,ship,ore,module,lodge,ore,1,1,,광석 -> 숙소,1,999,배에 실은 광석을 숙소 보관소로 내린다
+ship-sailcloth-to-host,ship,sailcloth,global,,sailcloth,1,1,,돛천 -> 전역 보관소,1,999,배 강화 후보 재료를 전역 보관소로 보낸다
+ship-shell-fragment-to-lodge,ship,shell-fragment,module,lodge,shell-fragment,1,1,,조개 조각 -> 숙소,1,999,배에 실은 조개 조각을 숙소 보관소로 내린다
