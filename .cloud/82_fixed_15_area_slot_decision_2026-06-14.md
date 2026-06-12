@@ -191,6 +191,24 @@ AREA-02 항구와 AREA-13 숙소는 anchor로 잠근다.
 - [x] `IslandFullMapScreen`의 dynamic zone section을 13 slot UI로 흡수한다.
 - [x] `/island/area/02`, `/island/area/13` alias 또는 redirect 방침을 route 구현에 반영한다.
 
+## M1 구현 현황
+
+M1에서 완료한 범위:
+
+- frontend `zones.ts`를 AREA-01~15 static SoT로 전환했다.
+- backend `myIslandStates.zoneSlots` schema/default/spec/repository 보강을 추가했다.
+- `my-island` slot 조회, 편입, 해제, 이동 service와 API route를 추가했다.
+- frontend API, Zustand store, facade, sync key에 `zoneSlots`를 연결했다.
+- `IslandFullMapScreen`을 15구역 카드와 13개 fillable slot 표시 구조로 전환했다.
+- `/island/area/02`, `/island/area/13`은 항구/숙소로 redirect하고, 구현된 AREA는 compat route로 연결했다.
+- 미구현 AREA는 `IslandAreaPlaceholderScene`으로 받는다.
+- backend persistence test에 `zoneSlots` 기본값, anchor 잠금, 중복 편입, move/release 검증을 추가했다.
+
+M1 이후로 넘긴 범위:
+
+- 실제 편입 선택 UI는 아직 disabled 상태이며 M2 항해/영입/편입 루프에서 연결한다.
+- `route-neighbor/encounter/accept`에서 자동 편입을 분리하는 작업은 M2에서 처리한다.
+- `dynamicAidongZones` 데이터 migration/삭제는 최소 1개 마일스톤 동안 compat 상태로 유지한다.
 ## 변경 기록
 
 - **2026-06-12**: 15구역 전환 방침을 확정했다. `zones.ts`는 최신 AREA-01~15로 교체하고, backend 신규 저장 필드는 `zoneSlots`로 결정했다. `dynamicAidongZones`는 삭제하지 않고 migration/compat 입력으로 낮추며, AREA-02 항구와 AREA-13 숙소는 anchor 잠금으로 정리했다.
@@ -201,3 +219,4 @@ AREA-02 항구와 AREA-13 숙소는 anchor로 잠근다.
 - **2026-06-12**: M1 5번 작업으로 frontend API client, userStore `zoneSlots`, store facade, sync key를 연결했다.
 - **2026-06-12**: M1 6번 작업으로 `IslandFullMapScreen`의 dynamic zone section을 13개 fillable slot 관리 UI로 흡수했다.
 - **2026-06-12**: M1 7번 작업으로 `/island/area/02`와 `/island/area/13`을 각각 항구와 숙소로 redirect하고, 구현된 AREA compat route와 미구현 AREA placeholder를 추가했다.
+- **2026-06-12**: M1 8~9번 작업으로 `zoneSlots` 자동 검증과 문서 정합성 정리를 반영했다. `route-neighbor/encounter/accept` 분리는 M2 항해/영입/편입 루프의 남은 작업으로 유지한다.

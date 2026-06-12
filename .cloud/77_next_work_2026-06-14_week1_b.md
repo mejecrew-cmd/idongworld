@@ -205,3 +205,4 @@
 - **2026-06-12**: 5번 backend module 충돌 지도 작성을 완료했다. `.cloud/81_backend_module_conflict_map_2026-06-14.md`에 M03~M09, M21, M22와 현재 backend module의 충돌, 결정 방향, M1 이후 구현 우선순위를 정리하고 79번 충돌 지도에 연결했다.
 - **2026-06-12**: 6번 고정 15구역 슬롯 전환 결정을 완료했다. `.cloud/82_fixed_15_area_slot_decision_2026-06-14.md`에 `zones.ts` 직접 교체, `zoneSlots` 저장 필드, AREA-02/13 anchor 잠금, `dynamicAidongZones` compat 유지, `IslandFullMapScreen` 13 slot UI 흡수 방침을 정리했다.
 - **2026-06-12**: 8번 M1 시작 보드 작성을 완료했다. `.cloud/83_next_work_2026-06-15_m1.md`에 6/15~6/18 마이섬 15구역 슬롯 전환 구현 순서를 만들고, 7번 규칙 문서 갱신 미완료를 M0 잔여 위험으로 남겼다.
+- **2026-06-12**: M1 구현 보드 83번의 9번 문서 정리에서 확인했다. 7번 규칙 문서 갱신은 아직 완료하지 않고, M1 구현 결과를 바탕으로 M2/M5 전 별도 문서 debt로 유지한다.
