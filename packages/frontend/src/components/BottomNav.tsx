@@ -1,8 +1,6 @@
 import { Box, Typography } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { api } from '@/lib/api'
-import { applyActionApiResponse } from '@/lib/actionApiSync'
-import { accountStoreFacade, routeNeighborStoreFacade } from '@/lib/storeFacades'
+import { voyageSessionFacade } from '@/lib/storeFacades'
 
 const TABS = [
   { id: 'island', label: '마이섬', path: '/island', mark: '섬' },
@@ -16,10 +14,6 @@ const ROUTE_ALIASES: Record<string, 'neighbor'> = {
   'route-neighbor': 'neighbor',
 }
 
-function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' ? value as Record<string, unknown> : {}
-}
-
 function normalizeRouteId(routeId: string | undefined): 'neighbor' | undefined {
   return routeId ? ROUTE_ALIASES[routeId] : undefined
 }
@@ -28,34 +22,13 @@ export const BottomNav = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const navigateToVoyage = async () => {
-    const uid = accountStoreFacade.getFirebaseUid()
-    if (!uid) {
-      routeNeighborStoreFacade.endVoyage()
+  const navigateToVoyage = () => {
+    const activeRoute = normalizeRouteId(voyageSessionFacade.getCurrentRoute())
+    if (!activeRoute) {
       navigate('/island/harbor')
       return
     }
-
-    try {
-      const routeStateResponse = await api.getModuleState(uid, 'route-neighbor')
-      const routeState = asRecord(routeStateResponse.state)
-      const activeRoute = normalizeRouteId(typeof routeState.currentRoute === 'string'
-        ? routeState.currentRoute
-        : undefined)
-
-      if (!activeRoute) {
-        routeNeighborStoreFacade.endVoyage()
-        navigate('/island/harbor')
-        return
-      }
-
-      applyActionApiResponse({ state: routeState })
-      navigate(`/voyage/board?route=${encodeURIComponent(activeRoute)}`)
-    } catch (error) {
-      console.warn('[voyage] failed to validate active route before navigation', error)
-      routeNeighborStoreFacade.endVoyage()
-      navigate('/island/harbor')
-    }
+    navigate(`/voyage/board?route=${encodeURIComponent(activeRoute)}`)
   }
 
   return (
@@ -88,7 +61,7 @@ export const BottomNav = () => {
             data-testid={`bottom-nav-${tab.id}`}
             onClick={() => {
               if (tab.id === 'voyage') {
-                void navigateToVoyage()
+                navigateToVoyage()
                 return
               }
               navigate(tab.path)

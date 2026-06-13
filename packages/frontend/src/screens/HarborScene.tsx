@@ -2,9 +2,10 @@
  * packages/frontend/src/screens/HarborScene.tsx
  * ------------------------------------------------------------
  * 역할: 항구에서 현재 배 상태, 선실/갑판 아이동 배치, 배 인벤토리, 배 종류 변경, 출항 메뉴를 보여준다.
- * 연결: ship module action API와 route-neighbor 출항 API를 호출하고, 기존 Zustand facade에는 화면에 필요한 최소 상태만 반영한다.
+ * 연결: ship module action API와 탭/창별 voyage session store를 사용한다.
  * 주의: 2026-06-08 기획 변경 이후 세관 UI는 기본 core UX에서 노출하지 않는다.
  *       배 인벤토리 이동은 후속 입항/비우기 action으로 정리하고, customs backend는 기술 자산으로만 유지한다.
+ *       항구는 DB의 출항/정박 상태를 보지 않고 항상 정박 화면으로 렌더링한다.
  */
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -32,17 +33,12 @@ import {
   accountStoreFacade,
   hostStoreFacade,
   myAidongStoreFacade,
-  routeNeighborStoreFacade,
   shipStoreFacade,
+  voyageSessionFacade,
 } from '@/lib/storeFacades'
 
 const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
-const ROUTE_ALIASES: Record<string, 'neighbor'> = {
-  neighbor: 'neighbor',
-  'route-neighbor': 'neighbor',
-}
-
 const FALLBACK_CABIN_FURNITURE: DecorItemConfig[] = [
   { itemId: 'hammock', label: '해먹', cost: 0, defaultOwned: 1 },
   { itemId: 'lamp', label: '선실등', cost: 0, defaultOwned: 1 },
@@ -67,10 +63,6 @@ interface ShipStateView {
   cabinFurnitureInventory: Record<string, number>
 }
 
-interface RouteStateView {
-  currentRoute?: string
-  boardPosition: number
-}
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -144,17 +136,6 @@ function toShipStateView(value: unknown): ShipStateView {
   }
 }
 
-function toRouteStateView(value: unknown): RouteStateView {
-  const state = asRecord(value)
-  const boardPosition = Number(state.boardPosition)
-  const currentRoute = typeof state.currentRoute === 'string'
-    ? ROUTE_ALIASES[state.currentRoute] ?? state.currentRoute
-    : undefined
-  return {
-    currentRoute,
-    boardPosition: Number.isFinite(boardPosition) ? boardPosition : 0,
-  }
-}
 
 function resourceLabel(resource: string): string {
   const labels: Record<string, string> = {
@@ -201,7 +182,6 @@ export const HarborScene = () => {
     cabins: {},
     cabinFurnitureInventory: {},
   })
-  const [routeState, setRouteState] = useState<RouteStateView>({ boardPosition: 0 })
   const [selectedAidong, setSelectedAidong] = useState<string | null>(null)
   const [shipLoading, setShipLoading] = useState(false)
   const [shipError, setShipError] = useState<string | null>(null)
@@ -229,8 +209,7 @@ export const HarborScene = () => {
     ]),
     [shipState.cabinAssignments, shipState.deckAssignments],
   )
-  const hasActiveVoyage = Boolean(routeState.currentRoute)
-  const canDepart = shipAssignedAidongs.size > 0 && !hasActiveVoyage
+  const canDepart = shipAssignedAidongs.size > 0
   const cabinSlotCount = Math.max(currentShipType?.cabinSlots ?? 0, maxSlotIndex(shipState.cabinAssignments, 'cabin'))
   const deckSlotCount = Math.max(currentShipType?.deckSlots ?? 0, maxSlotIndex(shipState.deckAssignments, 'deck'))
   const selectedCabinAidong = selectedCabinSlot ? shipState.cabinAssignments[selectedCabinSlot] : undefined
@@ -241,17 +220,15 @@ export const HarborScene = () => {
     setShipLoading(true)
     setShipError(null)
     try {
-      const [configResponse, stateResponse, routeResponse] = await Promise.all([
+      const [configResponse, stateResponse] = await Promise.all([
         api.getShipConfig(),
         api.getModuleState(uid, 'ship'),
-        api.getModuleState(uid, 'route-neighbor'),
       ])
       setShipTypes(configResponse.shipTypes)
       if (Array.isArray(configResponse.cabinFurnitureItems) && configResponse.cabinFurnitureItems.length > 0) {
         setCabinFurnitureItems(configResponse.cabinFurnitureItems)
       }
       setShipState(toShipStateView(stateResponse.state))
-      setRouteState(toRouteStateView(routeResponse.state))
     } catch (error) {
       console.warn('[ship] load failed', error)
       setShipError('배 정보를 불러오지 못했어요.')
@@ -282,10 +259,6 @@ export const HarborScene = () => {
 
   const assignShipSlot = async (kind: 'cabin' | 'deck', slotId: string, current?: string) => {
     if (!uid || shipLoading) return
-    if (hasActiveVoyage) {
-      setShipError('이미 출항한 배는 항구에서 아이동 배치나 재배치를 할 수 없어요.')
-      return
-    }
     const characterId = current ? undefined : selectedAidong ?? undefined
     if (!current && !characterId) return
 
@@ -308,10 +281,6 @@ export const HarborScene = () => {
 
   const changeShip = async (shipTypeId: string) => {
     if (!uid || shipLoading) return
-    if (hasActiveVoyage) {
-      setShipError('이미 출항한 배는 항구에서 배 종류를 바꿀 수 없어요.')
-      return
-    }
     setShipLoading(true)
     setShipError(null)
     try {
@@ -372,8 +341,8 @@ export const HarborScene = () => {
           borderColor: assigned ? 'primary.main' : 'divider',
           borderRadius: 1,
           bgcolor: assigned ? 'action.selected' : 'background.paper',
-          cursor: hasActiveVoyage ? 'not-allowed' : assigned || selectedAidong ? 'pointer' : 'default',
-          opacity: hasActiveVoyage ? 0.72 : 1,
+          cursor: assigned || selectedAidong ? 'pointer' : 'default',
+          opacity: 1,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -391,9 +360,6 @@ export const HarborScene = () => {
               {assigned}
             </Typography>
             <Chip size="small" label="배치됨" sx={{ mt: 0.5, height: 18, fontSize: 10 }} />
-            {hasActiveVoyage && (
-              <Chip size="small" label="출항 중" color="warning" sx={{ mt: 0.5, height: 18, fontSize: 10 }} />
-            )}
           </>
         ) : (
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
@@ -469,24 +435,9 @@ export const HarborScene = () => {
           </Alert>
         )}
         {shipError && <Alert severity="warning" sx={{ mb: 2 }}>{shipError}</Alert>}
-        {hasActiveVoyage && (
-          <Alert
-            severity="info"
-            sx={{ mb: 2 }}
-            action={(
-              <Button color="inherit" size="small" onClick={() => navigate(`/voyage/board?route=${routeState.currentRoute}`)}>
-                보드로
-              </Button>
-            )}
-          >
-            현재 배가 항해 중입니다. 항로 {routeState.currentRoute} · 현재 칸 {routeState.boardPosition}. 항구에서는 재출항, 배 변경, 선실/갑판 재배치를 할 수 없어요.
-          </Alert>
-        )}
 
         <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, mb: 3 }}>
-          {!hasActiveVoyage && (
-            <>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2} sx={{ mb: 2 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2} sx={{ mb: 2 }}>
                 <Box>
                   <Typography variant="h2" sx={{ fontSize: 18, mb: 0.5 }}>
                     현재 배
@@ -502,7 +453,7 @@ export const HarborScene = () => {
                   <Button size="small" variant="outlined" onClick={() => setInventoryOpen(true)}>
                     배 인벤토리
                   </Button>
-                  <Button size="small" variant="contained" disabled={hasActiveVoyage} onClick={() => setShipTypeOpen(true)}>
+                  <Button size="small" variant="contained" onClick={() => setShipTypeOpen(true)}>
                     배 변경
                   </Button>
                 </Stack>
@@ -524,10 +475,10 @@ export const HarborScene = () => {
                         key={id}
                         size="small"
                         variant={selectedAidong === id ? 'contained' : 'outlined'}
-                        disabled={hasActiveVoyage || harborAssigned}
+                        disabled={harborAssigned}
                         onClick={() => setSelectedAidong(selectedAidong === id ? null : id)}
                       >
-                        {id}{hasActiveVoyage && shipAssignedAidongs.has(id) ? ' · 출항 중' : harborAssigned ? ' · 항구 지원 중' : ''}
+                        {id}{harborAssigned ? ' · 항구 지원 중' : ''}
                       </Button>
                     )
                   })}
@@ -552,8 +503,6 @@ export const HarborScene = () => {
                   </Box>
                 </Box>
               </Stack>
-            </>
-          )}
 
           <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -619,9 +568,7 @@ export const HarborScene = () => {
           </Box>
         </Box>
 
-        {!hasActiveVoyage && (
-          <>
-            <Typography variant="h2" sx={{ fontSize: 16, mb: 1 }}>출항 메뉴</Typography>
+        <Typography variant="h2" sx={{ fontSize: 16, mb: 1 }}>출항 메뉴</Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
               항로를 선택해 항해 보드로 이동합니다.
             </Typography>
@@ -666,20 +613,7 @@ export const HarborScene = () => {
                           setShipError('출항하려면 먼저 선실이나 갑판에 아이동을 1명 이상 배치해야 해요.')
                           return
                         }
-                        if (MODULE_ACTION_API_SYNC) {
-                          const currentUid = accountStoreFacade.getFirebaseUid()
-                          if (currentUid) {
-                            void api.startRouteNeighbor(currentUid, route.id)
-                              .then((response) => {
-                                applyActionApiResponse(response)
-                                setRouteState(toRouteStateView(response.state))
-                                navigate(`/voyage/board?route=${route.id}`)
-                              })
-                              .catch((error) => console.warn('[route-neighbor] start action api failed', error))
-                          }
-                          return
-                        }
-                        routeNeighborStoreFacade.startVoyage(route.id)
+                        voyageSessionFacade.startSession(route.id)
                         navigate(`/voyage/board?route=${route.id}`)
                       }}
                     >
@@ -693,8 +627,6 @@ export const HarborScene = () => {
                 🎁 항로 구매하기 · Phase 2
               </Button>
             </Stack>
-          </>
-        )}
       </Box>
 
       <Dialog open={inventoryOpen} onClose={() => setInventoryOpen(false)} maxWidth="sm" fullWidth>

@@ -175,8 +175,8 @@ backend는 하나의 Express 서버다.
 | `myAidongStates` | 영입 Aidong, needs, 케어, 착용, Aidong 도감템 후보 원장 |
 | `myIslandStates` | 마이섬 해금, 15구역 `zoneSlots`, 구역 진행 |
 | `codexStates` | 도감 표시, 등록, 일지 상태. 수량 원장이 아님 |
-| `routeNeighborStates` | 항해 route, board position, encounter/landing 후보 |
-| `shipStates` | 배, 선실, 갑판, ship inventory, 항구/선박 상태 |
+| `routeNeighborStates` | 항해 route catalog, landing/encounter 결과 호환 기록. 현재 항해 위치와 출항/정박 여부는 저장하지 않는다 |
+| `shipStates` | 배 종류, 선실, 갑판, 꾸미기, 선박 inventory 호환 필드. 출항/정박 여부는 저장하지 않는다 |
 | `zoneStates` | zone-garden, zone-oasis, zone-memory, zone-mine local state |
 | `moduleStates` | 아직 dedicated collection이 없는 module fallback state |
 | `customsLogs` | customs 처리 로그, 실패 사유, idempotency 기록 |
@@ -252,10 +252,29 @@ myIslandStates.zoneSlots
 
 | 책임 | 담당 |
 |---|---|
-| 항해 route, board position, encounter 후보 | `route-neighbor` |
+| 항해 route catalog, landing/encounter 규칙, 보상 확정 action | `route-neighbor` |
+| 현재 항해 중인 route id, 현재 칸, 주사위 이동 결과, 세션 내 landing 후보 | 브라우저 탭/창별 session state |
+| 주사위 소모, 영입, 보상 지급, inventory 증가 같은 영속 결과 | backend module action API와 MongoDB |
 | 아이동섬 상륙, 이동, 상호작용, 영입 후보 | `aidong-island` |
 | 실제 Aidong 보유 상태 | `my-aidong` |
 | 마이섬 13개 slot 편입 | `my-island/slots/incorporate` |
+
+### 8.1 항해 세션 권위 결정 2026-06-13
+
+항해 중인지, 항구에 정박 중인지, 현재 몇 번째 칸에 있는지는 DB가 알면 안 된다.
+
+이 정보는 브라우저 탭 또는 창별 세션 상태다. 한 사용자가 항해 창을 여러 개 열면 각 창은 서로 독립적인 항해 세션을 가진다.
+
+원칙은 다음이다.
+
+- DB에는 `isVoyaging`, `departed`, `currentRoute`, `boardPosition` 같은 현재 항해 세션 권위 값을 저장하지 않는다.
+- 항해 창을 닫으면 그 창의 세션 항해 상태는 사라진다. 이 경우 게임적으로는 자동 마이섬 복귀로 본다.
+- 항해 중인 탭이 있더라도 다른 탭이나 URL 직접 입력으로 항구에 들어가면 항구에는 배가 정박해 있어야 한다.
+- 항구 화면에서 “배가 출항 중입니다” 같은 DB 기반 표시는 절대 띄우지 않는다.
+- 항구에서 항해 시작 버튼을 누르면 해당 탭의 항해 세션을 처음부터 새로 만든다.
+- 같은 계정의 다른 탭에서 항해를 시작해도 기존 탭의 항해 세션과 독립적으로 진행된다.
+- 주사위 소모, 보상 획득, Aidong 영입, inventory 증감처럼 영속 결과가 생기는 순간만 backend action API를 통해 DB에 기록한다.
+- `route-neighbor` API가 주사위 결과나 landing 후보를 반환할 수는 있지만, 그 결과는 호출한 프론트 세션이 들고 있는 진행 정보로 취급한다.
 
 중요한 원칙:
 
@@ -404,7 +423,7 @@ pnpm check:live-smoke:local
 - backend 서버 물리 분리.
 - ship/lodge inventory 즉시 삭제.
 - destination-shell-island 삭제.
-- 30칸 항해 보드 최종 밸런스 확정.
+- 항해 세션 상태를 DB에 저장하지 않는 전제에서 보드 크기, 이동 규칙, landing payload 확정.
 - SUNO, realtime AI, UGC, fandom, 광고 연동.
 
 ### 기획 필요
@@ -414,7 +433,7 @@ pnpm check:live-smoke:local
 - 25개 도감템 실제 데이터.
 - upgrade recipe와 economy.
 - 13개 구역 역할.
-- 항해 encounter payload.
+- 항해 encounter payload와 세션 내 landing 후보 처리 방식.
 - dynamic Aidong zone과 15구역 관계.
 - shop/BM/currency.
 - Pixi/Rive asset pipeline.
@@ -453,6 +472,7 @@ Codex는 다음 기준에서 벗어나면 안 된다.
 - 세관 backend는 유지하지만 Phase 1 UX에서 강제 gate로 되돌리지 않는다.
 - ship/lodge/destination POC는 무작정 삭제하지 않고 compat/dev/보류로 분류한다.
 - PixiJS/Rive는 일부 scene/연출에만 부분 적용한다.
+- 항해 중/정박 중 여부와 현재 칸 같은 런타임 항해 상태를 DB에 저장하지 않는다.
 - 한글 문서를 수정하면 깨짐 문자 검사를 한다.
 - 현재 작업은 `.cloud/89_next_work_2026-07-01.md`에서 이어간다.
 
@@ -460,3 +480,4 @@ Codex는 다음 기준에서 벗어나면 안 된다.
 
 - **2026-06-13**: `.cloud` 문서 정리를 위해 지금까지의 작업 히스토리를 현재 구현 기준으로 요약했다. 오래된 next_work, 임시 충돌 지도, 임시 설계 조각이 Codex와 신규 개발자를 혼란스럽게 하지 않도록 이 문서를 기준 히스토리로 세웠다.
 - **2026-06-13**: 새 모듈 제작자가 따라갈 수 있는 `.cloud/02_module_creator_guide_2026-06-13.md`를 기준 문서로 추가했다.
+- **2026-06-13**: 항해 세션 권위 결정을 추가했다. 출항/정박 여부, 현재 route, 현재 칸, 세션 내 landing 후보는 DB가 아니라 브라우저 탭/창별 세션 상태로 관리하고, DB에는 주사위 소모와 보상 지급 같은 영속 결과만 기록한다.

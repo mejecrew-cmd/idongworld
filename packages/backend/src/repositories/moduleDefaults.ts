@@ -122,8 +122,6 @@ export function createRouteNeighborDefault(
   const now = Date.now()
   return {
     uid,
-    currentRoute: seed.currentRoute,
-    boardPosition: seed.boardPosition ?? 0,
     localResources: seed.localResources ?? {},
     landings: seed.landings ?? {},
     progress: seed.progress ?? {},

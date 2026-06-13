@@ -161,12 +161,13 @@ async function prepareVoyageCrew(uid) {
 
 async function checkVoyageAndAidongIsland(uid) {
   const route = await post('/api/modules/route-neighbor/start', { uid, routeId: 'neighbor' })
-  assert(route.state?.currentRoute === 'neighbor', 'route-neighbor start should set currentRoute', route)
-  assert(route.state?.boardPosition === 0, 'route-neighbor start should reset boardPosition', route)
+  assert(route.routeId === 'neighbor', 'route-neighbor start should echo routeId', route)
+  assert(route.boardPosition === 0, 'route-neighbor start should return session initial boardPosition', route)
+  assert(route.state?.currentRoute === undefined, 'route-neighbor start must not persist currentRoute', route)
+  assert(route.state?.boardPosition === undefined, 'route-neighbor start must not persist boardPosition', route)
 
-  const duplicateRoute = await postFailure('/api/modules/route-neighbor/start', { uid, routeId: 'neighbor' })
-  assert(duplicateRoute.status === 409, 'route-neighbor duplicate start should be rejected', duplicateRoute)
-  assert(duplicateRoute.body?.error === 'route_already_started', 'route-neighbor duplicate start error mismatch', duplicateRoute)
+  const restartedRoute = await post('/api/modules/route-neighbor/start', { uid, routeId: 'neighbor' })
+  assert(restartedRoute.routeId === 'neighbor', 'route-neighbor start should be repeatable per frontend session', restartedRoute)
 
   const islandConfig = await get('/api/modules/aidong-island/config')
   assert(islandConfig.config?.islandId === 'first-aidong-island', 'aidong-island config should expose first island', islandConfig)
@@ -250,24 +251,27 @@ async function checkProductionCodexAndMyroom(uid, characterId) {
 }
 
 async function checkRouteLandingCompat(uid) {
-  const roll = await post('/api/modules/route-neighbor/roll', { uid, steps: 6 })
-  assert(roll.state?.boardPosition === 6, 'route-neighbor roll should update boardPosition', roll)
+  const roll = await post('/api/modules/route-neighbor/roll', { uid, steps: 6, routeId: 'neighbor', boardPosition: 6 })
+  assert(roll.boardPosition === 6, 'route-neighbor roll should echo session boardPosition', roll)
+  assert(roll.state?.boardPosition === undefined, 'route-neighbor roll must not persist boardPosition', roll)
   assert(roll.landing?.targetWorldScope === 'destination-island', 'route landing should target destination-island', roll)
   assert(roll.landing?.landingModuleId === 'destination-shell-island', 'route landing should preserve destination-shell-island compat', roll)
 
   const currentLanding = await get(`/api/modules/route-neighbor/landing/current?uid=${encodeURIComponent(uid)}`)
-  assert(currentLanding.landing?.landingId === 'neighbor:6', 'route-neighbor current landing should match rolled landing', currentLanding)
+  assert(!currentLanding.landing, 'route-neighbor current landing should not be persisted outside session', currentLanding)
 
   const clearLanding = await post('/api/modules/route-neighbor/landing/clear', {
     uid,
     landingId: 'neighbor:6',
+    routeId: 'neighbor',
+    boardPosition: 6,
   })
   assert(clearLanding.state?.localResources?.['deck-cargo'] === 1, 'route landing clear should grant deck-cargo compat reward', clearLanding)
   assert(clearLanding.moduleStates?.['destination-shell-island']?.localResources?.['shell-fragment'] === 1, 'route landing clear should seed destination resource', clearLanding)
 
   const end = await post('/api/modules/route-neighbor/end', { uid })
-  assert(end.state?.boardPosition === 0, 'route end should reset boardPosition', end)
-  assert(!end.state?.currentRoute, 'route end should clear currentRoute', end)
+  assert(end.state?.boardPosition === undefined, 'route end must not expose persisted boardPosition', end)
+  assert(!end.state?.currentRoute, 'route end must not expose persisted currentRoute', end)
 }
 
 async function checkFinalState(uid, characterId) {
@@ -285,7 +289,7 @@ async function checkFinalState(uid, characterId) {
   assert(lodgeState.storage === 'dedicated', 'lodge state should be dedicated', lodgeState)
   assert(lodgeState.state?.assignedAidongs?.includes(characterId), 'lodge should persist assigned Aidong', lodgeState)
   assert(routeState.storage === 'dedicated', 'route-neighbor state should be dedicated', routeState)
-  assert(routeState.state?.boardPosition === 0, 'route-neighbor should be ended at boardPosition 0', routeState)
+  assert(routeState.state?.boardPosition === undefined, 'route-neighbor state must not persist boardPosition', routeState)
   assert(zoneState.storage === 'dedicated', 'zone-garden state should be dedicated', zoneState)
   assert(zoneState.state?.progress?.lastProductionClaim?.characterId === characterId, 'zone-garden should persist production claim', zoneState)
 
@@ -296,7 +300,7 @@ async function main() {
   const { health } = await step('00 health and dedicated repository contracts', assertDedicatedRepositories)
   const { uid } = await step('01 guest login and account bootstrap', createSmokeAccount)
   await step('02 my-island tutorial and lodge config bootstrap', () => prepareIslandAndLodge(uid))
-  await step('03 ship crew bootstrap for voyage guard', () => prepareVoyageCrew(uid))
+  await step('03 ship crew bootstrap for route start', () => prepareVoyageCrew(uid))
   const { characterId } = await step('04 voyage to aidong-island, recruit, and incorporate into 15-slot island', () => checkVoyageAndAidongIsland(uid))
   await step('05 lodge assignment and four-parameter care action', () => checkCareAndLodge(uid, characterId))
   const { myRoomCodex, myRoomCollection } = await step('06 zone production reward, Aidong codex progress, and myroom aggregation', () => checkProductionCodexAndMyroom(uid, characterId))
@@ -330,7 +334,7 @@ async function main() {
       ownedCodexItemCount: myRoomCollection.collection.aidongCodexItems.length,
       islandSlot: finalStates.myIslandState.state.zoneSlots['AREA-01'],
       lodgeAssignedCount: finalStates.lodgeState.state.assignedAidongs.length,
-      routeBoardPosition: finalStates.routeState.state.boardPosition,
+      routeBoardPosition: finalStates.routeState.state.boardPosition ?? null,
     },
   }, null, 2))
 }

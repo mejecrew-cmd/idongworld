@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/backend/src/models/RouteNeighborStateModel.ts
  * ------------------------------------------------------------
  * 역할: MongoDB collection의 schema와 document 타입을 정의한다.
@@ -9,8 +9,6 @@ import mongoose, { Schema } from 'mongoose'
 
 export interface RouteNeighborStateDoc {
   uid: string
-  currentRoute?: string
-  boardPosition: number
   localResources: Record<string, number>
   landings: Record<string, unknown>
   progress: Record<string, unknown>
@@ -21,8 +19,6 @@ export interface RouteNeighborStateDoc {
 const RouteNeighborStateSchema = new Schema<RouteNeighborStateDoc>(
   {
     uid: { type: String, required: true, unique: true, index: true },
-    currentRoute: String,
-    boardPosition: { type: Number, required: true, default: 0 },
     localResources: { type: Schema.Types.Mixed, required: true, default: {} },
     landings: { type: Schema.Types.Mixed, required: true, default: {} },
     progress: { type: Schema.Types.Mixed, required: true, default: {} },

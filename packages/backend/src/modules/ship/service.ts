@@ -1,9 +1,9 @@
-﻿/**
+/**
  * packages/backend/src/modules/ship/service.ts
  * ------------------------------------------------------------
- * 역할: 모듈별 domain rule과 상태 전이를 담당하는 service 계층이다.
- * 연결: userStore action으로 처리하던 로직을 backend 권위 로직으로 옮기는 위치다.
- * 주의: 자기 module document만 직접 수정하고, 다른 module/host 자원 이동은 adapter 또는 customs를 통한다.
+ * 역할: 배 종류, 선실/갑판 배치, 항구 지원, 선실 꾸미기 같은 ship 영속 상태를 관리한다.
+ * 연결: 항구/항해 화면의 ship action API가 이 service를 호출한다.
+ * 주의: 항해 중/정박 중 여부는 frontend session state가 판단한다. ship backend는 route-neighbor DB를 읽어 전역 출항 lock을 걸지 않는다.
  */
 import { getHostStateRepository } from '../../repositories/index.js'
 import { assertAidongRecruited } from '../my-aidong/service.js'
@@ -112,20 +112,6 @@ function getCurrentShipTypeId(state: LooseState): string {
     : getDefaultShipTypeConfig().shipTypeId
 }
 
-async function assertShipNotSailing(uid: string): Promise<void> {
-  const routeState = await requireModuleRepo('route-neighbor').getOrCreate(uid) as LooseState
-  if (typeof routeState.currentRoute === 'string' && routeState.currentRoute) {
-    throw new ServiceError('ship_is_sailing', 409)
-  }
-}
-
-async function assertShipAssignmentContext(uid: string, context: ShipAssignmentContext): Promise<void> {
-  const routeState = await requireModuleRepo('route-neighbor').getOrCreate(uid) as LooseState
-  const isSailing = typeof routeState.currentRoute === 'string' && routeState.currentRoute
-  if (isSailing && context !== 'voyage') {
-    throw new ServiceError('ship_is_sailing', 409)
-  }
-}
 
 function parseSlotIndex(slotId: string, pattern: RegExp, errorCode: string): number {
   const match = pattern.exec(slotId)
@@ -236,7 +222,6 @@ export function getShipConfig() {
 }
 
 export async function changeShipType(uid: string, shipTypeId: string) {
-  await assertShipNotSailing(uid)
   const config = requireShipTypeConfig(shipTypeId)
   const repo = requireModuleRepo('ship')
   const state = await repo.getOrCreate(uid) as LooseState
@@ -258,7 +243,6 @@ async function assignShipSlot(
   characterId?: string,
   context: ShipAssignmentContext = 'harbor',
 ) {
-  await assertShipAssignmentContext(uid, context)
   const repo = requireModuleRepo('ship')
   const state = await repo.getOrCreate(uid) as LooseState
   const shipType = requireShipTypeConfig(getCurrentShipTypeId(state))

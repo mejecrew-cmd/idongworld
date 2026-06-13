@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 📌 packages/backend/scripts/smoke-persistence.mjs — backend split 안내
  * ────────────────────────────────────────────────────────────
  * 🎯 역할: Backend migration/check script. userStore.ts 중심 legacy 저장 흐름이 Mongo repository, module document, customs API로 분리됐는지 실행 단계에서 확인한다.
@@ -270,14 +270,16 @@ async function main() {
     method: 'POST',
     body: JSON.stringify({ uid, routeId: 'neighbor' }),
   })
-  assert(startRoute.state?.currentRoute === 'neighbor', 'route-neighbor start action failed', startRoute)
+  assert(startRoute.routeId === 'neighbor', 'route-neighbor start should echo routeId', startRoute)
+  assert(startRoute.state?.currentRoute === undefined, 'route-neighbor start must not persist currentRoute', startRoute)
 
   const rollRoute = await request('/api/modules/route-neighbor/roll', {
     method: 'POST',
-    body: JSON.stringify({ uid, steps: 4 }),
+    body: JSON.stringify({ uid, steps: 4, routeId: 'neighbor', boardPosition: 4 }),
   })
   assert(rollRoute.steps === 4, 'route-neighbor roll steps mismatch', rollRoute)
-  assert(rollRoute.state?.boardPosition === 4, 'route-neighbor roll board position mismatch', rollRoute)
+  assert(rollRoute.boardPosition === 4, 'route-neighbor roll board position mismatch', rollRoute)
+  assert(rollRoute.state?.boardPosition === undefined, 'route-neighbor roll must not persist boardPosition', rollRoute)
   assert(rollRoute.host?.diceCount === 7, 'route-neighbor roll dice mutation mismatch', rollRoute)
 
   const lodgeState = await request(`/api/modules/lodge/state?uid=${encodeURIComponent(uid)}`)
@@ -298,7 +300,7 @@ async function main() {
     zoneGardenClearedCount: zoneClear.state.clearedCount,
     zoneGardenAcorn: zoneAfter.state.localResources.acorn,
     customsTransactional: apply.transactional,
-    routeBoardPosition: rollRoute.state.boardPosition,
+    routeBoardPosition: rollRoute.boardPosition,
     shipCharge: chargeShip.charge,
     logs: logs.logs.length,
   }, null, 2))

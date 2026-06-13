@@ -109,8 +109,8 @@ customsLogs
 - `myAidongStates`: Aidong 영입, 호감도, needs, 케어 로그, 착용 상태.
 - `myIslandStates`: island unlock, zone progress.
 - `codexStates`: diary, codex entry, full registration.
-- `routeNeighborStates`: 항로, 보드 진행, route-neighbor local resource.
-- `shipStates`: 항해 선박, 선실, 선박 inventory.
+- `routeNeighborStates`: 항해 route catalog, landing/encounter 결과 호환 기록, route-neighbor local resource. 현재 route/current cell/출항 여부는 저장하지 않는다.
+- `shipStates`: 배 종류, 선실, 갑판, 꾸미기, 선박 inventory 호환 필드. 출항/정박 여부는 저장하지 않는다.
 - `zoneStates`: `zone-garden`, `zone-oasis`, `zone-memory`, `zone-mine` local state.
 - `moduleStates`: 아직 dedicated model이 없는 module의 fallback state.
 - `customsLogs`: customs 처리 결과, 실패 사유, idempotency 기록.
@@ -411,53 +411,58 @@ packages/frontend/src/lib/codexBootstrap.ts
 packages/modules/codex/src/actions.ts
 ```
 
-## 11. Route/Ship 항해 상태 경계
+## 11. Route/Ship 항해 세션 경계
 
-현재 route-neighbor와 ship 상태는 항해 기획 확정 전의 임시 계약이다. 이 단계에서는 확정 모델을 만들기보다 현재 저장 경계를 명확히 하고, 최소 action이 깨지지 않도록 테스트로 고정한다.
+2026-06-13 기준으로 항해 진행 상태의 권위는 DB가 아니라 브라우저 탭/창별 세션이다.
 
-`routeNeighborStates` 책임:
+이전 POC에서는 `routeNeighborStates.currentRoute`, `routeNeighborStates.boardPosition`, `shipStates`의 항구/선박 상태를 현재 항해 진행처럼 다루는 임시 계약이 있었다. 이제 그 방향으로 새 코드를 늘리지 않는다.
 
-- `currentRoute`: 현재 진행 중인 항로 id. `start`에서 설정하고 `end`에서 제거한다.
-- `boardPosition`: 현재 항해 보드 위치. `start`와 `end`에서 0으로 초기화하고 `roll`에서 이동한다.
-- `localResources`: route-neighbor 내부에서만 쓰는 임시/지역 자원 저장소다.
-- `landings`: 보드 칸 도착, 이벤트 처리, 방문 기록을 담는다. `roll`은 `landings.last`에 최근 landing 후보를 저장한다.
+DB에 저장하지 않는 것:
 
-route landing 1차 기준:
+- 현재 배가 출항 중인지 항구에 정박 중인지.
+- 현재 항해 route id.
+- 현재 보드 칸 또는 `boardPosition`.
+- 현재 탭에서만 유효한 landing 후보.
+- 항해 창을 닫으면 사라져도 되는 encounter 선택 상태.
 
-- `roll` 응답은 `landing` 후보를 포함한다.
-- `landing.targetWorldScope`는 도착 대상이 내 섬, 외부 도착 섬, 항해 경로 이벤트 중 어디인지 표시한다.
-- `GET /api/modules/route-neighbor/landing/current`는 최근 landing 후보를 확인한다.
-- `POST /api/modules/route-neighbor/landing/clear`는 mission reward를 처리한다.
-- 현재 실제 `destination-island` 모듈이 없으므로 resource landing reward는 임시 호환으로 `routeNeighborStates.localResources.deck-cargo`에 적립한다.
-- 향후 외부 도착 섬 모듈이 생기면 reward target은 해당 module state로 이전한다.
+DB에 저장하는 것:
+
+- 주사위 소모와 지급.
+- host inventory/resource 증감.
+- Aidong 영입.
+- 마이섬 slot 편입.
+- 도감템, 성장 재료, 보상 ledger처럼 계정에 남아야 하는 결과.
+- 필요한 경우 customs/audit log.
+
+`route-neighbor` 책임:
+
+- 항해 route catalog, board rule, landing/encounter generator를 제공한다.
+- `roll` 또는 landing 관련 API가 결과 후보를 반환할 수는 있다.
+- 반환된 현재 위치와 landing 후보는 호출한 frontend 세션의 진행 정보로 취급한다.
+- 보상 확정 action은 주사위 소모, reward 지급, 영입 같은 영속 결과만 DB에 반영한다.
+- 새 코드에서 `currentRoute`와 `boardPosition`을 user-level 영속 진행 상태로 쓰지 않는다.
 
 `shipStates` 책임:
 
-- `harborAssignedChars`: 항구/선박에 배정된 Aidong id 목록이다.
-- `harborLastChargedAt`: 항구 충전 기준 시각이다.
-- `shipInventory`: 선박 inventory 예약 필드다. 실제 아이템 종류와 cargo 관계는 미확정이다.
-- `cabins`: 선실 배정/효과 예약 필드다. 선실 구조와 효과는 기획 확정 뒤 구체화한다.
+- `shipTypeId`, 선실/갑판 구성, 선실 꾸미기, 선박 inventory 호환 필드 같은 영속/호환 정보를 가진다.
+- `shipStates`는 현재 배가 나가 있는지 여부를 저장하지 않는다.
+- 항구 화면은 항상 배가 정박한 것으로 표시한다.
+- 같은 계정이 여러 항해 창을 열어도 `shipStates`가 세션 간 mutex 역할을 하면 안 된다.
 
-아직 확정하지 않는 것:
+frontend/session 책임:
 
-- 선실 slot 구조와 Aidong 배정 효과.
-- 선박 inventory와 항해 cargo의 차이.
-- route-neighbor `localResources`와 ship `shipInventory` 사이의 이동 규칙.
-- route landing 보상/이벤트 payload 구조.
-- route/ship 사이 customs rule과 ratio.
+- 항해 시작 시 해당 탭/창에 새 항해 세션을 만든다.
+- 현재 route, 현재 칸, 세션 내 landing 후보를 session state에 둔다.
+- 항해 창을 닫으면 세션 상태는 사라지고 게임적으로 자동 마이섬 복귀로 본다.
+- 항해 중인 탭이 있어도 다른 탭의 항구 화면은 정박 상태를 보여준다.
+- 같은 탭에서 항구로 돌아와 항해 시작을 다시 누르면 처음부터 새 세션을 시작한다.
 
 현재 회귀 테스트 기준:
 
-- `route-neighbor/start`는 `currentRoute`를 설정하고 `boardPosition`을 0으로 초기화한다.
-- `route-neighbor/roll`은 주사위를 1개 차감하고 `boardPosition`을 이동한다.
-- `route-neighbor/roll`은 landing 후보를 반환하고 `landings.last`에 저장한다.
-- `route-neighbor/landing/clear`는 현재 resource landing reward를 `localResources.deck-cargo`에 적립한다.
-- `route-neighbor/end`는 `currentRoute`를 제거하고 `boardPosition`을 0으로 되돌린다.
-- `ship/harbor/assign-toggle`은 영입된 Aidong만 배정한다.
-- `ship/harbor/charge`는 경과 시간과 배정 인원 기준으로 host `diceCount`를 지급한다.
-- 위 기준은 `backendPersistence.test.ts`와 `pnpm check:module-actions-smoke`로 확인한다.
-- `check:module-actions-smoke`는 route-neighbor end 이후 `currentRoute` 제거, `boardPosition` 초기화, ship `harborAssignedChars`, `harborLastChargedAt`, `shipInventory`, `cabins` 존재를 확인한다.
-
+- backend persistence test는 영속 결과가 올바른 collection에 기록되는지 확인한다.
+- 항해 세션 자체가 DB에 남는지 확인하는 테스트를 추가하지 않는다.
+- smoke가 `currentRoute`/`boardPosition` 영속 저장을 기대한다면 smoke 기준을 수정한다.
+- 신규 smoke는 “항구가 DB 출항 flag를 보지 않는다”, “주사위 소모와 보상 지급은 DB에 남는다”를 분리해서 확인한다.
 ## 12. Health 확인
 
 backend가 정상적으로 뜨면 `/health`에서 최소한 아래 값을 확인한다.
@@ -634,7 +639,7 @@ pnpm check:frontend:state-route-runtime
 - first gacha 또는 Aidong recruit 이후 `myAidongStates`에 영입 상태가 반영되는지 확인한다.
 - zone clear 이후 zone document와 host reward가 backend 응답 기준으로 반영되는지 확인한다.
 - codex unlock/register가 codex document에 반영되는지 확인한다.
-- route-neighbor start/roll/end와 ship assign/charge가 각각 route/ship document와 host dice에 반영되는지 확인한다.
+- route-neighbor roll/clear가 주사위 소모와 보상 지급 같은 영속 결과만 DB에 반영하는지 확인한다. 현재 route/current cell/출항 여부 저장을 기대하지 않는다.
 - 화면 흐름 중 `/api/state` 호출이나 직접 legacy state sync가 다시 나타나지 않는지 확인한다.
 
 현재 기준:
@@ -666,10 +671,10 @@ pnpm check:frontend:state-route-runtime
 - **2026-06-01**: local MongoDB와 backend server를 실행한 상태에서 `pnpm check:module-actions-smoke`를 통과했다. Mongo repository 연결, legacy state API 제거 상태, ship/lodge/route/customs/Aidong item/zone-garden action 흐름이 live smoke에서 확인됐다.
 - **2026-05-29**: Atlas를 future option으로 보류했다. 현재는 Atlas를 사용하지 않고 local MongoDB 기준 개발을 유지하며, 실제 사용 결정과 credential 준비 전에는 readiness 실행을 요구하지 않는다.
 - **2026-05-29**: Zone reward/action rule config화 기준을 현행화했다. 보상 숫자와 zone별 allowlist는 `balance.csv`에서 읽고, unlock/validation/idempotency는 backend service 코드에 유지한다.
-- **2026-05-29**: Route/Ship 임시 QA 기준을 보강했다. route-neighbor end 후 상태 초기화와 ship harbor/예약 필드 유지 여부를 `check:module-actions-smoke`에서 확인하도록 했다.
+- **2026-05-29**: Route/Ship 임시 QA 기준을 보강했다. 이후 2026-06-13 기준으로 현재 항해 진행 상태는 DB 영속 기준에서 제외한다.
 - **2026-05-29**: 실제 화면 기준 수동 QA 1차 결과를 기록했다. `pnpm check:state-route-runtime:local`로 local Mongo/backend/frontend runtime gate를 통과했고, 남은 클릭 QA 항목은 `.cloud/01_project_history_current_2026-06-13.md`에 분리했다.
 - **2026-05-29**: Google/Twitter social login skeleton 기준을 추가했다. `/api/auth/session`은 provider metadata를 user document에 저장하고, module-local 상태는 건드리지 않는다.
-- **2026-05-29**: Route/Ship 항해 상태 경계를 임시 계약으로 명시했다. `routeNeighborStates`와 `shipStates`의 현재 책임, 미확정 항목, 회귀 테스트 기준을 분리해 기록했다.
+- **2026-05-29**: Route/Ship 항해 상태 경계를 임시 계약으로 명시했다. 2026-06-13 이후에는 이 기준을 항해 세션 권위 분리 규칙으로 대체한다.
 - **2026-05-29**: Customs rule 운용 상태를 임시 체제로 명시했다. 실제 플레이 루프 확정 전까지는 rule 삭제보다 POC/검증용 rule의 추적 가능성, adapter 경계, smoke 재현성을 우선한다.
 - **2026-05-29**: module action smoke 실행 절차를 추가했다. `pnpm check:module-actions-smoke`는 backend server와 local Mongo가 떠 있는 상태에서 my-aidong, my-island, codex, route-neighbor, ship, zone-garden action 흐름을 확인한다. 실제 실행에서 route-neighbor end의 optional field 제거 문제를 발견해 repository patch의 undefined 처리 기준도 함께 고정했다.
 - **2026-05-29**: customs 테스트 기준을 추가했다. 성공, insufficient failure, rollback, idempotency replay 케이스를 분리해 기록했다.
@@ -684,3 +689,4 @@ pnpm check:frontend:state-route-runtime
 - **2026-05-29**: runbook을 백엔드 작업자용 한글 매뉴얼로 재정리했다. 오래된 migration 설명과 누적 작업 로그를 제거하고, MongoDB, module storage/API, customs, auth, 검증 명령 중심으로 정리했다.
 - **2026-05-29**: 상태 API 제거 상세 계획은 `.cloud/01_project_history_current_2026-06-13.md`로 분리했다.
 - **2026-06-13**: M5 live smoke 실행 기준을 추가했다. `pnpm check:live-smoke:local`이 local Mongo, backend, frontend를 띄우고 module action smoke, Playwright route smoke, state-route runtime check를 순서대로 실행하는 기준 명령임을 기록했다.
+- **2026-06-13**: 항해 세션 경계를 현행화했다. 출항/정박 여부, 현재 route, 현재 칸은 DB가 아니라 브라우저 탭/창별 세션 상태이며, DB에는 주사위 소모와 보상 같은 영속 결과만 남긴다.

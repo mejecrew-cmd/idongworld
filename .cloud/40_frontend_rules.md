@@ -22,6 +22,7 @@
 - Phase 1 core route에서는 세관 버튼, 세관 팝업, 모듈 이탈 세관 gate를 기본 노출하지 않는다.
 - 세관 UI는 `VITE_CUSTOMS_UI_ENABLED=true`, zone 이탈 gate는 `VITE_CUSTOMS_EXIT_GATE_ENABLED=true`, destination island 이탈 gate는 `VITE_DESTINATION_ISLAND_CUSTOMS_GATE_ENABLED=true`일 때만 compat/dev 경로로 노출한다.
 - 충돌 분류는 `.cloud/01_project_history_current_2026-06-13.md`, 새 작업 순서는 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
+- 항해 중/정박 중 여부와 현재 칸은 backend나 persisted Zustand가 아니라 브라우저 탭/창별 세션 상태로만 관리한다.
 
 ## 1. 현재 스택
 
@@ -61,8 +62,23 @@
 - progress: `onboardingComplete`, `hostName`.
 - aidong: `recruitedAidongs`, `firstGachaCandidate`, `firstGachaAttempts`, `affinities`, `needs`, `careLog`, `equippedOutfit`, `equippedItems`.
 - island/codex: `unlockedZones`, `unlockedDiaries`, `unlockedCodexEntries`, `codexFullyRegistered`.
-- voyage: `currentRoute`, `boardPosition`, `harborAssignedChars`, `harborLastChargedAt`.
+- voyage: 기존 `currentRoute`, `boardPosition`은 legacy/compat 입력으로만 보고 신규 runtime 권위로 쓰지 않는다. 항해 세션 상태는 persisted userStore 범위 밖에 둔다. `harborAssignedChars`, `harborLastChargedAt`도 신규 기획에서는 실제 소유권을 다시 확인한다.
 
+
+## 4.1 항해 세션 UI 규칙
+
+항해 진행 상태는 브라우저 탭/창별 세션 상태다. `persist({ name: 'idongworld-user' })`로 localStorage에 저장되는 `userStore`에 현재 항해 상태를 넣으면 여러 탭이 서로 덮어쓰므로 금지한다.
+
+frontend 구현 기준:
+
+- 현재 route id, 현재 칸, 이번 항해의 landing 후보는 별도 session hook, in-memory state, 또는 `sessionStorage`에 둔다.
+- localStorage persisted Zustand에는 현재 항해 상태를 저장하지 않는다.
+- 탭을 닫으면 항해 세션은 사라진다. 이 상태는 자동 마이섬 복귀로 간주한다.
+- 항해 중인 탭이 있어도 다른 탭에서 항구에 들어가면 항구는 배가 정박한 화면을 보여준다.
+- 항구 화면에는 DB 값을 근거로 “배가 출항 중입니다”를 표시하지 않는다.
+- 항구에서 항해 시작 버튼을 누르면 그 탭의 항해 세션을 새로 시작한다. 같은 탭에서 항구로 돌아와 다시 누르면 처음부터 다시 시작한다.
+- 여러 탭에서 항해를 시작해도 각 탭의 항해 세션은 독립적이다.
+- 주사위 소모, 보상 지급, Aidong 영입처럼 영속 결과가 생기는 순간에만 backend action API를 호출하고 응답을 store에 병합한다.
 ## 5. Sync 규칙
 
 - frontend sync는 항상 account, host, module 전용 API를 사용한다.
@@ -107,7 +123,7 @@
 - Aidong 소유 item 착용은 `/api/modules/my-aidong/items/equip-toggle`을 사용한다.
 - `my-island` zone unlock과 tutorial completion은 `my-island` action API를 사용한다.
 - `codex` diary unlock, slot unlock, full registration은 `codex` action API를 사용한다.
-- `route-neighbor` roll은 route start 이후에만 실행되도록 frontend에서도 호출 순서를 지킨다.
+- `route-neighbor` roll은 브라우저 세션에 항해가 시작된 뒤에만 실행한다. 이 시작 여부는 DB가 아니라 탭/창별 세션 상태로 판단한다.
 - `route-neighbor` resource/treasure landing 처리는 `/api/modules/route-neighbor/landing/clear`를 우선 사용한다.
 - `ship` harbor assign과 charge는 ship action API를 사용한다.
 - zone local resource 수집과 clear 진행은 `/api/modules/{zoneId}/collect`, `/api/modules/{zoneId}/clear`를 사용한다.
@@ -254,8 +270,10 @@ FRONTEND_URL=http://localhost:5174 pnpm check:frontend:state-route-runtime
 - PixiJS scene 안에서 Rive asset을 직접 섞기 전에, React overlay 또는 Pixi texture 변환 방식 중 유지보수가 쉬운 쪽을 먼저 검토한다.
 - Rive 파일은 module asset catalog와 연결 가능한 id를 가져야 한다.
 
-## 변경 기록
 
 - **2026-06-05**: PixiJS를 프론트 전체 엔진이 아니라 destination island와 미션/보상/조사 같은 화려한 연출이 필요한 장면에만 부분 도입하는 원칙을 추가했다.
 - **2026-06-05**: Spine/Live2D 대신 Rive를 캐릭터 반응, UI, 오브젝트 애니메이션의 1차 선택지로 쓰는 규칙을 추가했다.
 - **2026-06-13**: M5 Playwright smoke 기준을 현행화했다. core route, AREA-01~15, legacy redirect, 세관 UI 비강제, 포토카드 placeholder, full-map zone dialog, 항해 guard를 현재 smoke 범위로 기록했다.
+
+
+- **2026-06-13**: 항해 세션 UI 규칙을 추가했다. 현재 route, 현재 칸, 출항 여부는 persisted Zustand나 DB에 두지 않고 탭/창별 session state로 관리한다.

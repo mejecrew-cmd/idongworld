@@ -58,8 +58,8 @@ export const MODULE_MODEL_SPECS: ModuleModelSpec[] = [
     moduleId: 'route-neighbor',
     storage: 'dedicated',
     collectionName: 'routeNeighborStates',
-    ownedFields: ['currentRoute', 'boardPosition', 'localResources', 'landings', 'progress'],
-    notes: '항해 경로, 현재 위치, landing 호환 상태와 Aidong 만남 수락 기록 후보를 소유한다.',
+    ownedFields: ['localResources', 'landings', 'progress'],
+    notes: 'route-neighbor 전용 자원, landing clear 이력, Aidong 만남 수락 기록 후보를 소유한다. 현재 항해 route와 보드 위치는 브라우저 session state가 소유한다.',
   },
   {
     moduleId: 'ship',

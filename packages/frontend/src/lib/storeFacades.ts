@@ -13,6 +13,13 @@ import {
   type UserState,
 } from '@/stores/userStore'
 
+export {
+  useVoyageSessionStore,
+  voyageSessionFacade,
+  type VoyageSession,
+  type VoyageSessionLanding,
+} from './voyageSessionStore'
+
 type HostStatePatch = Partial<
   Pick<UserState, 'hostName' | 'coins' | 'diamonds' | 'gems' | 'diceCount' | 'inventory'>
 >

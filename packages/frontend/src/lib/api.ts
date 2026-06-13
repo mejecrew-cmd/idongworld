@@ -417,11 +417,15 @@ export const api = {
       body: JSON.stringify({ routeId }),
     }),
 
-  rollRouteNeighbor: <TState = Record<string, unknown>>(uid: string, steps?: number) =>
+  rollRouteNeighbor: <TState = Record<string, unknown>>(
+    uid: string,
+    steps?: number,
+    context?: { routeId?: string; boardPosition?: number },
+  ) =>
     apiFetch<ActionResponse<TState>>('/api/modules/route-neighbor/roll', {
       method: 'POST',
       uid,
-      body: JSON.stringify({ steps }),
+      body: JSON.stringify({ steps, ...context }),
     }),
 
   acceptRouteAidongEncounter: <TState = Record<string, unknown>>(
@@ -481,6 +485,7 @@ export const api = {
   clearRouteLanding: <TState = Record<string, unknown>>(
     uid: string,
     landingId?: string,
+    context?: { routeId?: string; boardPosition?: number },
   ) =>
     apiFetch<ActionResponse<TState> & {
       landing?: Record<string, unknown>
@@ -488,7 +493,7 @@ export const api = {
     }>('/api/modules/route-neighbor/landing/clear', {
       method: 'POST',
       uid,
-      body: JSON.stringify({ landingId }),
+      body: JSON.stringify({ landingId, ...context }),
     }),
 
   endRouteNeighbor: <TState = Record<string, unknown>>(uid: string) =>

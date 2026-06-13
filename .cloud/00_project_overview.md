@@ -61,6 +61,7 @@
 - Aidong 영입과 마이섬 slot 편입은 분리한다.
 - `codexStates`는 수량 원장이 아니다. Aidong별 도감템 수량은 `myAidongStates.aidongCodexItems` 쪽이 기준이다.
 - customs backend는 유지하지만 Phase 1 core UX에서 필수 gate로 강제하지 않는다.
+- 항해 중/정박 중 여부와 현재 칸은 DB가 아니라 브라우저 탭/창별 세션 상태다.
 - PixiJS/Rive는 전체 UI 대체가 아니라 일부 scene/연출에만 부분 적용한다.
 
 ## 주요 문서
@@ -96,3 +97,4 @@ M5 기준으로 backend/frontend typecheck, backend persistence test 39개, live
 
 - **2026-06-13**: `.cloud` 문서 정리 이후 현재 기준 개요로 다시 작성했다. 오래된 next_work와 임시 설계 문서 링크를 제거하고 히스토리, 최신 실행 보드, 로드맵, 규칙 문서를 기준으로 세웠다.
 - **2026-06-13**: 신규 모듈 제작자가 따라갈 수 있는 `.cloud/02_module_creator_guide_2026-06-13.md`를 주요 문서 목록에 추가했다.
+- **2026-06-13**: 항해 세션 권위 기준을 추가했다. 항해 현재 상태는 DB에 저장하지 않고 탭/창별 세션에서만 관리한다.

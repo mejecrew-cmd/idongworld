@@ -119,8 +119,8 @@
 | `myAidongStates` | 영입 Aidong, needs, 케어, 착용, 도감 아이템 후보 원장 |
 | `myIslandStates` | 마이섬 해금, 15구역 slot, 구역 진행 |
 | `codexStates` | 도감 표시, 일지, 등록 상태. 수량 원장은 아님 |
-| `routeNeighborStates` | 항해 route, boardPosition, landing 후보 |
-| `shipStates` | 배, 선실, 갑판, shipInventory, 항구/선박 상태 |
+| `routeNeighborStates` | 항해 route catalog, landing/encounter 결과 호환 기록. 현재 route/current cell/출항 여부는 저장하지 않음 |
+| `shipStates` | 배 종류, 선실, 갑판, 꾸미기, shipInventory 호환 필드. 출항/정박 여부는 저장하지 않음 |
 | `zoneStates` | zone-garden, zone-oasis, zone-memory, zone-mine local state |
 | `moduleStates` | 아직 전용 collection이 없는 module의 fallback state |
 | `customsLogs` | customs 처리 로그, 실패 사유, idempotency 기록 |
@@ -188,14 +188,22 @@
 
 현재 기준:
 
-- `route-neighbor`는 항해 보드 진행과 landing 후보를 소유한다.
-- `ship`은 배 종류, 선실, 갑판, shipInventory, 항구/선박 상태를 소유한다.
+- `route-neighbor`는 항해 route catalog, board rule, landing/encounter generator, 보상 확정 action을 담당할 수 있다.
+- `route-neighbor`는 현재 route, 현재 칸, 출항 여부를 DB에 저장하지 않는다.
+- `ship`은 배 종류, 선실, 갑판, 꾸미기, shipInventory 호환 필드를 소유한다.
+- `ship`은 현재 배가 나가 있는지, 항구에 정박 중인지 같은 상태를 저장하지 않는다.
 - `lodge`는 숙소 배치, 방, 가구, 적극 육성 슬롯 후보 상태를 소유한다.
 - ship/lodge inventory와 customs 연결은 POC/compat 성격이 강하다.
 - 새 Phase 1 루프에서는 숙소 중심 육성, 통 inventory, 아이동별 도감 아이템을 우선한다.
 
 개발자가 기억할 것:
 
+- 항해 중/정박 중 여부, 현재 route, 현재 칸, 세션 내 landing 후보는 브라우저 탭/창별 session state다.
+- 항해 창을 닫으면 해당 세션 상태는 사라지고 자동 마이섬 복귀로 본다.
+- 같은 계정이 여러 항해 창을 열어도 각 창은 독립 세션이다.
+- 항구 화면은 언제나 배가 정박한 화면을 보여준다. “배가 출항 중입니다” 같은 DB 기반 문구는 띄우지 않는다.
+- 항구에서 항해 시작을 누르면 해당 탭에서 처음부터 새 항해 세션을 만든다.
+- 주사위 소모, 보상 지급, Aidong 영입처럼 계정에 남는 결과만 backend action API로 DB에 기록한다.
 - 기존 ship/lodge/destination 기능을 무작정 삭제하지 않는다.
 - 새 기획과 충돌하는 부분은 숨김, 축소, compat 유지, 후속 재설계로 분류한다.
 - 항해 보드는 아직 최종 UX가 아니다. 주사위, 칸 수, 지정 이동 여부는 계속 조정될 수 있다.
@@ -787,3 +795,4 @@ M5 10번 6월 동결 선언이 완료됐으므로 아래 순서로 이어간다.
 - **2026-06-13**: M5 10번 완료에 맞춰 최신 실행 보드를 `.cloud/89_next_work_2026-07-01.md`로 갱신했다. 새 개발자의 다음 작업을 M6 2번 core/compat smoke 분리 설계로 변경했다.
 - **2026-06-13**: `.cloud` 정리 작업에 맞춰 읽기 순서를 히스토리 요약, 최신 실행 보드, 로드맵, 규칙 문서 중심으로 단순화했다. 오래된 next_work와 임시 설계 문서는 직접 기준으로 삼지 않도록 안내했다.
 - **2026-06-13**: 새 모듈 제작자가 구현 순서를 따라갈 수 있도록 `.cloud/02_module_creator_guide_2026-06-13.md`를 읽기 순서와 작업 전 확인 파일에 추가했다.
+- **2026-06-13**: 항해 세션 권위 기준을 추가했다. 현재 항해 상태는 DB나 전역 출항 flag가 아니라 브라우저 탭/창별 session state로 관리하고, DB에는 주사위 소모와 보상 같은 영속 결과만 남긴다.

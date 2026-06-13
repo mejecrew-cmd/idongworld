@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/backend/src/modules/route-neighbor/routes.ts
  * ------------------------------------------------------------
  * 역할: 모듈 action API의 HTTP route를 정의한다.
@@ -25,8 +25,8 @@ routeNeighborRouter.post('/start', async (req, res) => {
 
   const routeId = asString(req.body?.routeId) || 'neighbor'
   try {
-    const state = await startRoute(uid, routeId)
-    res.json({ ok: true, state })
+    const result = await startRoute(uid, routeId)
+    res.json({ ok: true, ...result })
   } catch (error) {
     if (error instanceof ServiceError) {
       return res.status(error.status).json({ error: error.code })
@@ -40,9 +40,11 @@ routeNeighborRouter.post('/roll', async (req, res) => {
   if (!uid) return res.status(401).json({ error: 'no_uid' })
 
   const requestedSteps = req.body?.steps === undefined ? undefined : Number(req.body.steps)
+  const routeId = asString(req.body?.routeId) || undefined
+  const boardPosition = req.body?.boardPosition === undefined ? undefined : Number(req.body.boardPosition)
 
   try {
-    const result = await rollRoute(uid, requestedSteps)
+    const result = await rollRoute(uid, requestedSteps, { routeId, boardPosition })
     res.json({ ok: true, ...result })
   } catch (error) {
     if (error instanceof ServiceError) {
@@ -73,8 +75,10 @@ routeNeighborRouter.post('/landing/clear', async (req, res) => {
   if (!uid) return res.status(401).json({ error: 'no_uid' })
 
   const landingId = asString(req.body?.landingId)
+  const routeId = asString(req.body?.routeId) || undefined
+  const boardPosition = req.body?.boardPosition === undefined ? undefined : Number(req.body.boardPosition)
   try {
-    const result = await clearCurrentLanding(uid, landingId)
+    const result = await clearCurrentLanding(uid, landingId, { routeId, boardPosition })
     res.json({ ok: true, ...result })
   } catch (error) {
     if (error instanceof ServiceError) {

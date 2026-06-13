@@ -1,12 +1,12 @@
 /**
  * packages/backend/src/modules/route-neighbor/service.ts
  * ------------------------------------------------------------
- * 역할: 모듈별 domain rule과 상태 전이를 담당하는 service 계층이다.
- * 연결: userStore action으로 처리하던 로직을 backend 권위 로직으로 옮기는 위치다.
- * 주의: 자기 module document만 직접 수정하고, 다른 module/host 자원 이동은 adapter 또는 customs를 통한다.
+ * 역할: route-neighbor의 영속 결과와 항해 보상 지급을 담당하는 service 계층이다.
+ * 연결: frontend 탭/창별 voyage session이 넘긴 route/board position payload를 검증하고 영속 결과만 DB에 남긴다.
+ * 주의: 현재 항해 중인지, 현재 칸이 어디인지는 DB에 저장하지 않는다.
  */
 import { getHostStateRepository } from '../../repositories/index.js'
-import { asNumber, requireModuleRepo, ServiceError, type LooseState } from '../shared.js'
+import { requireModuleRepo, ServiceError, type LooseState } from '../shared.js'
 import { getRouteLandingCandidate, type RouteLandingCandidate } from './landing.js'
 
 const BOARD_SIZE = 30
@@ -66,57 +66,77 @@ function hasShipCrew(state: LooseState): boolean {
   return [...cabinAssignments, ...deckAssignments].some((characterId) => typeof characterId === 'string' && characterId)
 }
 
-export async function startRoute(uid: string, routeId: string) {
+function assertValidRouteId(routeId: string) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(routeId)) {
     throw new ServiceError('invalid_route_id', 400)
   }
-  const repo = requireModuleRepo('route-neighbor')
-  const routeState = await repo.getOrCreate(uid) as LooseState
-  if (typeof routeState.currentRoute === 'string' && routeState.currentRoute) {
-    throw new ServiceError('route_already_started', 409)
+}
+
+function asBoardPosition(value: unknown): number | undefined {
+  const position = Number(value)
+  if (!Number.isInteger(position) || position < 0 || position >= BOARD_SIZE) return undefined
+  return position
+}
+
+function landingFromInput(input: {
+  landingId?: string
+  routeId?: string
+  boardPosition?: number
+}): RouteLandingCandidate | undefined {
+  if (input.routeId && input.boardPosition !== undefined) {
+    assertValidRouteId(input.routeId)
+    return getRouteLandingCandidate(input.routeId, input.boardPosition)
   }
+  if (!input.landingId) return undefined
+  const [routeId, rawPosition] = input.landingId.split(':')
+  const boardPosition = asBoardPosition(rawPosition)
+  if (!routeId || boardPosition === undefined) return undefined
+  assertValidRouteId(routeId)
+  const landing = getRouteLandingCandidate(routeId, boardPosition)
+  return landing.landingId === input.landingId ? landing : undefined
+}
+
+export async function startRoute(uid: string, routeId: string) {
+  assertValidRouteId(routeId)
+  const state = await requireModuleRepo('route-neighbor').getOrCreate(uid) as LooseState
   const shipState = await requireModuleRepo('ship').getOrCreate(uid) as LooseState
   if (!hasShipCrew(shipState)) {
     throw new ServiceError('ship_crew_required', 409)
   }
-  return await repo.patch(uid, {
-    currentRoute: routeId,
+  return {
+    routeId,
     boardPosition: 0,
-  })
+    state,
+  }
 }
 
-export async function rollRoute(uid: string, requestedSteps?: number) {
+export async function rollRoute(
+  uid: string,
+  requestedSteps?: number,
+  input: {
+    routeId?: string
+    boardPosition?: number
+  } = {},
+) {
   const repo = requireModuleRepo('route-neighbor')
   if (requestedSteps !== undefined && (!Number.isInteger(requestedSteps) || requestedSteps < 1 || requestedSteps > 6)) {
     throw new ServiceError('invalid_steps', 400)
   }
+  const routeId = input.routeId
+  const boardPosition = asBoardPosition(input.boardPosition)
+  if (!routeId || boardPosition === undefined) {
+    throw new ServiceError('route_session_required', 409)
+  }
+  assertValidRouteId(routeId)
   const steps = requestedSteps !== undefined && Number.isFinite(requestedSteps)
     ? Math.max(1, Math.min(6, Math.floor(requestedSteps)))
     : Math.floor(Math.random() * 6) + 1
 
   try {
     const state = await repo.getOrCreate(uid) as LooseState
-    if (typeof state.currentRoute !== 'string' || !state.currentRoute) {
-      throw new ServiceError('route_not_started', 409)
-    }
-    const current = asNumber(state.boardPosition, 0)
-    if (!Number.isInteger(current) || current < 0 || current >= BOARD_SIZE) {
-      throw new ServiceError('invalid_board_position', 409)
-    }
     const host = await getHostStateRepository().mutateResource(uid, 'diceCount', -1)
-    const boardPosition = (current + steps) % BOARD_SIZE
-    const routeId = String(state.currentRoute)
     const landing = getRouteLandingCandidate(routeId, boardPosition)
-    const landings = {
-      ...asLandingState(state.landings),
-      last: {
-        ...landing,
-        landedAt: Date.now(),
-        status: 'arrived' as const,
-      },
-    }
-    const updated = await repo.patch(uid, { boardPosition, landings })
-    return { steps, landing, host, state: updated }
+    return { steps, boardPosition, landing, host, state }
   } catch (error) {
     if (error instanceof Error && error.message === 'insufficient_host_resource') {
       throw new ServiceError('insufficient_dice', 409)
@@ -126,31 +146,33 @@ export async function rollRoute(uid: string, requestedSteps?: number) {
 }
 
 export async function endRoute(uid: string) {
-  const repo = requireModuleRepo('route-neighbor')
-  return await repo.patch(uid, {
-    currentRoute: null,
-    boardPosition: 0,
-  })
+  return await requireModuleRepo('route-neighbor').getOrCreate(uid)
 }
 
 export async function getCurrentLanding(uid: string) {
-  const repo = requireModuleRepo('route-neighbor')
-  const state = await repo.getOrCreate(uid) as LooseState
-  return asLandingState(state.landings).last
+  await requireModuleRepo('route-neighbor').getOrCreate(uid)
+  return undefined
 }
 
-export async function clearCurrentLanding(uid: string, landingId?: string) {
+export async function clearCurrentLanding(
+  uid: string,
+  landingId?: string,
+  input: {
+    routeId?: string
+    boardPosition?: number
+  } = {},
+) {
   const repo = requireModuleRepo('route-neighbor')
   const state = await repo.getOrCreate(uid) as LooseState
   const landings = asLandingState(state.landings)
-  const landing = landings.last
+  const landing = landingFromInput({ landingId, ...input })
 
   if (!landing) throw new ServiceError('landing_not_found', 404)
   if (landingId && landing.landingId !== landingId) {
     throw new ServiceError('landing_id_mismatch', 409)
   }
-  if (landing.status === 'cleared' || landings.cleared?.[landing.landingId]) {
-    return { landing, state }
+  if (landings.cleared?.[landing.landingId]) {
+    return { landing: { ...landing, status: 'cleared' as const }, state }
   }
   if (!landing.mission) {
     throw new ServiceError('landing_has_no_mission', 409)
@@ -181,10 +203,6 @@ export async function clearCurrentLanding(uid: string, landingId?: string) {
 
   const nextLandings: RouteLandingState = {
     ...landings,
-    last: {
-      ...landing,
-      status: 'cleared',
-    },
     cleared: {
       ...(landings.cleared ?? {}),
       [landing.landingId]: Date.now(),
@@ -196,14 +214,13 @@ export async function clearCurrentLanding(uid: string, landingId?: string) {
   })
 
   return {
-    landing: nextLandings.last,
+    landing: { ...landing, status: 'cleared' as const },
     rewards: landing.mission.rewards,
     host,
     moduleStates,
     state: updated,
   }
 }
-
 // Aidong 만남 수락 shell:
 // 실제 encounter pool, 확률, 스토리 컷은 확정 전이므로 characterId를 직접 받는다.
 // route-neighbor는 수락 기록과 후보 정보만 소유한다.

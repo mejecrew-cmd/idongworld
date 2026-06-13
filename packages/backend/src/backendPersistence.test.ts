@@ -150,13 +150,11 @@ const MODULE_REPOSITORY_OPERATION_CASES: Record<string, {
     },
   },
   'route-neighbor': {
-    seed: { currentRoute: 'neighbor', boardPosition: 2 },
-    secondSeed: { currentRoute: 'ignored', boardPosition: 9 },
+    seed: { localResources: { seedCargo: 1 } },
+    secondSeed: { localResources: { ignoredCargo: 9 } },
     patch: { localResources: { 'deck-cargo': 3 } },
-    expectedCreated: { currentRoute: 'neighbor', boardPosition: 2 },
+    expectedCreated: { localResources: { seedCargo: 1 } },
     expectedPatched: {
-      currentRoute: 'neighbor',
-      boardPosition: 2,
       localResources: { 'deck-cargo': 3 },
     },
   },
@@ -1392,9 +1390,14 @@ describe('backend persistence contracts', () => {
     await recruitAidong(uid, shipCrewId)
     await assignCabinSlot(uid, 'cabin1', shipCrewId)
 
-    const route = await startRoute(uid, 'neighbor') as { currentRoute?: string; boardPosition?: number }
-    expect(route.currentRoute).toBe('neighbor')
+    const route = await startRoute(uid, 'neighbor') as { routeId?: string; boardPosition?: number; state?: Record<string, unknown> }
+    expect(route.routeId).toBe('neighbor')
     expect(route.boardPosition).toBe(0)
+    expect(route.state?.currentRoute).toBeUndefined()
+    expect(route.state?.boardPosition).toBeUndefined()
+
+    const shipAfterRouteStart = await changeShipType(uid, 'sloop') as { shipTypeId?: string }
+    expect(shipAfterRouteStart.shipTypeId).toBe('sloop')
 
     const accepted = await acceptAidongEncounter(uid, {
       characterId: '황금멍',
@@ -1482,7 +1485,7 @@ describe('backend persistence contracts', () => {
       status: 409,
     })
     await expect(rollRoute(uid, 3)).rejects.toMatchObject({
-      code: 'route_not_started',
+      code: 'route_session_required',
       status: 409,
     })
     await expect(rollRoute(uid, 7)).rejects.toMatchObject({
@@ -1622,9 +1625,10 @@ describe('backend persistence contracts', () => {
 
     await getHostStateRepository().getOrCreate(uid, { diceCount: 1 })
     await startRoute(uid, 'neighbor')
-    const rolled = await rollRoute(uid, 6)
+    const rolled = await rollRoute(uid, 6, { routeId: 'neighbor', boardPosition: 6 })
     expect(rolled.steps).toBe(6)
-    expect((rolled.state as { boardPosition?: number }).boardPosition).toBe(6)
+    expect(rolled.boardPosition).toBe(6)
+    expect((rolled.state as { boardPosition?: number }).boardPosition).toBeUndefined()
     expect(rolled.landing).toMatchObject({
       landingId: 'neighbor:6',
       targetWorldScope: 'destination-island',
@@ -1632,16 +1636,10 @@ describe('backend persistence contracts', () => {
       action: 'destination-resource-mission',
       screenPath: '/voyage/island/shell',
     })
-    expect((rolled.state as { landings?: { last?: unknown } }).landings?.last).toMatchObject({
-      landingId: 'neighbor:6',
-      status: 'arrived',
-    })
+    expect((rolled.state as { landings?: { last?: unknown } }).landings?.last).toBeUndefined()
 
     const currentLanding = await getCurrentLanding(uid)
-    expect(currentLanding).toMatchObject({
-      landingId: 'neighbor:6',
-      slotType: 'resource',
-    })
+    expect(currentLanding).toBeUndefined()
 
     const clearedLanding = await clearCurrentLanding(uid, 'neighbor:6')
     expect(clearedLanding.rewards).toEqual([
@@ -1658,12 +1656,13 @@ describe('backend persistence contracts', () => {
     expect(((clearedLanding.moduleStates as Record<string, DestinationIslandStateDoc>)['destination-shell-island'])
       .localResources['shell-fragment'])
       .toBe(1)
-    expect((clearedLanding.state as { landings?: { last?: { status?: string } } }).landings?.last?.status)
-      .toBe('cleared')
+    expect((clearedLanding.state as { landings?: { last?: unknown; cleared?: Record<string, number> } }).landings?.last).toBeUndefined()
+    expect((clearedLanding.state as { landings?: { cleared?: Record<string, number> } }).landings?.cleared?.['neighbor:6'])
+      .toEqual(expect.any(Number))
 
     const ended = await endRoute(uid) as { currentRoute?: string | null; boardPosition?: number }
-    expect(ended.currentRoute).toBeNull()
-    expect(ended.boardPosition).toBe(0)
+    expect(ended.currentRoute).toBeUndefined()
+    expect(ended.boardPosition).toBeUndefined()
 
     const movedIsland = await moveDestinationIsland(uid, 'destination-shell-island', 'west') as DestinationIslandStateDoc
     expect(movedIsland.currentNodeId).toBe('beach-west')

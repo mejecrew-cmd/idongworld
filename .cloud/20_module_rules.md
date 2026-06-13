@@ -24,6 +24,7 @@ M5 이후 모듈 작업은 아래 완료 상태를 전제로 한다.
 - `my-island`는 15구역 static definition과 13개 fillable slot, AREA-02/AREA-13 anchor 잠금을 가진다.
 - Aidong 영입은 `my-aidong`, 마이섬 편입은 `my-island/slots/incorporate`가 담당한다.
 - `aidong-island`는 항해 중 만나는 아이동섬의 상륙, 이동, 상호작용, 영입 후보, 영입 action을 가진다.
+- 항해 중/정박 중 여부와 현재 route/current cell은 DB가 아니라 브라우저 탭/창별 세션 상태다.
 - `myroom`은 전용 collection 없이 account, host, my-aidong, codex, lodge를 읽는 aggregation shell이다.
 - Aidong별 25칸 도감 아이템 수량은 `my-aidong` 영역이 소유하고, `codex`는 기존 도감 표시/해금/등록 책임을 유지한다.
 - `/stage`와 `/stage/debut/:id`는 frontend placeholder route로 존재한다. 정식 stage/debut backend module과 포토카드 저장소는 7월 backlog 후보로 둔다.
@@ -133,15 +134,37 @@ M5 이후 모듈 작업은 아래 완료 상태를 전제로 한다.
 - 항해, 세관, 숙소 이동 판단이 필요한 모듈은 manifest에 `worldScope`를 선언한다.
 - `home-island`는 내 섬 안의 구역이다.
 - `destination-island`는 배를 타고 도착하는 외부 섬의 구역이다.
-- `voyage-route`는 주사위 항해 경로와 보드 진행 상태다.
-- `ship`은 배 자체와 배 인벤토리, 선실, 갑판 상태다.
+- `voyage-route`는 항해 경로와 보드 규칙을 의미한다. 현재 route, 현재 칸, 출항/정박 여부 같은 진행 상태는 DB에 저장하지 않는다.
+- `ship`은 배 종류, 배 인벤토리, 선실, 갑판, 꾸미기 같은 영속/호환 상태다. 현재 출항 중인지 여부는 `ship` state가 아니다.
 - `lodge`는 내 섬 숙소와 숙소 인벤토리 상태다.
 - 현재 `zone-garden`, `zone-oasis`, `zone-memory`, `zone-mine`은 `home-island`다.
 - 현재 `route-neighbor`는 다른 섬이 아니라 항해 경로이므로 `voyage-route`다.
-- 정식 항해 보상 루프는 `destination-island -> ship -> lodge` 세관 흐름을 기본으로 따른다.
+- 정식 항해 보상 루프는 새 기획 확정 전까지 domain action API와 통 인벤토리 방향을 우선한다. 실제 source/target document debit/credit이 필요할 때만 customs를 쓴다.
 - 전역 보관 대상 아이템은 `home-island`와 `destination-island` 양쪽에서 세관을 통해 `hostStates.inventory`로 직접 이동할 수 있다.
 - 자세한 기준은 `packages/modules/WORLD_SCOPE_GUIDE.md`를 따른다.
 
+
+## 항해 세션 상태 규칙 2026-06-13
+
+항해 관련 모듈을 만들 때 현재 플레이 중인 항해 상태를 backend module state로 만들면 안 된다.
+
+금지되는 저장 대상:
+
+- `isVoyaging`, `departed`, `isDocked` 같은 출항/정박 flag.
+- `currentRoute`를 user document의 현재 항해 권위값으로 저장하는 것.
+- `boardPosition`이나 현재 칸을 DB에 저장하는 것.
+- 현재 탭에서만 유효한 landing 후보를 영속 상태로 저장하는 것.
+
+허용되는 저장 대상:
+
+- route catalog와 보드 규칙.
+- 주사위 소모와 지급.
+- 영입된 Aidong.
+- 마이섬 편입 결과.
+- host inventory/resource 변화.
+- 보상 처리 로그.
+
+여러 항해 창이 동시에 열릴 수 있으므로 항해 세션은 탭/창별로 독립되어야 한다. 항구 화면은 언제나 배가 정박해 있는 것으로 표시해야 하며, “배가 출항 중입니다” 같은 DB 기반 상태 문구를 띄우지 않는다.
 ## Manifest 작성 규칙
 
 - `id`, `kind`, `name`, `version`은 필수로 본다.
@@ -241,9 +264,11 @@ M5 이후 모듈 작업은 아래 완료 상태를 전제로 한다.
 - Rive state machine input은 React component가 제어하고, 상태 변경은 module action API 또는 customs API를 통해 처리한다.
 - 모듈별 Rive asset은 `items.csv`, `balance.csv`, `customs.csv`, hotspot 정의와 id를 맞춰 추적 가능하게 둔다.
 
-## 변경 기록
 
 - **2026-06-05**: 모듈 개발 시 PixiJS를 destination island 등 화려한 탐험 scene에만 부분 도입하도록 범위를 명시했다.
 - **2026-06-05**: 모듈 캐릭터/UI/hotspot 반응 애니메이션은 Rive를 우선 검토하고, Spine/Live2D는 추후 필요 시 도입하도록 규칙을 추가했다.
 - **2026-06-13**: M5 동결 기준을 추가했다. 최신 실행 보드를 87번 M5로 올리고, 15구역, 아이동섬, 마이룸, 도감템, stage placeholder, live smoke 완료 상태를 신규 모듈 작업 전제로 기록했다.
 - **2026-06-13**: 모듈 제작 순서 문서 `.cloud/02_module_creator_guide_2026-06-13.md`를 추가했다. 신규 모듈은 이 제작자 가이드로 순서를 잡고, 이 문서는 규칙 확인용으로 사용한다.
+
+
+- **2026-06-13**: 항해 세션 상태 규칙을 추가했다. 출항/정박 여부와 현재 칸은 module DB state가 아니라 탭/창별 frontend session state로 관리한다.

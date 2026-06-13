@@ -45,7 +45,7 @@ import {
   accountStoreFacade,
   hostStoreFacade,
   myAidongStoreFacade,
-  routeNeighborStoreFacade,
+  voyageSessionFacade,
 } from '@/lib/storeFacades'
 
 type Phase = 'idle' | 'rolling' | 'moving' | 'arrived'
@@ -220,17 +220,17 @@ export const NavigationBoardScene = () => {
   const routeId = normalizeRouteId(rawRouteId)
   const uid = accountStoreFacade.useFirebaseUid()
   const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
-  const boardPosition = routeNeighborStoreFacade.useBoardPosition()
+  const activeSession = voyageSessionFacade.useSession()
+  const boardPosition = activeSession?.boardPosition ?? 0
   const diceCount = hostStoreFacade.useDiceCount()
   const coins = hostStoreFacade.useCoins()
-  const currentRoute = routeNeighborStoreFacade.useCurrentRoute()
+  const currentRoute = normalizeRouteId(activeSession?.routeId)
 
   const route = useMemo(() => buildNeighborRoute(recruitedAidongs), [recruitedAidongs])
   const [phase, setPhase] = useState<Phase>('idle')
   const [lastRoll, setLastRoll] = useState<number | null>(null)
   const [arrivedSlot, setArrivedSlot] = useState<BoardSlot | null>(null)
   const [arrivedLanding, setArrivedLanding] = useState<RouteLandingCandidate | null>(null)
-  const [routeGuardChecking, setRouteGuardChecking] = useState(routeId === 'neighbor')
   const [returningToHarbor, setReturningToHarbor] = useState(false)
   const [shipTypes, setShipTypes] = useState<ShipTypeConfig[]>([])
   const [cabinFurnitureItems, setCabinFurnitureItems] = useState<DecorItemConfig[]>(FALLBACK_CABIN_FURNITURE)
@@ -275,76 +275,24 @@ export const NavigationBoardScene = () => {
 
   useEffect(() => {
     if (routeId !== 'neighbor') return
-    let cancelled = false
-
-    const validateActiveRoute = async () => {
-      setRouteGuardChecking(true)
-
-      if (!uid) {
-        routeNeighborStoreFacade.endVoyage()
-        navigate('/island/harbor', { replace: true })
-        if (!cancelled) setRouteGuardChecking(false)
-        return
-      }
-
-      try {
-        const routeStateResponse = await api.getModuleState(uid, 'route-neighbor')
-        const routeState = asRecord(routeStateResponse.state)
-        const activeRoute = normalizeRouteId(typeof routeState.currentRoute === 'string'
-          ? routeState.currentRoute
-          : undefined)
-
-        if (!activeRoute) {
-          routeNeighborStoreFacade.endVoyage()
-          navigate('/island/harbor', { replace: true })
-          return
-        }
-
-        applyActionApiResponse({ state: routeState })
-        if (activeRoute !== routeId) {
-          navigate(`/voyage/board?route=${encodeURIComponent(activeRoute)}`, { replace: true })
-        }
-      } catch (error) {
-        console.warn('[voyage] failed to validate active route before opening board', error)
-        routeNeighborStoreFacade.endVoyage()
-        navigate('/island/harbor', { replace: true })
-      } finally {
-        if (!cancelled) setRouteGuardChecking(false)
-      }
+    if (!activeSession) {
+      navigate('/island/harbor', { replace: true })
+      return
     }
-
-    void validateActiveRoute()
-
-    return () => {
-      cancelled = true
+    if (currentRoute && currentRoute !== routeId) {
+      navigate(`/voyage/board?route=${encodeURIComponent(currentRoute)}`, { replace: true })
     }
-  }, [navigate, routeId, uid])
+  }, [activeSession, currentRoute, navigate, routeId])
 
   useEffect(() => {
-    if (!uid || !currentRoute || routeGuardChecking) return
-    let cancelled = false
-
-    const loadCurrentLanding = async () => {
-      try {
-        const response = await api.getCurrentRouteLanding<RouteLandingCandidate>(uid)
-        const landing = response.landing
-        if (cancelled || !landing || landing.status === 'cleared') return
-        const slot = getSlotByLanding(route, landing)
-        if (!slot) return
-        setArrivedLanding(landing)
-        setArrivedSlot(slot)
-        setPhase('arrived')
-      } catch (error) {
-        console.warn('[route-neighbor] current landing load failed', error)
-      }
-    }
-
-    void loadCurrentLanding()
-
-    return () => {
-      cancelled = true
-    }
-  }, [currentRoute, route, routeGuardChecking, uid])
+    const landing = activeSession?.landing as RouteLandingCandidate | undefined
+    if (!currentRoute || !landing || landing.status === 'cleared') return
+    const slot = getSlotByLanding(route, landing)
+    if (!slot) return
+    setArrivedLanding(landing)
+    setArrivedSlot(slot)
+    setPhase('arrived')
+  }, [activeSession?.landing, currentRoute, route])
 
   const loadShipMenu = async () => {
     if (!uid || !currentRoute) return
@@ -381,13 +329,6 @@ export const NavigationBoardScene = () => {
     )
   }
 
-  if (routeGuardChecking) {
-    return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography>항해 상태를 확인하는 중입니다.</Typography>
-      </Box>
-    )
-  }
 
   if (!currentRoute) {
     return (
@@ -404,21 +345,9 @@ export const NavigationBoardScene = () => {
     setArrivedLanding(null)
     setArrivedSlot(null)
     setPhase('idle')
-
-    const uid = accountStoreFacade.getFirebaseUid()
-    try {
-      if (uid) {
-        const response = await api.endRouteNeighbor(uid)
-        applyActionApiResponse(response)
-      }
-      routeNeighborStoreFacade.endVoyage()
-      navigate('/island/harbor', { replace: true })
-    } catch (error) {
-      console.warn('[route-neighbor] end route action api failed', error)
-      alert('항구로 복귀하지 못했어요. 잠시 후 다시 시도해 주세요.')
-    } finally {
-      setReturningToHarbor(false)
-    }
+    voyageSessionFacade.endSession()
+    navigate('/island/harbor', { replace: true })
+    setReturningToHarbor(false)
   }
 
   const handleRoll = () => {
@@ -428,45 +357,44 @@ export const NavigationBoardScene = () => {
     }
     setPhase('rolling')
     setArrivedLanding(null)
+    voyageSessionFacade.clearLanding()
     let count = 0
     const tick = setInterval(() => {
       setLastRoll(Math.floor(Math.random() * 6) + 1)
       count++
       if (count > 8) {
         clearInterval(tick)
-        const finalRoll = routeNeighborStoreFacade.rollDice()
-        const routeSync = MODULE_ACTION_API_SYNC
-          ? (() => {
-          const uid = accountStoreFacade.getFirebaseUid()
-            if (!uid) return undefined
-            return api.rollRouteNeighbor(uid, finalRoll)
-              .catch((error) => {
-                console.warn('[route-neighbor] roll action api failed', error)
-                return undefined
-              })
-          })()
-          : undefined
+        const finalRoll = Math.floor(Math.random() * 6) + 1
+        hostStoreFacade.mutateDiceCount(-1)
+
         setLastRoll(finalRoll)
         setPhase('moving')
-        // 칸 이동 애니메이션 (한 칸씩)
+        // 칸 이동 애니메이션 (한 칸씩). 현재 위치는 탭/창별 voyage session에만 저장한다.
         let step = 0
         const moveTick = setInterval(() => {
           step++
-          routeNeighborStoreFacade.movePosition(1)
+          const movedSession = voyageSessionFacade.movePosition(1, route.slotsCount)
           if (step >= finalRoll) {
             clearInterval(moveTick)
             // 도착 처리
             setTimeout(() => {
-              const newPos = routeNeighborStoreFacade.getBoardPosition()
+              const newPos = movedSession?.boardPosition ?? voyageSessionFacade.getBoardPosition()
               const slot = route.slots[newPos]!
               setArrivedSlot(slot)
               setPhase('arrived')
-              void routeSync?.then((response) => {
-                if (!response) return
-                applyActionApiResponse(response)
-                const landing = (response as { landing?: RouteLandingCandidate }).landing
-                setArrivedLanding(landing ?? null)
-              })
+              if (MODULE_ACTION_API_SYNC) {
+                const uid = accountStoreFacade.getFirebaseUid()
+                if (uid) {
+                  void api.rollRouteNeighbor(uid, finalRoll, { routeId: currentRoute, boardPosition: newPos })
+                    .then((response) => {
+                      applyActionApiResponse(response)
+                      const landing = (response as { landing?: RouteLandingCandidate }).landing
+                      setArrivedLanding(landing ?? null)
+                      voyageSessionFacade.setLanding(landing)
+                    })
+                    .catch((error) => console.warn('[route-neighbor] roll action api failed', error))
+                }
+              }
             }, 200)
           }
         }, 300)
@@ -480,11 +408,12 @@ export const NavigationBoardScene = () => {
 
     try {
       if (MODULE_ACTION_API_SYNC && uid && landing.mission) {
-        const response = await api.clearRouteLanding(uid, landing.landingId)
+        const response = await api.clearRouteLanding(uid, landing.landingId, { routeId: landing.routeId, boardPosition: landing.boardPosition })
         applyActionApiResponse(response)
       }
       setArrivedLanding(null)
       setArrivedSlot(null)
+      voyageSessionFacade.clearLanding()
       setPhase('idle')
       navigate(path)
       return true
@@ -516,12 +445,13 @@ export const NavigationBoardScene = () => {
     if (MODULE_ACTION_API_SYNC && (arrivedSlot.type === 'resource' || arrivedSlot.type === 'treasure')) {
       const uid = accountStoreFacade.getFirebaseUid()
       if (uid) {
-        void api.clearRouteLanding(uid, arrivedLanding?.landingId)
+        void api.clearRouteLanding(uid, arrivedLanding?.landingId, { routeId: arrivedLanding?.routeId, boardPosition: arrivedLanding?.boardPosition })
           .then((response) => applyActionApiResponse(response))
           .catch((error) => console.warn('[route-neighbor] landing clear action api failed', error))
           .finally(() => {
             setArrivedLanding(null)
             setArrivedSlot(null)
+            voyageSessionFacade.clearLanding()
             setPhase('idle')
           })
         return
@@ -547,6 +477,7 @@ export const NavigationBoardScene = () => {
     }
     setArrivedLanding(null)
     setArrivedSlot(null)
+    voyageSessionFacade.clearLanding()
     setPhase('idle')
   }
 
