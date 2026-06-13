@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/backend/src/modules/modelSpecs.ts
  * ------------------------------------------------------------
  * 역할: 모듈별 backend storage ownership을 선언하는 명세다.
@@ -77,6 +77,22 @@ export const MODULE_MODEL_SPECS: ModuleModelSpec[] = [
       'cabins',
     ],
     notes: '`shipInventory`는 배 적재 자원의 권위 필드다. `cabinFurniture`는 선실 꾸미기 구매 수량 원장이다. `cargoCapacity`는 ship balance config에서 계산하며, `cargo`/`cabins`는 기존 예약 필드 호환용이다.',
+  },
+  {
+    moduleId: 'aidong-island',
+    storage: 'dedicated',
+    collectionName: 'aidongIslandStates',
+    ownedFields: [
+      'currentIslandId',
+      'currentNodeId',
+      'visitedIslandIds',
+      'visitedNodeIds',
+      'metAidongIds',
+      'recruitedAidongIds',
+      'recruitmentCandidates',
+      'interactionLog',
+    ],
+    notes: 'M22 아이동섬의 상륙 위치, 상호작용, 영입 후보와 섬 내부 영입 기록을 소유한다. 실제 Aidong 보유는 my-aidong, 마이섬 편입은 my-island가 소유한다.',
   },
   {
     moduleId: 'destination-shell-island',

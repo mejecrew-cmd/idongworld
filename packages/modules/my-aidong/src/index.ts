@@ -1,4 +1,4 @@
-﻿/**
+/**
  * my-aidong/src/index.ts
  * ------------------------------------------------------------
  * 역할: @idongworld/my-aidong 모듈의 공개 API 표면을 모아 export한다.
@@ -44,3 +44,16 @@ export function getAffinityLevelThreshold(level: number): number {
 }
 
 
+
+export {
+  aidongCodexItems,
+  getAidongCodexItem,
+  getAidongCodexItemBySlot,
+  getAidongCodexItems,
+} from './codexItems.ts'
+export {
+  aidongMinigameSkins,
+  getAidongMinigameSkin,
+  getAidongMinigameSkinByEngine,
+  getAidongMinigameSkins,
+} from './minigameSkins.ts'

@@ -14,16 +14,16 @@ describe('registerModules 모듈 등록', () => {
     expect(() => registerModules()).not.toThrow()
   })
 
-  it('총 16개 모듈을 등록한다', () => {
+  it('총 18개 모듈을 등록한다', () => {
     registerModules()
-    expect(listAll()).toHaveLength(16)
+    expect(listAll()).toHaveLength(18)
   })
 
   it('분류별 등록 수를 유지한다', () => {
     registerModules()
     expect(listByKind('global')).toHaveLength(6)
     expect(listByKind('system')).toHaveLength(4)
-    expect(listByKind('content')).toHaveLength(6)
+    expect(listByKind('content')).toHaveLength(8)
   })
 
   it('광역 모듈 ID를 등록한다', () => {
@@ -42,6 +42,8 @@ describe('registerModules 모듈 등록', () => {
     registerModules()
     const ids = listByKind('content').map((m) => m.id).sort()
     expect(ids).toEqual([
+      'aidong-island',
+      'destination-shell-island',
       'lodge',
       'route-neighbor',
       'zone-garden',
@@ -58,6 +60,8 @@ describe('registerModules 모듈 등록', () => {
     expect(scopes.get('ship')).toBe('ship')
     expect(scopes.get('lodge')).toBe('lodge')
     expect(scopes.get('route-neighbor')).toBe('voyage-route')
+    expect(scopes.get('aidong-island')).toBe('destination-island')
+    expect(scopes.get('destination-shell-island')).toBe('destination-island')
 
     for (const moduleId of ['zone-garden', 'zone-oasis', 'zone-memory', 'zone-mine']) {
       expect(scopes.get(moduleId)).toBe('home-island')

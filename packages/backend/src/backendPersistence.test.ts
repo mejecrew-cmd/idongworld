@@ -30,9 +30,27 @@ import {
   isLegacyAuthFallbackEnabled,
   type AuthedRequest,
 } from './middleware/auth.js'
+import {
+  getAidongIslandConfig,
+  interactAidongIsland,
+  landAidongIsland,
+  leaveAidongIsland,
+  moveAidongIsland,
+  recruitFromAidongIsland,
+} from './modules/aidong-island/service.js'
 import { fullyRegisterCodex, unlockCodexSlot, unlockDiary } from './modules/codex/service.js'
+import {
+  getAidongMinigameSkinCatalogItemByEngine,
+  listAidongMinigameSkinCatalogItems,
+} from './modules/my-aidong/minigameSkinCatalog.js'
 import { purchaseLodgeFurniture, toggleLodgeAidongAssign, toggleLodgeRoomFurniture } from './modules/lodge/service.js'
-import { addAidongAffinity, recruitAidong, toggleAidongEquippedItem } from './modules/my-aidong/service.js'
+import {
+  addAidongAffinity,
+  getAidongCodexProgress,
+  grantAidongCodexItem,
+  recruitAidong,
+  toggleAidongEquippedItem,
+} from './modules/my-aidong/service.js'
 import {
   incorporateSlot,
   listZoneSlots,
@@ -40,13 +58,16 @@ import {
   releaseSlot,
 } from './modules/my-island/service.js'
 import { listModuleModelSpecs } from './modules/modelSpecs.js'
+import { buildMyRoomSummary } from './modules/myroom/routes.js'
 import {
   clearDestinationMission,
   interactDestinationHotspot,
   moveDestinationIsland,
 } from './modules/destination-island/service.js'
+import type { AidongIslandStateDoc } from './models/AidongIslandStateModel.js'
 import type { DestinationIslandStateDoc } from './models/DestinationIslandStateModel.js'
 import {
+  acceptAidongEncounter,
   clearCurrentLanding,
   endRoute,
   getCurrentLanding,
@@ -68,7 +89,7 @@ import {
   toggleHarborAssign,
 } from './modules/ship/service.js'
 import { getZoneBalanceRule } from './modules/zone/balance.js'
-import { clearZone, collectZoneResource } from './modules/zone/service.js'
+import { assignZoneProduction, claimZoneProduction, clearZone, collectZoneResource } from './modules/zone/service.js'
 import type { HostStateDoc } from './models/HostStateModel.js'
 import type { LodgeStateDoc } from './models/LodgeStateModel.js'
 import type { MyAidongStateDoc } from './models/MyAidongStateModel.js'
@@ -160,6 +181,23 @@ const MODULE_REPOSITORY_OPERATION_CASES: Record<string, {
       cabinFurniture: { window: 1 },
       cargo: { acorn: 5 },
       cabins: { cabin1: '황금멍' },
+    },
+  },
+  'aidong-island': {
+    seed: { currentIslandId: 'first-aidong-island', currentNodeId: 'landing-beach' },
+    secondSeed: { currentIslandId: 'ignored-island' },
+    patch: { metAidongIds: ['황금멍'], recruitmentCandidates: { '황금멍': { characterId: '황금멍', status: 'recruitable', metAt: 1, sourceIslandId: 'first-aidong-island' } } },
+    expectedCreated: {
+      moduleId: 'aidong-island',
+      currentIslandId: 'first-aidong-island',
+      currentNodeId: 'landing-beach',
+    },
+    expectedPatched: {
+      moduleId: 'aidong-island',
+      currentIslandId: 'first-aidong-island',
+      currentNodeId: 'landing-beach',
+      metAidongIds: ['황금멍'],
+      recruitmentCandidates: { '황금멍': { characterId: '황금멍', status: 'recruitable', metAt: 1, sourceIslandId: 'first-aidong-island' } },
     },
   },
   'destination-shell-island': {
@@ -582,6 +620,7 @@ describe('backend persistence contracts', () => {
     const repositories = getDedicatedModuleRepositories()
 
     expect(Object.keys(repositories).sort()).toEqual([
+      'aidong-island',
       'codex',
       'destination-shell-island',
       'lodge',
@@ -610,6 +649,10 @@ describe('backend persistence contracts', () => {
     const specs = listModuleModelSpecs()
 
     expect(specs.map((spec) => spec.moduleId).sort()).toEqual(Object.keys(repositories).sort())
+    expect(specs.find((spec) => spec.moduleId === 'aidong-island')).toMatchObject({
+      storage: 'dedicated',
+      collectionName: 'aidongIslandStates',
+    })
     expect(specs.find((spec) => spec.moduleId === 'ship')).toMatchObject({
       storage: 'dedicated',
       collectionName: 'shipStates',
@@ -829,6 +872,97 @@ describe('backend persistence contracts', () => {
       code: 'zone_slot_empty',
       status: 409,
     })
+  })
+  it('prevents duplicate 15-zone incorporation while preserving dynamic zone compatibility', async () => {
+    initializeRepositories()
+
+    const uid = testUid('zone-slots-m5-guards')
+    const repositories = getDedicatedModuleRepositories()
+
+    await recruitAidong(uid, 'm5-slot-aidong')
+    await recruitAidong(uid, 'm5-dynamic-aidong')
+    await recruitAidong(uid, 'm5-second-aidong')
+
+    const first = await incorporateSlot(uid, {
+      areaNo: 'AREA-01',
+      characterId: 'm5-slot-aidong',
+    }) as MyIslandStateDoc
+    expect(first.zoneSlots['AREA-01']).toMatchObject({
+      kind: 'fillable',
+      state: 'filled',
+      occupantAidongId: 'm5-slot-aidong',
+    })
+
+    await expect(incorporateSlot(uid, {
+      areaNo: 'AREA-03',
+      characterId: 'm5-slot-aidong',
+    })).rejects.toMatchObject({
+      code: 'aidong_already_in_zone_slot',
+      status: 409,
+    })
+
+    await expect(incorporateSlot(uid, {
+      areaNo: 'AREA-13',
+      characterId: 'm5-second-aidong',
+    })).rejects.toMatchObject({
+      code: 'zone_slot_anchor_locked',
+      status: 409,
+    })
+
+    const released = await releaseSlot(uid, { areaNo: 'AREA-01' }) as MyIslandStateDoc
+    expect(released.zoneSlots['AREA-01']).toMatchObject({
+      state: 'empty',
+      occupantAidongId: undefined,
+      source: 'default',
+    })
+
+    const reincorporated = await incorporateSlot(uid, {
+      areaNo: 'AREA-03',
+      characterId: 'm5-slot-aidong',
+    }) as MyIslandStateDoc
+    expect(reincorporated.zoneSlots['AREA-03']).toMatchObject({
+      state: 'filled',
+      occupantAidongId: 'm5-slot-aidong',
+      source: 'incorporation',
+    })
+    expect(reincorporated.zoneSlots['AREA-01']).toMatchObject({
+      state: 'empty',
+      occupantAidongId: undefined,
+    })
+
+    await repositories['my-island'].patch(uid, {
+      dynamicAidongZones: {
+        'aidong-m5-dynamic-zone': {
+          zoneId: 'aidong-m5-dynamic-zone',
+          characterId: 'm5-dynamic-aidong',
+          status: 'active',
+          displayOrder: 1,
+          pinned: false,
+          openedAt: 1,
+          source: 'migration',
+        },
+      },
+    } as Partial<MyIslandStateDoc>)
+
+    const dynamicIncorporated = await incorporateSlot(uid, {
+      areaNo: 'AREA-04',
+      characterId: 'm5-dynamic-aidong',
+    }) as MyIslandStateDoc
+    expect(dynamicIncorporated.zoneSlots['AREA-04']).toMatchObject({
+      state: 'filled',
+      occupantAidongId: 'm5-dynamic-aidong',
+      source: 'incorporation',
+    })
+    expect(dynamicIncorporated.dynamicAidongZones['aidong-m5-dynamic-zone']).toMatchObject({
+      characterId: 'm5-dynamic-aidong',
+      status: 'active',
+      source: 'migration',
+    })
+
+    const listed = await listZoneSlots(uid) as MyIslandStateDoc
+    expect(listed.zoneSlots['AREA-03'].occupantAidongId).toBe('m5-slot-aidong')
+    expect(listed.zoneSlots['AREA-04'].occupantAidongId).toBe('m5-dynamic-aidong')
+    expect(listed.dynamicAidongZones['aidong-m5-dynamic-zone'].characterId).toBe('m5-dynamic-aidong')
   })
   it('applies customs debit and credit through resource adapters', async () => {
     initializeRepositories()
@@ -1178,6 +1312,162 @@ describe('backend persistence contracts', () => {
     })
   })
 
+  it('provides an aidong-island skeleton for land, interact, recruit, and leave actions', async () => {
+    initializeRepositories()
+
+    const uid = testUid('aidong-island')
+    const config = getAidongIslandConfig()
+    expect(config).toMatchObject({
+      islandId: 'first-aidong-island',
+      initialNodeId: 'landing-beach',
+    })
+
+    const landed = await landAidongIsland(uid) as { currentIslandId?: string; currentNodeId?: string; visitedIslandIds?: string[] }
+    expect(landed.currentIslandId).toBe('first-aidong-island')
+    expect(landed.currentNodeId).toBe('landing-beach')
+    expect(landed.visitedIslandIds).toContain('first-aidong-island')
+
+    const moved = await moveAidongIsland(uid, 'north') as { currentNodeId?: string; visitedNodeIds?: string[] }
+    expect(moved.currentNodeId).toBe('small-grove')
+    expect(moved.visitedNodeIds).toContain('small-grove')
+
+    const interacted = await interactAidongIsland(uid, 'meet-hwanggumeong') as {
+      state: { metAidongIds?: string[]; recruitmentCandidates?: Record<string, { status?: string }> }
+      candidate?: { characterId?: string; status?: string }
+    }
+    expect(interacted.candidate).toMatchObject({ characterId: '황금멍', status: 'recruitable' })
+    expect(interacted.state.metAidongIds).toContain('황금멍')
+    expect(interacted.state.recruitmentCandidates?.['황금멍']?.status).toBe('recruitable')
+
+    const recruited = await recruitFromAidongIsland(uid, '황금멍') as {
+      state: { recruitedAidongIds?: string[]; recruitmentCandidates?: Record<string, { status?: string }> }
+      aidongState: MyAidongStateDoc
+      nextActions?: string[]
+    }
+    expect(recruited.state.recruitedAidongIds).toContain('황금멍')
+    expect(recruited.state.recruitmentCandidates?.['황금멍']?.status).toBe('recruited')
+    expect(recruited.aidongState.recruitedAidongs).toContain('황금멍')
+    expect(recruited.nextActions).toEqual(['my-island/slots/incorporate'])
+
+    const left = await leaveAidongIsland(uid) as { currentIslandId?: string; currentNodeId?: string }
+    expect(left.currentIslandId).toBeUndefined()
+    expect(left.currentNodeId).toBeUndefined()
+  })
+  it('separates route encounter acceptance from Aidong recruitment and island slot incorporation', async () => {
+    initializeRepositories()
+
+    const uid = testUid('encounter-split')
+    const characterId = 'encounter-split-aidong'
+    const encounterId = 'encounter-split-1'
+
+    const accepted = await acceptAidongEncounter(uid, { characterId, encounterId }) as {
+      encounter?: { characterId?: string; encounterId?: string; status?: string }
+      state?: { progress?: { acceptedEncounters?: Record<string, { characterId?: string }> } }
+      aidongState?: MyAidongStateDoc
+      islandState?: MyIslandStateDoc
+      nextActions?: string[]
+    }
+
+    expect(accepted.encounter).toMatchObject({ encounterId, characterId, status: 'accepted' })
+    expect(accepted.nextActions).toEqual(['my-aidong/recruit', 'my-island/slots/incorporate'])
+    expect(accepted.state?.progress?.acceptedEncounters?.[encounterId]?.characterId).toBe(characterId)
+    expect(accepted.aidongState?.recruitedAidongs).not.toContain(characterId)
+    expect(accepted.islandState?.dynamicAidongZones).toEqual({})
+    expect(accepted.islandState?.zoneSlots?.['AREA-01']?.occupantAidongId).toBeUndefined()
+
+    const replayed = await acceptAidongEncounter(uid, { characterId, encounterId }) as { replayed?: boolean }
+    expect(replayed.replayed).toBe(true)
+
+    const recruited = await recruitAidong(uid, characterId) as MyAidongStateDoc
+    expect(recruited.recruitedAidongs).toContain(characterId)
+
+    const incorporated = await incorporateSlot(uid, { areaNo: 'AREA-01', characterId }) as MyIslandStateDoc
+    expect(incorporated.zoneSlots['AREA-01'].occupantAidongId).toBe(characterId)
+  })
+  it('keeps voyage Aidong island recruitment and island slot incorporation responsibilities separated', async () => {
+    initializeRepositories()
+
+    const uid = testUid('m22-voyage-recruit-incorporate')
+    const shipCrewId = 'm22-ship-crew'
+    await recruitAidong(uid, shipCrewId)
+    await assignCabinSlot(uid, 'cabin1', shipCrewId)
+
+    const route = await startRoute(uid, 'neighbor') as { currentRoute?: string; boardPosition?: number }
+    expect(route.currentRoute).toBe('neighbor')
+    expect(route.boardPosition).toBe(0)
+
+    const accepted = await acceptAidongEncounter(uid, {
+      characterId: '황금멍',
+      encounterId: 'm22-hwanggumeong-encounter',
+    })
+    expect(accepted.encounter).toMatchObject({
+      encounterId: 'm22-hwanggumeong-encounter',
+      characterId: '황금멍',
+      status: 'accepted',
+    })
+    expect(accepted.nextActions).toEqual(['my-aidong/recruit', 'my-island/slots/incorporate'])
+    expect((accepted.aidongState as MyAidongStateDoc).recruitedAidongs).not.toContain('황금멍')
+    expect((accepted.islandState as MyIslandStateDoc).zoneSlots?.['AREA-01']?.occupantAidongId).toBeUndefined()
+
+    const landed = await landAidongIsland(uid) as AidongIslandStateDoc
+    expect(landed.currentIslandId).toBe('first-aidong-island')
+    expect(landed.currentNodeId).toBe('landing-beach')
+
+    const moved = await moveAidongIsland(uid, 'north') as AidongIslandStateDoc
+    expect(moved.currentNodeId).toBe('small-grove')
+
+    const interacted = await interactAidongIsland(uid, 'meet-hwanggumeong') as {
+      state: AidongIslandStateDoc
+      candidate?: { characterId?: string; status?: string; sourceIslandId?: string }
+    }
+    expect(interacted.candidate).toMatchObject({
+      characterId: '황금멍',
+      status: 'recruitable',
+      sourceIslandId: 'first-aidong-island',
+    })
+    expect(interacted.state.metAidongIds).toContain('황금멍')
+
+    const recruited = await recruitFromAidongIsland(uid, '황금멍') as {
+      state: AidongIslandStateDoc
+      aidongState: MyAidongStateDoc
+      nextActions: string[]
+    }
+    expect(recruited.state.recruitedAidongIds).toEqual(['황금멍'])
+    expect(recruited.state.recruitmentCandidates['황금멍']).toMatchObject({
+      characterId: '황금멍',
+      status: 'recruited',
+    })
+    expect(recruited.aidongState.recruitedAidongs).toContain('황금멍')
+    expect(recruited.nextActions).toEqual(['my-island/slots/incorporate'])
+
+    const afterRecruitIsland = await getDedicatedModuleRepositories()['my-island'].getOrCreate(uid) as MyIslandStateDoc
+    expect(afterRecruitIsland.zoneSlots?.['AREA-01']?.occupantAidongId).toBeUndefined()
+
+    const incorporated = await incorporateSlot(uid, {
+      areaNo: 'AREA-01',
+      characterId: '황금멍',
+    }) as MyIslandStateDoc
+    expect(incorporated.zoneSlots['AREA-01']).toMatchObject({
+      state: 'filled',
+      occupantAidongId: '황금멍',
+      source: 'incorporation',
+    })
+
+    const duplicateRecruit = await recruitFromAidongIsland(uid, '황금멍') as {
+      state: AidongIslandStateDoc
+      aidongState: MyAidongStateDoc
+    }
+    expect(duplicateRecruit.state.recruitedAidongIds).toEqual(['황금멍'])
+    expect(duplicateRecruit.aidongState.recruitedAidongs.filter((id) => id === '황금멍')).toHaveLength(1)
+
+    await expect(incorporateSlot(uid, {
+      areaNo: 'AREA-03',
+      characterId: '황금멍',
+    })).rejects.toMatchObject({
+      code: 'aidong_already_in_zone_slot',
+      status: 409,
+    })
+  })
   it('guards module action APIs against invalid local state transitions', async () => {
     initializeRepositories()
 
@@ -1405,6 +1695,113 @@ describe('backend persistence contracts', () => {
     expect((charged.state as { harborLastChargedAt?: number }).harborLastChargedAt).toBeTypeOf('number')
   })
 
+  it('separates myroom codex progress and collection payloads for empty and owned states', async () => {
+    initializeRepositories()
+
+    const emptyUid = testUid('myroom-empty')
+    const emptySummary = await buildMyRoomSummary(emptyUid)
+    expect(emptySummary.codex.aidongCodexCatalog.length).toBeGreaterThanOrEqual(2)
+    expect(emptySummary.codex.aidongCodexProgress).toEqual({})
+    expect(emptySummary.codex.aidongCodexItems).toEqual({})
+    expect(emptySummary.collection.aidongCodexItems).toEqual([])
+    expect(emptySummary.collection.photocardPlaceholders).toEqual([])
+    expect(emptySummary.collection.inventory).toEqual({})
+    expect(emptySummary.collection.lodgeInventory).toEqual({})
+
+    const uid = testUid('myroom-owned')
+    const characterId = '황금멍'
+    await recruitAidong(uid, characterId)
+    await grantAidongCodexItem(uid, characterId, 'hwanggumeong-golden-paw', 2, 'myroom-test')
+
+    const ownedSummary = await buildMyRoomSummary(uid)
+    expect(ownedSummary.codex.aidongCodexProgress[characterId]).toHaveLength(25)
+    expect(ownedSummary.codex.aidongCodexProgress[characterId][0]).toMatchObject({
+      slotNo: 1,
+      status: 'owned',
+      quantity: 2,
+      item: { itemId: 'hwanggumeong-golden-paw', characterId },
+    })
+    expect(ownedSummary.codex.aidongCodexProgress[characterId][1]).toMatchObject({
+      slotNo: 2,
+      status: 'empty',
+      quantity: 0,
+      item: { itemId: 'hwanggumeong-bone-mic', characterId },
+    })
+    expect(ownedSummary.collection.aidongCodexItems).toEqual([
+      expect.objectContaining({
+        characterId,
+        itemId: 'hwanggumeong-golden-paw',
+        quantity: 2,
+        slotNo: 1,
+      }),
+    ])
+    expect(ownedSummary.collection.aidongCodexItems.some((item) => item.itemId === 'hwanggumeong-bone-mic')).toBe(false)
+  })
+
+  it('reflects zone production rewards in both myroom codex and collection sections', async () => {
+    initializeRepositories()
+
+    const uid = testUid('myroom-production')
+    const characterId = '황금멍'
+    await recruitAidong(uid, characterId)
+    await assignZoneProduction(uid, 'zone-garden', characterId, 'slot1')
+    await claimZoneProduction(uid, 'zone-garden', 'slot1', 'myroom-production-claim')
+
+    const summary = await buildMyRoomSummary(uid)
+    expect(summary.codex.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(1)
+    expect(summary.codex.aidongCodexProgress[characterId][0]).toMatchObject({
+      status: 'owned',
+      quantity: 1,
+      item: { itemId: 'hwanggumeong-golden-paw' },
+    })
+    expect(summary.collection.aidongCodexItems).toEqual([
+      expect.objectContaining({
+        characterId,
+        itemId: 'hwanggumeong-golden-paw',
+        quantity: 1,
+        sourceType: 'zone-production',
+        sourceId: 'zone-garden',
+      }),
+    ])
+    expect(summary.collection.photocardPlaceholders).toEqual([])
+  })
+  it('builds Aidong codex progress from catalog and owned quantities', async () => {
+    initializeRepositories()
+
+    const uid = testUid('aidong-codex-progress')
+    const characterId = '황금멍'
+    await recruitAidong(uid, characterId)
+
+    const granted = await grantAidongCodexItem(uid, characterId, 'hwanggumeong-golden-paw', 2, 'test') as MyAidongStateDoc
+    expect(granted.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(2)
+
+    const progress = await getAidongCodexProgress(uid, characterId)
+    expect(progress.ownedItems['hwanggumeong-golden-paw']).toBe(2)
+    expect(progress.progress).toHaveLength(25)
+    expect(progress.progress[0]).toMatchObject({
+      slotNo: 1,
+      status: 'owned',
+      quantity: 2,
+      item: { itemId: 'hwanggumeong-golden-paw', characterId, slotNo: 1 },
+    })
+    expect(progress.progress[1]).toMatchObject({
+      slotNo: 2,
+      status: 'empty',
+      quantity: 0,
+      item: { itemId: 'hwanggumeong-bone-mic', characterId, slotNo: 2 },
+    })
+    expect(progress.progress[2]).toMatchObject({ slotNo: 3, status: 'locked', quantity: 0 })
+
+    const duplicated = await grantAidongCodexItem(uid, characterId, 'hwanggumeong-golden-paw', 1, 'test-duplicate') as MyAidongStateDoc
+    expect(duplicated.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(3)
+    const duplicatedProgress = await getAidongCodexProgress(uid, characterId)
+    expect(duplicatedProgress.progress[0]).toMatchObject({ status: 'owned', quantity: 3 })
+
+    await expect(grantAidongCodexItem(uid, characterId, 'unknown-item', 1, 'test')).rejects.toMatchObject({
+      code: 'unknown_aidong_codex_item',
+      status: 400,
+    })
+  })
   it('guards zone action APIs with zone-local resource and clear rules', async () => {
     initializeRepositories()
 
@@ -1487,6 +1884,52 @@ describe('backend persistence contracts', () => {
     expect(mine?.rewards.mineCoinsPerOreFound).toBe(10)
   })
 
+  it('loads Aidong minigame skin catalog for engine reward candidates', async () => {
+    const skins = listAidongMinigameSkinCatalogItems()
+    expect(skins.length).toBeGreaterThanOrEqual(2)
+
+    const gardenSkin = getAidongMinigameSkinCatalogItemByEngine('황금멍', 'garden-grow')
+    expect(gardenSkin).toMatchObject({
+      skinId: 'hwanggumeong-garden-grow',
+      rewardItemId: 'hwanggumeong-golden-paw',
+      rewardAmount: 1,
+      zoneModuleId: 'zone-garden',
+    })
+  })
+  it('grants Aidong codex item from zone production claim', async () => {
+    initializeRepositories()
+
+    const uid = testUid('zone-production-codex')
+    const characterId = '황금멍'
+    await recruitAidong(uid, characterId)
+    await assignZoneProduction(uid, 'zone-garden', characterId, 'slot1')
+
+    const claimed = await claimZoneProduction(uid, 'zone-garden', 'slot1', 'zone-production-codex-1')
+    expect(claimed.rewards).toEqual([{
+      kind: 'aidong-codex-item',
+      characterId,
+      itemId: 'hwanggumeong-golden-paw',
+      amount: 1,
+      sourceType: 'zone-production',
+      sourceId: 'zone-garden',
+      slotNo: 1,
+    }])
+    const claimedAidongState = claimed.aidongState as unknown as MyAidongStateDoc
+    const claimedZoneState = claimed.state as ZoneStateDoc
+    expect(claimedAidongState.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(1)
+    expect((claimedZoneState.progress as Record<string, unknown>).lastProductionClaim).toMatchObject({
+      slotId: 'slot1',
+      characterId,
+      rewards: claimed.rewards,
+    })
+
+    const replayed = await claimZoneProduction(uid, 'zone-garden', 'slot1', 'zone-production-codex-1')
+    expect(replayed.replayed).toBe(true)
+    expect(replayed.rewards).toEqual([])
+
+    const progress = await getAidongCodexProgress(uid, characterId)
+    expect(progress.progress[0]).toMatchObject({ status: 'owned', quantity: 1 })
+  })
   it('moves zone completion host rewards through backend clear actions', async () => {
     initializeRepositories()
 

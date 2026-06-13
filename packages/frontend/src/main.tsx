@@ -28,6 +28,7 @@ import { bootstrapMyAidong } from './lib/myAidongBootstrap'
 import { bootstrapMyIsland } from './lib/myIslandBootstrap'
 import { bootstrapCodex } from './lib/codexBootstrap'
 import { bootstrapZoneGarden } from './lib/zoneGardenBootstrap'
+import { bootstrapAidongIsland } from './lib/aidongIslandBootstrap'
 import { bootstrapZoneContent } from './lib/zoneContentBootstrap'
 import { bootstrapCustoms } from './lib/customsBootstrap'
 import { bootstrapCutsceneRunner } from './lib/cutsceneBootstrap'
@@ -57,6 +58,7 @@ bootstrapMyAidong()   // 영입·친밀도·욕구·케어
 bootstrapMyIsland()   // zone unlock 2-gate (build phase + condition DSL)
 bootstrapCodex()      // 도감·일기 해금
 bootstrapZoneGarden() // zone-garden harvest -> zone action API sync
+bootstrapAidongIsland() // aidong-island recruit placeholder -> aidong-island/my-aidong action API sync
 bootstrapZoneContent() // oasis/memory/mine -> zone action API sync
 
 // 3. 시스템 모듈 DI 훅 주입 — 앱 mount 전 1회

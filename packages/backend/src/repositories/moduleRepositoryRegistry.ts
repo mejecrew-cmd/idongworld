@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/backend/src/repositories/moduleRepositoryRegistry.ts
  * ------------------------------------------------------------
  * 역할: 상태 저장소 접근을 캡슐화하는 repository 계층이다.
@@ -9,6 +9,7 @@ import type { DedicatedModuleStateRepository } from './dedicatedModuleStateRepos
 import {
   createMemoryDestinationIslandRepository,
   createMemoryZoneRepository,
+  memoryAidongIslandRepository,
   memoryLodgeRepository,
   memoryCodexRepository,
   memoryMyAidongRepository,
@@ -19,6 +20,7 @@ import {
 import {
   createMongoDestinationIslandRepository,
   createMongoZoneRepository,
+  mongoAidongIslandRepository,
   mongoLodgeRepository,
   mongoCodexRepository,
   mongoMyAidongRepository,
@@ -41,6 +43,7 @@ export function createDedicatedModuleRepositories(kind: 'memory' | 'mongo'): Mod
     lodge: (isMongo ? mongoLodgeRepository : memoryLodgeRepository) as DedicatedModuleStateRepository<object>,
     'route-neighbor': (isMongo ? mongoRouteNeighborRepository : memoryRouteNeighborRepository) as DedicatedModuleStateRepository<object>,
     ship: (isMongo ? mongoShipRepository : memoryShipRepository) as DedicatedModuleStateRepository<object>,
+    'aidong-island': (isMongo ? mongoAidongIslandRepository : memoryAidongIslandRepository) as DedicatedModuleStateRepository<object>,
   }
 
   for (const moduleId of ZONE_MODULE_IDS) {

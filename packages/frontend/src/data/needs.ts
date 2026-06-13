@@ -74,3 +74,25 @@ export function moodToExpression(mood: MoodKey): ExpressionId {
   if (mood === 'worried' || mood === 'sad') return 'worried'
   return 'normal'
 }
+export type CareSurfaceKey = 'hunger' | 'clean' | 'mood' | 'energy'
+
+export const CARE_SURFACE_LABELS: Record<CareSurfaceKey, { ko: string; emoji: string }> = {
+  hunger: { ko: 'Hunger', emoji: '🍽️' },
+  clean: { ko: 'Clean', emoji: '🛁' },
+  mood: { ko: 'Mood', emoji: '💗' },
+  energy: { ko: 'Energy', emoji: '⚡' },
+}
+
+export const CARE_SURFACE_KEYS: CareSurfaceKey[] = ['hunger', 'clean', 'mood', 'energy']
+
+export function calcCareSurface(
+  needs: Record<NeedKey, number>,
+  moodScore = calcMoodScore(needs),
+): Record<CareSurfaceKey, number> {
+  return {
+    hunger: needs.hunger ?? 0,
+    clean: needs.hygiene ?? 0,
+    mood: Math.round((((needs.social ?? 0) + (needs.fun ?? 0) + moodScore) / 3) * 10) / 10,
+    energy: Math.round((((needs.energy ?? 0) + (needs.health ?? 0)) / 2) * 10) / 10,
+  }
+}

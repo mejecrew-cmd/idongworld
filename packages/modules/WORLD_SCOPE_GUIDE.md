@@ -30,9 +30,8 @@
 - `route-neighbor`: `voyage-route`
 - `ship`: `ship`
 - `lodge`: `lodge`
-
-아직 `destination-island`로 분류된 실제 도착 섬 모듈은 없다. 이후 항해로 도착하는 섬 모듈을 추가할 때 이 값을 사용한다.
-
+- `destination-shell-island`: `destination-island`이며, 조개빛 섬 POC/compat/dev 또는 이벤트 섬 후보다.
+- `aidong-island`: `destination-island`이며, 항해 중 만나는 Aidong 영입용 M22 skeleton 모듈이다.
 ## 세관 목적지 판단
 
 세관은 자원 이동 출발 모듈의 `worldScope`를 보고 기본 목적지를 판단한다.
@@ -83,3 +82,5 @@
 
 - **2026-06-05**: 항해 도착 섬의 화려한 연출을 위해 PixiJS를 destination island 탐험 화면에 부분 도입할 수 있다는 규칙을 추가했다.
 - **2026-06-05**: 클릭형 destination island에서는 Spine보다 Rive를 hotspot/UI/Aidong 반응 애니메이션에 우선 적용한다는 규칙을 추가했다.
+
+- **2026-06-13**: `aidong-island`를 `destination-island` 분류에 추가했다. M22 영입 섬은 별도 module로 두고, `destination-shell-island`는 조개빛 섬 POC/compat 후보로 유지한다.

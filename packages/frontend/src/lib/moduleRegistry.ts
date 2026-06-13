@@ -29,6 +29,7 @@ import zoneMemoryManifest from '@idongworld/zone-memory/manifest'
 import zoneMineManifest from '@idongworld/zone-mine/manifest'
 import routeNeighborManifest from '@idongworld/route-neighbor/manifest'
 import destinationShellIslandManifest from '@idongworld/destination-shell-island/manifest'
+import aidongIslandManifest from '@idongworld/aidong-island/manifest'
 
 const ALL_MANIFESTS = [
   // 광역 모듈 (6)
@@ -43,7 +44,7 @@ const ALL_MANIFESTS = [
   gachaManifest,
   cutsceneRunnerManifest,
   customsManifest,
-  // 콘텐츠 모듈 (6)
+  // 콘텐츠 모듈 (8)
   lodgeManifest,
   zoneGardenManifest,
   zoneOasisManifest,
@@ -51,6 +52,7 @@ const ALL_MANIFESTS = [
   zoneMineManifest,
   routeNeighborManifest,
   destinationShellIslandManifest,
+  aidongIslandManifest,
 ]
 
 export function registerModules(): void {

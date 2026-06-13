@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@idongworld/account": "workspace:*",
+    "@idongworld/aidong-island": "workspace:*",
     "@idongworld/codex": "workspace:*",
     "@idongworld/core": "workspace:*",
     "@idongworld/customs": "workspace:*",

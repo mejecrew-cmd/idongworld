@@ -104,6 +104,13 @@ export interface MyIslandZoneSlot {
   updatedAt?: number
 }
 
+export interface AidongIslandActionResponse<TState = Record<string, unknown>> extends ActionResponse<TState> {
+  hotspot?: Record<string, unknown>
+  candidate?: Record<string, unknown>
+  aidongState?: Record<string, unknown>
+  nextActions?: string[]
+}
+
 export interface AuthSessionRequest {
   provider: 'google' | 'twitter' | 'firebase'
   email?: string | null
@@ -236,6 +243,17 @@ export const api = {
       body: JSON.stringify({ characterId, delta }),
     }),
 
+
+  applyAidongCare: <TState = Record<string, unknown>>(
+    uid: string,
+    characterId: string,
+    actionId: string,
+  ) =>
+    apiFetch<ActionResponse<TState> & { result?: Record<string, unknown> }>('/api/modules/my-aidong/care', {
+      method: 'POST',
+      uid,
+      body: JSON.stringify({ characterId, actionId }),
+    }),
   setAidongOutfit: <TState = Record<string, unknown>>(
     uid: string,
     characterId: string,
@@ -406,6 +424,55 @@ export const api = {
       body: JSON.stringify({ steps }),
     }),
 
+  acceptRouteAidongEncounter: <TState = Record<string, unknown>>(
+    uid: string,
+    request: {
+      characterId: string
+      encounterId?: string
+      zoneId?: string
+    },
+  ) =>
+    apiFetch<ActionResponse<TState> & {
+      encounter?: Record<string, unknown>
+      aidongState?: Record<string, unknown>
+      islandState?: Record<string, unknown>
+      nextActions?: string[]
+      replayed?: boolean
+    }>('/api/modules/route-neighbor/encounter/accept', {
+      method: 'POST',
+      uid,
+      body: JSON.stringify(request),
+    }),  landAidongIsland: <TState = Record<string, unknown>>(uid: string, islandId: string) =>
+    apiFetch<AidongIslandActionResponse<TState>>('/api/modules/aidong-island/land', {
+      method: 'POST',
+      uid,
+      body: JSON.stringify({ islandId }),
+    }),
+
+  moveAidongIsland: <TState = Record<string, unknown>>(
+    uid: string,
+    direction: 'north' | 'south' | 'west' | 'east',
+  ) =>
+    apiFetch<AidongIslandActionResponse<TState>>('/api/modules/aidong-island/move', {
+      method: 'POST',
+      uid,
+      body: JSON.stringify({ direction }),
+    }),
+
+  interactAidongIsland: <TState = Record<string, unknown>>(uid: string, hotspotId: string) =>
+    apiFetch<AidongIslandActionResponse<TState>>('/api/modules/aidong-island/interact', {
+      method: 'POST',
+      uid,
+      body: JSON.stringify({ hotspotId }),
+    }),
+
+  recruitFromAidongIsland: <TState = Record<string, unknown>>(uid: string, characterId: string) =>
+    apiFetch<AidongIslandActionResponse<TState>>('/api/modules/aidong-island/recruit', {
+      method: 'POST',
+      uid,
+      body: JSON.stringify({ characterId }),
+    }),
+
   getCurrentRouteLanding: <TLanding = Record<string, unknown>>(uid: string) =>
     apiFetch<{ ok: boolean; landing?: TLanding }>('/api/modules/route-neighbor/landing/current', {
       uid,
@@ -497,6 +564,15 @@ export const api = {
       body: JSON.stringify({ slotId, itemId }),
     }),
 
+
+  getMyRoomSummary: <TState = Record<string, unknown>>(uid: string) =>
+    apiFetch<{ ok: boolean } & TState>('/api/modules/myroom/summary', { uid }),
+
+  getMyRoomSection: <TState = Record<string, unknown>>(
+    uid: string,
+    section: 'aidongs' | 'codex' | 'collection' | 'ledger',
+  ) =>
+    apiFetch<{ ok: boolean } & TState>(`/api/modules/myroom/${section}`, { uid }),
   getLodgeConfig: () =>
     apiFetch<{
       ok: boolean

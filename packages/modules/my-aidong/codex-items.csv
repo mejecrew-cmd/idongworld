@@ -1,0 +1,4 @@
+# my-aidong/codex-items.csv - Aidong별 25칸 도감 아이템 catalog 후보
+characterId,itemId,name,slotNo,rarity,sourceType,sourceId,phase,description
+황금멍,hwanggumeong-golden-paw,황금 발도장,1,common,zone-production,zone-garden,Phase 1,M4 POC용 도감템. 정원 생산 보상 후보이며 황금멍 25칸 도감의 1번 슬롯에 표시한다.
+황금멍,hwanggumeong-bone-mic,뼈다귀 마이크,2,rare,stage-placeholder,stage-debut,Phase 1,M4 POC용 도감템. 데뷔 placeholder 보상 후보이며 황금멍 25칸 도감의 2번 슬롯에 표시한다.

@@ -1,0 +1,4 @@
+# my-aidong/minigame-skins.csv - Aidong별 미니게임 skin catalog 후보
+characterId,skinId,engineId,entryItemId,rewardItemId,rewardAmount,backgroundAssetId,objectAssetId,zoneModuleId,phase,description
+황금멍,hwanggumeong-garden-grow,garden-grow,,hwanggumeong-golden-paw,1,garden-gold-bg,golden-seed,zone-garden,Phase 1,M4 POC용 정원 성장 스킨. zone-garden 생산/활동 reward와 황금멍 도감템 연결 후보.
+춤냥,chumnyang-memory-match,memory-match,,chumnyang-silver-ribbon,1,memory-night-bg,silver-card,zone-memory,Phase 1,M4 POC용 카드 매칭 스킨. 실제 도감템 catalog 확정 전까지 rewardItemId는 placeholder.

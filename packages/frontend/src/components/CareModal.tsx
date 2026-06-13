@@ -23,9 +23,11 @@ import type { AidongCharacterId } from '@/stores/userStore'
 import { AidongSprite } from './AidongSprite'
 import { DiaryFragmentToast } from './DiaryFragmentToast'
 import { CARE_ACTIONS, ZONE_LABELS } from '@/data/careActions'
-import { NEED_KEYS, NEED_LABELS, calcMoodScore, moodFromScore, moodToExpression, INITIAL_NEEDS } from '@/data/needs'
+import { CARE_SURFACE_KEYS, CARE_SURFACE_LABELS, calcCareSurface, calcMoodScore, moodFromScore, moodToExpression, INITIAL_NEEDS } from '@/data/needs'
 import { getCurrentZone } from '@/data/schedZone'
-import { hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
+import { api } from '@/lib/api'
+import { applyActionApiResponse } from '@/lib/actionApiSync'
+import { accountStoreFacade, hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
 
 interface CareModalProps {
   character: AidongCharacterId | null
@@ -40,6 +42,7 @@ export const CareModal = ({ character, onClose }: CareModalProps) => {
   const [tab, setTab] = useState<'basic' | 'free'>('basic')
   const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
   const [diaryTrigger, setDiaryTrigger] = useState<{ character: AidongCharacterId; key: number } | null>(null)
+  const [applyingActionId, setApplyingActionId] = useState<string | null>(null)
 
   // 시퀀스 진입 시 욕구 감소
   useEffect(() => {
@@ -54,30 +57,50 @@ export const CareModal = ({ character, onClose }: CareModalProps) => {
   const mood = moodFromScore(score, curZone === 4)
   const exp = moodToExpression(mood)
   const aff = affinities[character] ?? { score: 0, level: 0 }
+  const careSurface = calcCareSurface(charNeeds, score)
 
   const visibleActions = CARE_ACTIONS.filter((a) => a.category === tab)
 
-  const onAction = (actionId: string) => {
-    const result = myAidongStoreFacade.applyCareAction(character, actionId)
-    if (result.ok) {
-      setFeedback({ kind: 'ok', text: `+${result.affinityDelta} 친밀도 · 욕구 회복` })
+  const onAction = async (actionId: string) => {
+    const action = CARE_ACTIONS.find((a) => a.id === actionId)
+    setApplyingActionId(actionId)
+
+    try {
+      if (import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true') {
+        const uid = accountStoreFacade.getFirebaseUid()
+        if (!uid) throw new Error('로그인 정보가 없어 케어할 수 없어요.')
+        const response = await api.applyAidongCare(uid, character, actionId)
+        applyActionApiResponse(response)
+        const result = response.result ?? {}
+        setFeedback({ kind: 'ok', text: `+${Number(result.affinityDelta ?? action?.affinity ?? 0)} 친밀도 · 케어 완료` })
+      } else {
+        const result = myAidongStoreFacade.applyCareAction(character, actionId)
+        if (!result.ok) {
+          const reason = {
+            wrong_zone: '지금 시간대엔 안 돼요.',
+            cooldown: '아직 쉬어야 해요.',
+            cap: '오늘 충분해요.',
+            no_coins: '코인이 부족해요.',
+            no_char: '오류',
+          }[result.reason ?? 'no_char']
+          setFeedback({ kind: 'err', text: reason })
+          return
+        }
+        setFeedback({ kind: 'ok', text: `+${result.affinityDelta} 친밀도 · 욕구 회복` })
+      }
+
       // 시간대 일기 조각 자동 노출 (다마고치코어 §9-2: 메인 케어 직후)
       // basic 카테고리만 트리거 (자유 케어는 너무 빈번해서 제외)
-      const action = CARE_ACTIONS.find((a) => a.id === actionId)
       if (action?.category === 'basic') {
         setDiaryTrigger({ character, key: Date.now() })
       }
-    } else {
-      const reason = {
-        wrong_zone: '지금 시간대엔 안 돼요.',
-        cooldown: '아직 쉬어야 해요.',
-        cap: '오늘 충분해요.',
-        no_coins: '코인이 부족해요.',
-        no_char: '오류',
-      }[result.reason ?? 'no_char']
-      setFeedback({ kind: 'err', text: reason })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '케어 처리 중 오류가 발생했어요.'
+      setFeedback({ kind: 'err', text: message.includes('care_daily_cap') ? '오늘 충분해요.' : message })
+    } finally {
+      setApplyingActionId(null)
+      setTimeout(() => setFeedback(null), 2000)
     }
-    setTimeout(() => setFeedback(null), 2000)
   }
 
   return (
@@ -117,16 +140,16 @@ export const CareModal = ({ character, onClose }: CareModalProps) => {
             </Box>
           </Box>
 
-          {/* 6 욕구 게이지 */}
-          <Box sx={{ mt: 1.5, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0.5 }}>
-            {NEED_KEYS.map((k) => {
-              const v = charNeeds[k] ?? 0
+          {/* 4파라미터 표면 게이지: 내부 저장은 6욕구, 숙소 표시는 Hunger/Clean/Mood/Energy로 압축 */}
+          <Box sx={{ mt: 1.5, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0.75 }}>
+            {CARE_SURFACE_KEYS.map((k) => {
+              const v = careSurface[k] ?? 0
               const pct = (v / 10) * 100
               const color = v < 3 ? 'error' : v < 5 ? 'warning' : 'success'
               return (
                 <Box key={k}>
                   <Typography variant="caption" sx={{ fontSize: 10 }}>
-                    {NEED_LABELS[k].emoji} {NEED_LABELS[k].ko} {v.toFixed(0)}
+                    {CARE_SURFACE_LABELS[k].emoji} {CARE_SURFACE_LABELS[k].ko} {v.toFixed(1)}
                   </Typography>
                   <LinearProgress variant="determinate" value={pct} color={color} sx={{ height: 4, borderRadius: 1 }} />
                 </Box>
@@ -163,7 +186,7 @@ export const CareModal = ({ character, onClose }: CareModalProps) => {
                   key={a.id}
                   variant="outlined"
                   onClick={() => onAction(a.id)}
-                  disabled={disabled}
+                  disabled={disabled || applyingActionId === a.id}
                   sx={{
                     py: 1.5,
                     flexDirection: 'column',

@@ -1,19 +1,9 @@
 /**
- * 📁 screens/DebutStageScene.tsx — 데뷔 스테이지 (시그니처 발화)
- * ───────────────────────────────────────────────
- * 📌 역할: 캐릭터의 시그니처 아이템을 5단계 시퀀스로 발화.
- *           무대 zone에 맞는 배경 + 시그니처 이모지 bob 애니.
- *
- * 🔗 연결:
- *   - data/signatures.ts → 5명 시그니처 카탈로그
- *   - 능력치파라메터.md §데뷔 보정 (피지컬 + 페르소나 점수)
- *   - 진입: HubHeartScene "✨ {캐릭터} 데뷔" 버튼
- *
- * 💡 초보자 안내:
- *   - 5단계: 📚 연습 → 💃 포즈 → 🎭 리허설 → 💄 메이크업 → 🎤 무대
- *   - 각 단계 탭 → 점수 +1~3
- *   - 마지막 단계 → 시그니처 발화 → 친밀도 +5 / 코인 +(score×5)
- *   - BG_BY_ZONE: 시그니처 zone에 맞는 배경 PNG 매핑
+ * packages/frontend/src/screens/DebutStageScene.tsx
+ * ------------------------------------------------------------
+ * 역할: Aidong의 데뷔 공연 placeholder를 진행하고 결과 payload와 포토카드 후보를 만든다.
+ * 연결: `/stage/debut/:id` route, `StageScreen`, `MyRoomScreen` 콜렉션 placeholder 흐름이 이 화면을 통과한다.
+ * 주의: M4에서는 실제 backend 결과 저장, 이미지 생성, SUNO, 고품질 포토카드 제작을 하지 않는다.
  */
 import { useState } from 'react'
 import { Box, Typography, Button, Stack, Chip, LinearProgress, Fade } from '@mui/material'
@@ -23,6 +13,8 @@ import { AidongSprite } from '@/components/AidongSprite'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { SIGNATURES } from '@/data/signatures'
 import { hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
+
+const PHOTOCARD_PLACEHOLDER_STORAGE_KEY = 'idongworld-photocard-placeholders'
 
 const STEPS = [
   { id: 'practice', label: '연습', emoji: '📚' },
@@ -40,6 +32,56 @@ const BG_BY_ZONE: Record<string, string> = {
   red_dusk_stage: 'island_red_dusk_stage.png',
 }
 
+type DebutGrade = 'S' | 'A' | 'B' | 'C'
+
+type DebutResultPayload = {
+  resultId: string
+  characterId: AidongCharacterId
+  stageRoute: string
+  score: number
+  grade: DebutGrade
+  affinityDelta: number
+  coinReward: number
+  signature: {
+    itemId: string
+    name: string
+    emoji: string
+    bonus: number
+    zone: string
+  }
+  photocardCandidate: {
+    candidateId: string
+    status: 'placeholder'
+    generationRouteCandidate: '/island/lodge/myroom/collection/photocard/new'
+    galleryRouteCandidate: '/island/lodge/myroom/collection/photocard'
+  }
+  generatedAt: number
+}
+
+function gradeFromScore(score: number): DebutGrade {
+  if (score >= 20) return 'S'
+  if (score >= 15) return 'A'
+  if (score >= 10) return 'B'
+  return 'C'
+}
+
+function readStoredPhotocardPlaceholders(): DebutResultPayload[] {
+  try {
+    const raw = window.sessionStorage.getItem(PHOTOCARD_PLACEHOLDER_STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed as DebutResultPayload[] : []
+  } catch {
+    return []
+  }
+}
+
+function storePhotocardPlaceholder(result: DebutResultPayload) {
+  const existing = readStoredPhotocardPlaceholders()
+  const next = [result, ...existing.filter((item) => item.resultId !== result.resultId)].slice(0, 20)
+  window.sessionStorage.setItem(PHOTOCARD_PLACEHOLDER_STORAGE_KEY, JSON.stringify(next))
+}
+
 export const DebutStageScene = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -48,34 +90,73 @@ export const DebutStageScene = () => {
   const [step, setStep] = useState(0)
   const [done, setDone] = useState(false)
   const [score, setScore] = useState(0)
+  const [resultPayload, setResultPayload] = useState<DebutResultPayload | null>(null)
 
   const characterId = id as AidongCharacterId
   if (!characterId || !recruitedAidongs.includes(characterId)) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
         <Typography>아직 영입하지 않은 친구의 데뷔는 진행할 수 없어요.</Typography>
-        <Button onClick={() => navigate('/island')} sx={{ mt: 2 }}>마이섬으로</Button>
+        <Button onClick={() => navigate('/stage')} sx={{ mt: 2 }}>대표 무대로</Button>
       </Box>
     )
   }
   const sig = SIGNATURES[characterId]
   const bg = BG_BY_ZONE[sig.zone] ?? 'ocean_dawn_warm.png'
 
+  const buildResultPayload = (finalScore: number): DebutResultPayload => {
+    const generatedAt = Date.now()
+    const resultId = `debut-${characterId}-${generatedAt}`
+    return {
+      resultId,
+      characterId,
+      stageRoute: `/stage/debut/${characterId}`,
+      score: finalScore,
+      grade: gradeFromScore(finalScore),
+      affinityDelta: 5,
+      coinReward: finalScore * 5,
+      signature: {
+        itemId: sig.itemId,
+        name: sig.name,
+        emoji: sig.emoji,
+        bonus: sig.bonus,
+        zone: sig.zone,
+      },
+      photocardCandidate: {
+        candidateId: `photocard-${resultId}`,
+        status: 'placeholder',
+        generationRouteCandidate: '/island/lodge/myroom/collection/photocard/new',
+        galleryRouteCandidate: '/island/lodge/myroom/collection/photocard',
+      },
+      generatedAt,
+    }
+  }
+
   const onTap = () => {
     if (done) return
     if (step < STEPS.length - 1) {
-      // 각 단계 점수 (랜덤 +1~3)
       const stepScore = 1 + Math.floor(Math.random() * 3)
       setScore((s) => s + stepScore)
       setStep(step + 1)
     } else {
-      // 무대 마지막 — 데뷔 완료
       const finalScore = score + sig.bonus
-      myAidongStoreFacade.addAffinity(characterId, 5)
-      hostStoreFacade.rewardCoins(finalScore * 5)
+      const result = buildResultPayload(finalScore)
+      myAidongStoreFacade.addAffinity(characterId, result.affinityDelta)
+      hostStoreFacade.rewardCoins(result.coinReward)
       setScore(finalScore)
+      setResultPayload(result)
       setDone(true)
     }
+  }
+
+  const moveToCollection = () => {
+    if (resultPayload) storePhotocardPlaceholder(resultPayload)
+    navigate('/island/lodge/myroom/collection', {
+      state: {
+        focus: 'photocard-placeholder',
+        debutResult: resultPayload,
+      },
+    })
   }
 
   return (
@@ -87,19 +168,17 @@ export const DebutStageScene = () => {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         position: 'relative',
-        cursor: 'pointer',
+        cursor: done ? 'default' : 'pointer',
       }}
     >
       <ScreenHeader category="데뷔 스테이지" title={characterId} subtitle={sig.zone} overlay />
-      {/* 헤더 */}
       <Box sx={{ position: 'absolute', top: 56, left: 16, right: 16, display: 'flex', justifyContent: 'space-between' }}>
         <Chip label={`데뷔 스테이지 · ${sig.zone}`} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.9)' }} />
-        <Button size="small" variant="contained" color="inherit" onClick={(e) => { e.stopPropagation(); navigate('/island') }}>
-          나가기
+        <Button size="small" variant="contained" color="inherit" onClick={(e) => { e.stopPropagation(); navigate('/stage') }}>
+          대표 무대
         </Button>
       </Box>
 
-      {/* 캐릭터 + 시그니처 */}
       <Box sx={{ position: 'absolute', bottom: '30%', left: '50%', transform: 'translateX(-50%)' }}>
         <AidongSprite
           character={characterId}
@@ -112,7 +191,6 @@ export const DebutStageScene = () => {
         </Typography>
       </Box>
 
-      {/* 하단 패널 */}
       <Box
         sx={{
           position: 'absolute',
@@ -122,9 +200,10 @@ export const DebutStageScene = () => {
           bgcolor: 'rgba(255,255,255,0.95)',
           borderRadius: 2,
           p: 3,
-          maxWidth: 600,
+          maxWidth: 660,
           mx: 'auto',
         }}
+        onClick={(event) => event.stopPropagation()}
       >
         {!done ? (
           <Fade in key={step}>
@@ -149,28 +228,45 @@ export const DebutStageScene = () => {
                 {step === 1 && '시그니처 동작을 잡아봐요.'}
                 {step === 2 && '한 번 처음부터 끝까지.'}
                 {step === 3 && '거울 앞에서 마지막 점검.'}
-                {step === 4 && '무대 위로! (탭으로 시그니처 발화)'}
+                {step === 4 && '무대 위로! 탭하면 시그니처가 발화됩니다.'}
               </Typography>
               <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
                 점수 {score} · 시그니처: {sig.emoji} {sig.name} · 보정 +{sig.bonus}
               </Typography>
-              <Button variant="contained" fullWidth onClick={(e) => { e.stopPropagation(); onTap() }} sx={{ mt: 2 }}>
-                {step < STEPS.length - 1 ? '다음 단계' : '🎤 시그니처 발화!'}
+              <Button variant="contained" fullWidth onClick={onTap} sx={{ mt: 2 }}>
+                {step < STEPS.length - 1 ? '다음 단계' : '시그니처 발화'}
               </Button>
             </Box>
           </Fade>
         ) : (
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h2" sx={{ fontSize: 22, mb: 1 }}>✨ 데뷔 완료!</Typography>
+            <Typography variant="h2" sx={{ fontSize: 22, mb: 1 }}>데뷔 완료</Typography>
             <Typography variant="body1" sx={{ mb: 1 }}>
               <strong>{characterId}</strong>의 {sig.name}이(가) 빛났어요.
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-              점수 {score} · 친밀도 +5 · 코인 +{score * 5}
-            </Typography>
-            <Button variant="contained" fullWidth onClick={(e) => { e.stopPropagation(); navigate('/island') }}>
-              마이섬 복귀
-            </Button>
+            <Stack direction="row" spacing={1} justifyContent="center" sx={{ flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              <Chip color="primary" label={`등급 ${resultPayload?.grade ?? gradeFromScore(score)}`} />
+              <Chip label={`점수 ${score}`} />
+              <Chip label={`친밀도 +${resultPayload?.affinityDelta ?? 5}`} />
+              <Chip label={`코인 +${resultPayload?.coinReward ?? score * 5}`} />
+            </Stack>
+            <Box sx={{ bgcolor: 'background.default', borderRadius: 2, p: 1.5, mb: 2, textAlign: 'left' }}>
+              <Typography sx={{ fontWeight: 800, mb: 0.5 }}>포토카드 placeholder 후보</Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                후보 ID: {resultPayload?.photocardCandidate.candidateId ?? 'pending'}
+              </Typography>
+              <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 0.5 }}>
+                정식 이미지 생성과 고품질 카드 제작은 6월 컷라인 밖으로 두고, 지금은 콜렉션에 후보만 표시합니다.
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+              <Button variant="contained" onClick={moveToCollection} sx={{ flex: '1 1 180px' }}>
+                포토카드 후보 보기
+              </Button>
+              <Button variant="outlined" onClick={() => navigate('/stage')} sx={{ flex: '1 1 160px' }}>
+                대표 무대
+              </Button>
+            </Stack>
           </Box>
         )}
       </Box>

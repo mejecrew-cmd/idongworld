@@ -1,0 +1,25 @@
+{
+  "name": "@idongworld/aidong-island",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./manifest": "./manifest.ts",
+    "./routes": "./src/routes.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@idongworld/core": "workspace:*",
+    "@mui/material": "^5.16.7",
+    "react": "^18.3.1",
+    "react-router-dom": "^6.27.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "typescript": "^5.6.0"
+  }
+}

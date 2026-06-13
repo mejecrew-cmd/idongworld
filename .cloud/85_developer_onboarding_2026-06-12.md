@@ -15,28 +15,32 @@
 
 새 개발자는 아래 순서대로 읽으면 된다.
 
-1. `.cloud/71_roadmap_2026-06_260612.md`
-   - 6월 전체 목표와 마일스톤을 보는 문서다.
-2. `.cloud/84_next_work_2026-06-19_m2_m3_preview.md`
-   - 현재 최신 실행 보드다. 파일명에는 preview가 남아 있지만 현재 M2~M3 작업 보드로 승격되어 있다.
-3. `.cloud/82_fixed_15_area_slot_decision_2026-06-14.md`
-   - 마이섬 15구역과 13개 편입 슬롯 구조를 확정한 문서다.
-4. `.cloud/80_frontend_route_audit_2026-06-14.md`
-   - frontend route와 사이트맵 사이의 대응 상태를 보는 문서다.
-5. `.cloud/81_backend_module_conflict_map_2026-06-14.md`
-   - backend module과 기획 module 사이의 충돌 지점을 보는 문서다.
+1. `.cloud/01_project_history_current_2026-06-13.md`
+   - 지금까지의 히스토리를 현재 구현 기준으로 요약한 기준 문서다. 오래된 next_work 대신 이 문서를 먼저 본다.
+2. `.cloud/89_next_work_2026-07-01.md`
+   - 현재 최신 실행 보드다. M6 7월 첫 작업을 진행한다.
+3. `.cloud/71_roadmap_2026-06_260612.md`
+   - 6월 완료/동결 결과와 7월로 넘어간 기준을 보는 로드맵이다.
+4. `.cloud/85_developer_onboarding_2026-06-12.md`
+   - 새 개발자용 실무 인수인계 문서다. 지금 읽고 있는 이 문서다.
+5. `.cloud/02_module_creator_guide_2026-06-13.md`
+   - 새 모듈을 만드는 순서와 체크리스트를 보는 제작자 가이드다.
 6. `.cloud/20_module_rules.md`
    - module 경계와 manifest, worldScope, PixiJS/Rive 사용 기준을 보는 문서다.
 7. `.cloud/30_backend_db_rules.md`
    - backend, MongoDB, module API, customs, auth 규칙을 보는 문서다.
 8. `.cloud/40_frontend_rules.md`
    - frontend, Zustand, API client, route, UI, smoke 규칙을 보는 문서다.
-9. `packages/modules/BACKEND_GUIDE.md`
+9. `.cloud/35_backend_db_runbook.md`
+   - local Mongo와 backend smoke 실행 절차를 보는 문서다.
+10. `packages/modules/BACKEND_GUIDE.md`
    - module 개발자가 backend 저장소와 API를 어떻게 설계해야 하는지 보는 실무 가이드다.
-10. `.cloud/90_codex_workflow.md`
+11. `.cloud/90_codex_workflow.md`
     - Codex 또는 자동화 도구가 작업할 때 지켜야 하는 절차다.
+12. `.cloud/95_rule_maintenance.md`
+    - 규칙 문서를 수정할 때 지켜야 하는 절차다.
 
-오래된 next_work 문서는 이력으로만 본다. 현재 작업 판단은 최신 로드맵과 최신 실행 보드를 우선한다.
+오래된 next_work, 임시 충돌 지도, 임시 설계 메모는 히스토리 문서에 흡수했다. 현재 작업 판단은 `.cloud/01_project_history_current_2026-06-13.md`, `.cloud/89_next_work_2026-07-01.md`, `.cloud/71_roadmap_2026-06_260612.md`를 우선한다.
 
 ## 2. 현재 6월 목표
 
@@ -75,7 +79,7 @@
 - 숙소 케어 최소 action.
 - 마이룸 shell.
 - 도감템 25칸 원장의 형태.
-- 최소 smoke 검증.
+- 최소 smoke 검증. M5 기준 `pnpm check:live-smoke:local`이 실제 통과했다.
 
 ## 3. 지금까지 완료된 큰 작업
 
@@ -84,16 +88,16 @@
 완료된 내용:
 
 - 6월 전체 로드맵을 `.cloud/71_roadmap_2026-06_260612.md`로 정리했다.
-- 최신 실행 보드를 `.cloud/84_next_work_2026-06-19_m2_m3_preview.md`로 전환했다.
-- frontend route audit, backend module conflict map, 15구역 slot decision 문서를 만들었다.
+- 최신 실행 보드는 `.cloud/89_next_work_2026-07-01.md`이며, M5까지의 완료 결과는 `.cloud/01_project_history_current_2026-06-13.md`에 동결 기록으로 남겼다.
+- frontend route audit, backend module conflict map, 15구역 slot decision 등 임시 판단 문서는 `.cloud/01_project_history_current_2026-06-13.md`에 흡수했다.
 - 6/8 이후 기획 변경에 맞춰 module, backend, frontend 규칙 문서를 갱신했다.
 - Phase 1에서는 세관 UI를 필수 gate로 강제하지 않는다는 기준을 문서화했다.
 
 개발자가 기억할 것:
 
-- 문서가 많기 때문에 최신 문서를 먼저 봐야 한다.
-- 6/8 이전 next_work는 대부분 이력이다.
-- 6/12 이후 문서는 6월 POC 루프 기준으로 읽는다.
+- 오래된 개별 문서가 아니라 히스토리 요약, 최신 실행 보드, 로드맵, 규칙 문서 순서로 읽는다.
+- 6/8 이전 next_work는 이력으로만 본다.
+- 6/12 이후 문서도 히스토리에 흡수된 것은 직접 기준으로 삼지 않는다.
 
 ### 3.2 backend 분리
 
@@ -227,55 +231,61 @@
 - PixiJS scene state를 backend document와 직접 결합하지 않는다.
 - 텍스트가 많거나 접근성이 필요한 UI는 React/MUI로 만든다.
 
+### 3.9 M5 검증과 동결 준비
+
+완료된 내용:
+
+- backend module action smoke를 6월 POC 수직 루프 기준으로 재작성했다.
+- Playwright route smoke가 core route, AREA-01~15, aidong-island, myroom, stage/debut, legacy redirect를 확인한다.
+- backend persistence test에 15구역 slot 중복 방지, M21 도감/콜렉션 분리, M22 상륙/영입/편입 책임 분리를 추가했다.
+- `pnpm check:live-smoke:local`을 실제로 실행했고 최종 통과했다.
+- live smoke 중 발견한 Playwright storage 초기화 문제와 성장의 정원 AREA-14 선택자 문제를 수정했다.
+
+개발자가 기억할 것:
+
+- M5 이후 넓은 회귀검사는 `pnpm check:live-smoke:local`을 우선 사용한다.
+- 이 명령은 local Mongo, backend, frontend를 실제로 띄운다.
+- 문서만 통과한 것이 아니라 실제 실행까지 통과한 smoke 기준이다.
+- 7월 작업은 M5 검증을 깨지 않도록 작은 단위로 추가한다.
 ## 4. 현재 최신 실행 보드
 
 현재 최신 실행 보드는 다음 문서다.
 
 ```text
-.cloud/84_next_work_2026-06-19_m2_m3_preview.md
+.cloud/89_next_work_2026-07-01.md
 ```
 
-파일명에는 preview가 남아 있지만, 현재는 M2~M3 실행 보드로 사용한다.
+M5 보드의 1~10번 완료 결과는 `.cloud/01_project_history_current_2026-06-13.md`에 흡수했다. 6월 POC 수직 루프는 동결 완료로 보고, 이제 7월 M6 작업을 진행한다.
 
-남은 작업은 아래 순서다.
+### 4.1 M5에서 이미 완료된 항목
 
-### 4.1 다음 즉시 작업: 2번
+1. 착수 전 검증 현황 재확인.
+2. backend core smoke를 6월 POC 루프 기준으로 재작성.
+3. Playwright route audit smoke 추가.
+4. 15구역 slot 중복 편입 방지 테스트 추가.
+5. M21 마이룸 도감/콜렉션 책임 분리 테스트 추가.
+6. M22 상륙/영입/편입 책임 분리 테스트 추가.
+7. `pnpm check:live-smoke:local` 실제 실행과 통과 확인.
 
-작업명:
+### 4.2 지금 바로 이어서 할 작업
+
+현재 보드 기준 다음 작업은 M6 2번이다.
 
 ```text
-항해 encounter와 영입 책임 분리
+.cloud/89_next_work_2026-07-01.md
+2. core smoke와 compat smoke 분리 설계
 ```
 
-해야 할 일:
+M5 10번 동결 선언이 끝났으므로 7월 backlog 요약은 `.cloud/01_project_history_current_2026-06-13.md`, 실제 실행 보드는 `.cloud/89_next_work_2026-07-01.md`를 본다.
 
-- `route-neighbor/encounter/accept`가 편입까지 자동 처리하는지 확인한다.
-- encounter accept는 영입 또는 영입 후보 확정까지만 담당하도록 낮춘다.
-- 실제 Aidong 보유 상태 변경은 `my-aidong` module 책임으로 둔다.
-- 마이섬 slot 편입은 `my-island/slots/incorporate`로 분리한다.
-- 기존 compat 흐름은 필요하면 유지하되 신규 수직 루프에서는 사용하지 않는다.
+### 4.3 7월로 넘길 가능성이 높은 후보
 
-완료 기준:
-
-```text
-영입과 마이섬 편입이 backend API 책임상 분리된다.
-```
-
-### 4.2 그다음 작업들
-
-현재 보드의 다음 작업:
-
-1. `aidong-island` module skeleton 작성.
-2. M22 frontend route와 화면 shell 추가.
-3. 영입 시나리오 1컷 placeholder.
-4. 편입 슬롯 선택 UI 연결.
-5. 숙소 메인 메뉴 재정렬.
-6. 4파라미터 케어 표면 모델 작성.
-7. M21 마이룸 route와 aggregation shell.
-8. M2~M3 smoke 추가.
-9. 문서와 changelog 정리.
-
-이 순서를 크게 바꾸지 않는 것이 좋다. 이유는 영입과 편입의 책임이 먼저 분리되어야 아이동섬, 숙소, 마이룸이 같은 데이터 흐름을 볼 수 있기 때문이다.
+- M08 stage/debut backend module과 debut result ledger.
+- 포토카드 정식 저장소와 생성/갤러리 route.
+- 실제 25개 Aidong 도감템 데이터와 upgrade/economy.
+- 13개 fillable 구역 각각의 고유 미니게임/생산 규칙.
+- PixiJS/Rive를 이용한 destination island 또는 아이동섬 연출 고도화.
+- `destination-shell-island`, ship/lodge cargo, customs compat 정리 정책.
 
 ## 5. 현재 구조를 아주 쉽게 설명하면
 
@@ -690,18 +700,25 @@ pnpm check:e2e:smoke
 
 ## 10. 현재 알려진 debt
 
+M5 기준으로 이미 해소된 debt:
+
+- `route-neighbor/encounter/accept` 자동 편입 책임은 분리됐다.
+- `aidong-island` module skeleton, backend state/action, frontend route shell은 구현됐다.
+- M21 마이룸 route와 aggregation shell은 구현됐다.
+- M07 4파라미터 케어 표면 모델과 기본 action은 구현됐다.
+- M2~M4 live smoke debt는 `pnpm check:live-smoke:local` 통과로 해소됐다.
+
 아직 남은 debt:
 
-- `.cloud/84_next_work_2026-06-19_m2_m3_preview.md` 파일명에 preview가 남아 있다. 내용상 현재 실행 보드다.
-- `route-neighbor/encounter/accept` 자동 편입 분리가 아직 남아 있다.
-- 실제 편입 슬롯 선택 UI가 아직 완성되지 않았다.
-- `aidong-island` module skeleton이 아직 없다.
-- M22 아이동섬 route와 화면 shell이 아직 없다.
-- M21 마이룸 route와 aggregation shell이 아직 없다.
-- M07 4파라미터 케어 표면 모델이 아직 없다.
-- `dynamicAidongZones` migration/삭제는 최소 1개 마일스톤 뒤로 미뤘다.
-- 77번 보드의 규칙 문서 갱신 debt가 일부 남아 있다.
-- runtime smoke는 서버 실행 상태에 따라 실패할 수 있으므로 검증 환경을 명확히 기록해야 한다.
+- stage/debut 결과를 backend에 저장하는 정식 module 또는 ledger가 없다.
+- 포토카드 placeholder는 있으나 정식 포토카드 생성/저장/갤러리 route는 없다.
+- Aidong별 25개 도감템 catalog는 구조만 있고 실제 데이터는 매우 적다.
+- upgrade/economy, 연습 상태, 데뷔 준비 상태는 7월 이후 설계가 필요하다.
+- 13개 fillable 구역의 고유 콘텐츠와 생산/미니게임은 대부분 placeholder 또는 compat 상태다.
+- `destination-shell-island`는 POC/compat/event 후보로 남아 있으며 정식 M22 원장은 아니다.
+- ship/lodge inventory와 customs transfer는 삭제하지 않고 compat/보류/재사용 후보로 관리한다.
+- `/signup`, `/terms`, `/settings`, `/shop`, `/activity/main/*` 같은 route placeholder 후보가 남아 있다.
+- `dynamicAidongZones` migration/삭제는 최소 1개 마일스톤 뒤로 미룬다.
 
 ## 11. 절대 하지 말아야 할 것
 
@@ -719,36 +736,31 @@ pnpm check:e2e:smoke
 
 ## 12. 새 개발자가 바로 잡을 첫 작업
 
-가장 먼저 잡을 작업은 최신 실행 보드의 2번이다.
+현재 기준으로 새 개발자가 바로 잡을 작업은 최신 M6 보드의 다음 미완료 항목이다.
 
 ```text
-.cloud/84_next_work_2026-06-19_m2_m3_preview.md
-2. 항해 encounter와 영입 책임 분리
+.cloud/89_next_work_2026-07-01.md
+2. core smoke와 compat smoke 분리 설계
 ```
+
+M5 10번 6월 동결 선언이 완료됐으므로 아래 순서로 이어간다.
+
+1. `.cloud/89_next_work_2026-07-01.md`의 2번부터 진행한다.
+2. `.cloud/01_project_history_current_2026-06-13.md`의 7월 필수 항목과 연결되는지 확인한다.
+3. smoke 분리 결과가 M5에서 통과한 `pnpm check:live-smoke:local` 기준을 깨지 않는지 확인한다.
+4. 변경한 script와 문서에 changelog를 남긴다.
+5. 한글 깨짐 문자와 BEL 제어문자를 검사한다.
 
 작업 전 확인 파일 후보:
 
 ```text
-packages/backend/src/modules/route-neighbor/routes.ts
-packages/backend/src/modules/route-neighbor/service.ts
-packages/backend/src/modules/my-aidong/routes.ts
-packages/backend/src/modules/my-aidong/service.ts
-packages/backend/src/modules/my-island/routes.ts
-packages/backend/src/modules/my-island/service.ts
-packages/frontend/src/lib/api.ts
-packages/frontend/src/lib/storeFacades.ts
-packages/frontend/src/screens/NavigationBoardScene.tsx
-packages/frontend/src/screens/IslandFullMapScreen.tsx
-```
-
-완료 후 기대 상태:
-
-```text
-항해 encounter accept
-→ Aidong 영입 또는 영입 후보 확정
-→ 사용자에게 편입 가능한 13개 slot 표시
-→ my-island/slots/incorporate 호출
-→ 마이섬 15구역 화면에 occupant 반영
+.cloud/01_project_history_current_2026-06-13.md
+.cloud/89_next_work_2026-07-01.md
+.cloud/71_roadmap_2026-06_260612.md
+.cloud/20_module_rules.md
+.cloud/30_backend_db_rules.md
+.cloud/40_frontend_rules.md
+.cloud/35_backend_db_runbook.md
 ```
 
 ## 13. 작업할 때의 마음가짐
@@ -770,3 +782,8 @@ packages/frontend/src/screens/IslandFullMapScreen.tsx
 ## 변경 기록
 
 - **2026-06-12**: 신규 개발자 합류를 대비해 현재 완료 상태, 남은 작업, module/backend/frontend 작업 규칙, 검증 명령, 금지 사항을 한 문서로 정리했다.
+- **2026-06-13**: M5 완료 상태에 맞춰 온보딩 문서를 현행화했다. 최신 실행 보드를 87번 M5로 수정하고, 완료된 M2~M5 항목, 남은 7월 후보, 새 개발자의 다음 작업을 다시 정리했다.
+- **2026-06-13**: M5 9번 완료에 맞춰 새 개발자의 다음 작업을 M5 10번 동결 선언으로 수정하고, 7월 backlog와 7월 첫 실행 보드 후보 문서를 읽기 목록에 추가했다.
+- **2026-06-13**: M5 10번 완료에 맞춰 최신 실행 보드를 `.cloud/89_next_work_2026-07-01.md`로 갱신했다. 새 개발자의 다음 작업을 M6 2번 core/compat smoke 분리 설계로 변경했다.
+- **2026-06-13**: `.cloud` 정리 작업에 맞춰 읽기 순서를 히스토리 요약, 최신 실행 보드, 로드맵, 규칙 문서 중심으로 단순화했다. 오래된 next_work와 임시 설계 문서는 직접 기준으로 삼지 않도록 안내했다.
+- **2026-06-13**: 새 모듈 제작자가 구현 순서를 따라갈 수 있도록 `.cloud/02_module_creator_guide_2026-06-13.md`를 읽기 순서와 작업 전 확인 파일에 추가했다.

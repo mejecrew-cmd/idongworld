@@ -11,6 +11,8 @@
     "./types": "./src/types.ts",
     "./actions": "./src/actions.ts",
     "./config": "./src/config.ts",
+    "./codex-items": "./src/codexItems.ts",
+    "./minigame-skins": "./src/minigameSkins.ts",
     "./i18n": "./i18n/index.ts"
   },
   "scripts": {

@@ -52,7 +52,7 @@
 
 ## Minigame Skin Catalog
 
-- 아이동별 미니게임 스킨 catalog는 `.cloud/59_aidong_minigame_skin_model_2026-06-08.md`를 따른다.
+- 아이동별 미니게임 스킨 catalog는 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
 - 미니게임은 공통 engine과 Aidong별 skin data를 분리한다.
 - skin catalog는 `characterId`, `skinId`, `engineId`, 입장재 item, 보상 item, asset id를 명확히 연결해야 한다.
 - skin catalog의 보상 수량과 입장재 값은 밸런스 조정 대상이므로 CSV 후보로 둔다.
@@ -108,7 +108,7 @@
 - `public` 자산은 core URL helper가 public URL로 즉시 해석할 수 있다.
 - `protected` 자산은 URL을 직접 만들지 않고 backend signed URL resolve 대상으로 둔다.
 - signed URL은 userStore, module state, DB에 장기 저장하지 않는다.
-- 자세한 기준은 `.cloud/46_asset_access_policy.md`를 따른다.
+- 자세한 기준은 `.cloud/50_asset_data_rules.md`를 따른다.
 
 ## Asset Access 변경 기록
 

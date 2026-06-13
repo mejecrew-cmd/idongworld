@@ -242,7 +242,7 @@ export const HubHeartScene = () => {
                   size="small"
                   variant="contained"
                   color="secondary"
-                  onClick={() => navigate(`/debut/${id}`)}
+                  onClick={() => navigate(`/stage/debut/${id}`)}
                 >
                   ✨ {id} 데뷔
                 </Button>

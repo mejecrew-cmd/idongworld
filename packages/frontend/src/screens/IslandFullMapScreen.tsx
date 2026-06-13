@@ -19,8 +19,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ZONES, PHASE_LABEL, PHASE_COLOR, type Zone } from '@/data/zones'
 import { MiniGameModal, type MiniGameId } from '@/components/MiniGameModal'
 import { ScreenHeader } from '@/components/ScreenHeader'
-import { myIslandStoreFacade } from '@/lib/storeFacades'
-import type { MyIslandZoneSlot } from '@/stores/userStore'
+import { api } from '@/lib/api'
+import { accountStoreFacade, myAidongStoreFacade, myIslandStoreFacade } from '@/lib/storeFacades'
+import type { AidongCharacterId, MyIslandZoneSlot } from '@/stores/userStore'
 
 const ZONE_TO_GAME: Record<string, MiniGameId> = {
   'growth-garden': 'garden',
@@ -30,6 +31,7 @@ const ZONE_TO_GAME: Record<string, MiniGameId> = {
 }
 
 const TOUR_STORAGE = 'opening:tourVisited'
+const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
 
 export const IslandFullMapScreen = () => {
   const navigate = useNavigate()
@@ -38,8 +40,13 @@ export const IslandFullMapScreen = () => {
 
   const unlockedZones = myIslandStoreFacade.useUnlockedZones()
   const zoneSlots = myIslandStoreFacade.useZoneSlots()
+  const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
   const [selected, setSelected] = useState<Zone | null>(null)
   const [activeMiniGame, setActiveMiniGame] = useState<MiniGameId>(null)
+  const [selectedIncorporationAidong, setSelectedIncorporationAidong] = useState<AidongCharacterId | ''>('')
+  const [incorporatingAreaNo, setIncorporatingAreaNo] = useState<string | null>(null)
+  const [incorporationMessage, setIncorporationMessage] = useState<string | null>(null)
+  const [incorporationError, setIncorporationError] = useState<string | null>(null)
   const [tourVisited, setTourVisited] = useState<Set<string>>(() => {
     const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(TOUR_STORAGE) : null
     return new Set(stored ? JSON.parse(stored) : [])
@@ -60,6 +67,19 @@ export const IslandFullMapScreen = () => {
     () => fillableZones.filter((z) => Boolean(zoneSlots[z.areaNo]?.occupantAidongId)).length,
     [fillableZones, zoneSlots],
   )
+  const assignedAidongIds = useMemo(() => (
+    new Set(
+      Object.values(zoneSlots)
+        .map((slot) => slot.occupantAidongId)
+        .filter((id): id is AidongCharacterId => Boolean(id)),
+    )
+  ), [zoneSlots])
+  const unassignedAidongs = useMemo(
+    () => recruitedAidongs.filter((id) => !assignedAidongIds.has(id)),
+    [assignedAidongIds, recruitedAidongs],
+  )
+  const activeIncorporationAidong = selectedIncorporationAidong || unassignedAidongs[0]
+
   const getSlot = (zone: Zone): MyIslandZoneSlot => (
     zoneSlots[zone.areaNo] ?? {
       areaNo: zone.areaNo,
@@ -82,6 +102,64 @@ export const IslandFullMapScreen = () => {
   const onSelect = (z: Zone) => {
     setSelected(z)
     markVisited(z.id)
+  }
+
+  const incorporateAidongToSlot = async (zone: Zone) => {
+    const characterId = activeIncorporationAidong
+    const slot = getSlot(zone)
+
+    setIncorporationMessage(null)
+    setIncorporationError(null)
+
+    if (!characterId) {
+      setIncorporationError('편입 대기 중인 Aidong이 없어요.')
+      return
+    }
+    if (slot.kind !== 'fillable') {
+      setIncorporationError('항구와 숙소는 편입 슬롯이 아니에요.')
+      return
+    }
+    if (slot.occupantAidongId) {
+      setIncorporationError(`${zone.areaNo}에는 이미 ${slot.occupantAidongId}이(가) 편입되어 있어요.`)
+      return
+    }
+
+    setIncorporatingAreaNo(zone.areaNo)
+    try {
+      if (MODULE_ACTION_API_SYNC) {
+        const uid = accountStoreFacade.getFirebaseUid()
+        if (!uid) throw new Error('로그인 정보가 없어 편입할 수 없어요.')
+        const response = await api.incorporateMyIslandSlot(uid, zone.areaNo, characterId)
+        if (response.zoneSlots) {
+          myIslandStoreFacade.setZoneSlots(response.zoneSlots)
+        } else if (
+          response.state
+          && typeof response.state === 'object'
+          && 'zoneSlots' in response.state
+        ) {
+          const nextSlots = (response.state as { zoneSlots?: Record<string, MyIslandZoneSlot> }).zoneSlots
+          if (nextSlots) myIslandStoreFacade.setZoneSlots(nextSlots)
+        }
+      } else {
+        myIslandStoreFacade.setZoneSlots({
+          ...zoneSlots,
+          [zone.areaNo]: {
+            ...slot,
+            state: 'filled',
+            occupantAidongId: characterId,
+            source: 'incorporation',
+            incorporatedAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        })
+      }
+      setSelectedIncorporationAidong('')
+      setIncorporationMessage(`${characterId}을(를) ${zone.areaNo} ${zone.name}에 편입했어요.`)
+    } catch (error) {
+      setIncorporationError(error instanceof Error ? error.message : '편입 처리 중 오류가 발생했어요.')
+    } finally {
+      setIncorporatingAreaNo(null)
+    }
   }
 
   return (
@@ -238,6 +316,52 @@ export const IslandFullMapScreen = () => {
 
           <Box
             sx={{
+              bgcolor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              p: 2,
+              mb: 2,
+            }}
+          >
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1, flexWrap: 'wrap', gap: 1 }}>
+              <Typography sx={{ fontWeight: 800 }}>편입 대기 Aidong</Typography>
+              {unassignedAidongs.length > 0 && (
+                <Chip label={`${unassignedAidongs.length}명 대기`} size="small" color="primary" variant="outlined" />
+              )}
+            </Stack>
+            {unassignedAidongs.length === 0 ? (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                편입할 수 있는 대기 Aidong이 없어요. 항해에서 Aidong을 영입하면 여기에 표시됩니다.
+              </Typography>
+            ) : (
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                {unassignedAidongs.map((id) => (
+                  <Chip
+                    key={id}
+                    label={id}
+                    clickable
+                    color={activeIncorporationAidong === id ? 'primary' : 'default'}
+                    variant={activeIncorporationAidong === id ? 'filled' : 'outlined'}
+                    onClick={() => setSelectedIncorporationAidong(id)}
+                  />
+                ))}
+              </Stack>
+            )}
+            {incorporationMessage && (
+              <Typography variant="body2" sx={{ color: 'success.main', mt: 1.5 }}>
+                {incorporationMessage}
+              </Typography>
+            )}
+            {incorporationError && (
+              <Typography variant="body2" sx={{ color: 'error.main', mt: 1.5 }}>
+                {incorporationError}
+              </Typography>
+            )}
+          </Box>
+
+          <Box
+            sx={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
               gap: 2,
@@ -288,8 +412,17 @@ export const IslandFullMapScreen = () => {
                     <Button size="small" variant="outlined" onClick={() => setSelected(zone)}>
                       상세
                     </Button>
-                    <Button size="small" variant="outlined" disabled>
-                      편입 관리
+                    <Button
+                      size="small"
+                      variant={occupied ? 'outlined' : 'contained'}
+                      disabled={occupied || !activeIncorporationAidong || incorporatingAreaNo === zone.areaNo}
+                      onClick={() => incorporateAidongToSlot(zone)}
+                    >
+                      {occupied
+                        ? '편입됨'
+                        : incorporatingAreaNo === zone.areaNo
+                          ? '편입 중'
+                          : '여기에 편입'}
                     </Button>
                   </Stack>
                 </Box>

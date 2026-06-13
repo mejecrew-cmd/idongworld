@@ -1,10 +1,14 @@
-﻿/**
+/**
  * packages/backend/src/repositories/mongoModuleRepositories.ts
  * ------------------------------------------------------------
  * 역할: 상태 저장소 접근을 캡슐화하는 repository 계층이다.
  * 연결: route/service가 memory와 Mongo 구현 차이를 알지 않도록 같은 인터페이스를 제공한다.
  * 주의: business rule은 service에 두고, repository는 읽기/쓰기와 기본 document 생성에 집중한다.
  */
+import {
+  AidongIslandStateModel,
+  type AidongIslandStateDoc,
+} from '../models/AidongIslandStateModel.js'
 import { CodexStateModel, type CodexStateDoc } from '../models/CodexStateModel.js'
 import {
   DestinationIslandStateModel,
@@ -21,6 +25,7 @@ import { ShipStateModel, type ShipStateDoc } from '../models/ShipStateModel.js'
 import { ZoneStateModel, type ZoneStateDoc } from '../models/ZoneStateModel.js'
 import { createMongoDedicatedRepository } from './mongoDedicatedRepository.js'
 import {
+  createAidongIslandDefault,
   createCodexDefault,
   createDestinationIslandDefault,
   createLodgeDefault,
@@ -51,6 +56,9 @@ export const mongoRouteNeighborRepository =
 
 export const mongoShipRepository =
   createMongoDedicatedRepository<ShipStateDoc>(ShipStateModel, createShipDefault)
+
+export const mongoAidongIslandRepository =
+  createMongoDedicatedRepository<AidongIslandStateDoc>(AidongIslandStateModel, createAidongIslandDefault)
 
 export function createMongoZoneRepository(moduleId: string) {
   return createMongoDedicatedRepository<ZoneStateDoc>(

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * my-aidong/src/types.ts
  * ------------------------------------------------------------
  * 역할: Aidong 영입, 친밀도, 욕구, 케어 결과에 쓰는 공유 타입을 정의한다.
@@ -43,3 +43,71 @@ export interface CareApplyResult {
 }
 
 
+
+/** Aidong별 25칸 도감 아이템 희귀도. 6월 POC에서는 표시와 테스트 분기에만 사용한다. */
+export type AidongCodexItemRarity = 'common' | 'rare' | 'epic' | 'legendary'
+
+/** 도감 아이템의 1차 획득처 분류. 실제 지급 검증은 backend service가 담당한다. */
+export type AidongCodexItemSourceType =
+  | 'zone-production'
+  | 'zone-clear'
+  | 'voyage-island'
+  | 'stage-placeholder'
+  | 'event-placeholder'
+  | 'test'
+
+/**
+ * Aidong 한 명에게 귀속되는 25칸 도감 아이템 catalog 행.
+ * 수량 원장은 myAidongStates.aidongCodexItems가 담당하고, 이 타입은 static catalog만 표현한다.
+ */
+export interface AidongCodexItem {
+  /** 아이템이 귀속되는 Aidong character id. 예: 황금멍 */
+  characterId: string
+  /** 전역 유일 item id. */
+  itemId: string
+  /** UI 표시명. */
+  name: string
+  /** Aidong별 도감 slot 번호. 1~25. */
+  slotNo: number
+  /** 표시/보상 연출용 희귀도. */
+  rarity: AidongCodexItemRarity
+  /** 주 획득처 분류. */
+  sourceType: AidongCodexItemSourceType
+  /** sourceType 내부의 구체 id. 예: zone-garden, stage-debut */
+  sourceId: string
+  /** 적용 단계. 예: Phase 1 */
+  phase: string
+  /** 운영/기획 설명. */
+  description: string
+}
+/** Aidong별 미니게임이 재사용할 공통 engine id. */
+export type AidongMinigameEngineId = 'garden-grow' | 'idle-rest' | 'memory-match' | 'mine-dig'
+
+/**
+ * Aidong별 미니게임 skin catalog 행.
+ * 실제 미니게임 결과 검증과 보상 지급은 backend service가 담당하고, 이 타입은 static 연결 정보만 표현한다.
+ */
+export interface AidongMinigameSkin {
+  /** 스킨이 귀속되는 Aidong character id. 예: 황금멍 */
+  characterId: string
+  /** 전역 유일 skin id. */
+  skinId: string
+  /** 재사용할 공통 미니게임 engine id. */
+  engineId: AidongMinigameEngineId
+  /** 미니게임 1회 입장에 필요한 item id. 미확정이면 빈 문자열. */
+  entryItemId: string
+  /** 완료 보상으로 연결할 item id. Aidong 도감템 또는 후속 placeholder. */
+  rewardItemId: string
+  /** backend가 보상 계산 시 참고할 기본 지급 수량 후보. */
+  rewardAmount: number
+  /** skin 배경 asset id 후보. */
+  backgroundAssetId: string
+  /** skin 주요 오브젝트 asset id 후보. */
+  objectAssetId: string
+  /** 현재 연결 후보 zone module id. */
+  zoneModuleId: string
+  /** 적용 단계. 예: Phase 1 */
+  phase: string
+  /** 운영/기획 설명. */
+  description: string
+}

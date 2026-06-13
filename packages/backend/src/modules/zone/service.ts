@@ -9,7 +9,8 @@ import { getHostStateRepository, getUserRepository } from '../../repositories/in
 import type { HostStateDoc } from '../../models/HostStateModel.js'
 import { asNumber, requireModuleRepo, ServiceError, type LooseState } from '../shared.js'
 import { getZoneBalanceRule, ZONE_MODULE_IDS } from './balance.js'
-import { assertAidongRecruited } from '../my-aidong/service.js'
+import { assertAidongRecruited, grantAidongCodexItem } from '../my-aidong/service.js'
+import { listAidongCodexCatalogItems, type AidongCodexCatalogItem } from '../my-aidong/codexCatalog.js'
 
 interface HostReward {
   kind: 'resource' | 'inventory'
@@ -28,6 +29,16 @@ interface ZoneProductionSlot {
   characterId: string
   assignedAt: number
   status: 'assigned'
+}
+
+interface AidongCodexProductionReward {
+  kind: 'aidong-codex-item'
+  characterId: string
+  itemId: string
+  amount: number
+  sourceType: 'zone-production'
+  sourceId: string
+  slotNo: number
 }
 
 const ZONE_MODULE_ID_SET = new Set(ZONE_MODULE_IDS)
@@ -159,6 +170,13 @@ function getProductionState(progress: Record<string, unknown>): Record<string, Z
     : {}
 }
 
+function findZoneProductionCodexItem(moduleId: string, characterId: string): AidongCodexCatalogItem | undefined {
+  return listAidongCodexCatalogItems().find((item) => (
+    item.characterId === characterId &&
+    item.sourceType === 'zone-production' &&
+    item.sourceId === moduleId
+  ))
+}
 function getProductionClaims(progress: Record<string, unknown>): Record<string, unknown> {
   const value = progress.productionClaims
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -395,7 +413,8 @@ export async function unassignZoneProduction(
 }
 
 // 구역 생산 회수 shell:
-// Phase 1 밸런스가 확정되면 여기서 elapsed time, efficiency, cap, hostStates.inventory 지급을 처리한다.
+// M4에서는 elapsed time/efficiency/cap 계산 전 단계로, catalog에 연결된 Aidong 도감템 1개를 지급한다.
+// 일반 생산량과 수치 밸런스는 후속 balance/config 단계에서 확장한다.
 export async function claimZoneProduction(
   uid: string,
   moduleId: string,
@@ -425,6 +444,32 @@ export async function claimZoneProduction(
     }
   }
 
+  const catalogItem = findZoneProductionCodexItem(moduleId, slot.characterId)
+  const rewards: AidongCodexProductionReward[] = catalogItem
+    ? [{
+        kind: 'aidong-codex-item',
+        characterId: slot.characterId,
+        itemId: catalogItem.itemId,
+        amount: 1,
+        sourceType: 'zone-production',
+        sourceId: moduleId,
+        slotNo: catalogItem.slotNo,
+      }]
+    : []
+
+  let codexState: LooseState | undefined
+  if (catalogItem) {
+    codexState = await grantAidongCodexItem(uid, slot.characterId, catalogItem.itemId, 1, `zone-production:${moduleId}`) as LooseState
+  }
+
+  const claimRecord = {
+    slotId,
+    characterId: slot.characterId,
+    claimedAt: Date.now(),
+    status: 'placeholder',
+    rewards,
+  }
+
   const nextState = await repo.patch(uid, {
     progress: {
       ...progress,
@@ -432,25 +477,16 @@ export async function claimZoneProduction(
       productionClaims: idempotencyKey
         ? {
             ...productionClaims,
-            [idempotencyKey]: {
-              slotId,
-              characterId: slot.characterId,
-              claimedAt: Date.now(),
-              status: 'placeholder',
-            },
+            [idempotencyKey]: claimRecord,
           }
         : productionClaims,
-      lastProductionClaim: {
-        slotId,
-        characterId: slot.characterId,
-        claimedAt: Date.now(),
-        status: 'placeholder',
-      },
+      lastProductionClaim: claimRecord,
     },
   })
 
   return {
     state: nextState,
-    rewards: [],
+    rewards,
+    aidongState: codexState,
   }
 }

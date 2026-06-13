@@ -20,6 +20,7 @@ import zoneMemoryRoutes from '@idongworld/zone-memory/routes'
 import zoneMineRoutes from '@idongworld/zone-mine/routes'
 import routeNeighborRoutes from '@idongworld/route-neighbor/routes'
 import destinationShellIslandRoutes from '@idongworld/destination-shell-island/routes'
+import aidongIslandRoutes from '@idongworld/aidong-island/routes'
 
 /** 등록된 모듈 라우트 — 신규 모듈 routes 추가 시 여기에 import + push. */
 const ALL_MODULE_ROUTES: IModuleRoutes[] = [
@@ -29,6 +30,7 @@ const ALL_MODULE_ROUTES: IModuleRoutes[] = [
   zoneMineRoutes,
   routeNeighborRoutes,
   destinationShellIslandRoutes,
+  aidongIslandRoutes,
 ]
 
 /** RouteSpec → JSX <Route> 변환 (재귀). */

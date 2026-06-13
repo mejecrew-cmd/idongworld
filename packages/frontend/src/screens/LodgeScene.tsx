@@ -72,6 +72,15 @@ const AIDONG_ITEMS = [
   { id: 'aidong-ribbon', mark: '리', label: 'Aidong 리본' },
 ]
 
+const LODGE_SECTIONS: Array<{ id: LodgeSection; label: string; description: string }> = [
+  { id: 'yard', label: '마당', description: '보유/대기 Aidong' },
+  { id: 'rooms', label: '방', description: '적극 육성 슬롯' },
+  { id: 'decor', label: '꾸미기', description: '방과 빈 방 가구' },
+  { id: 'practice', label: '연습실', description: '후속 육성 공간' },
+  { id: 'debut', label: '데뷔 회의실', description: '후속 목표 관리' },
+  { id: 'myroom', label: '마이룸', description: '정보/도감/콜렉션' },
+]
+
 const RESOURCE_LABELS: Record<string, string> = {
   acorn: '도토리',
   flower: '꽃',
@@ -85,6 +94,7 @@ const RESOURCE_LABELS: Record<string, string> = {
 }
 
 type LodgeRoomState = { furniture: string[] }
+type LodgeSection = 'yard' | 'rooms' | 'decor' | 'practice' | 'debut' | 'myroom'
 type RoomOption = {
   roomId: string
   label: string
@@ -168,6 +178,7 @@ export const LodgeScene = () => {
   const inventory = hostStoreFacade.useInventory()
   const equippedOutfit = myAidongStoreFacade.useEquippedOutfit()
   const equippedItems = myAidongStoreFacade.useEquippedItems()
+  const [section, setSection] = useState<LodgeSection>('yard')
   const [tab, setTab] = useState<'rooms' | 'outfit' | 'food'>('rooms')
   const [selectedRoomId, setSelectedRoomId] = useState<string>('')
   const [careTarget, setCareTarget] = useState<AidongCharacterId | null>(null)
@@ -188,6 +199,14 @@ export const LodgeScene = () => {
     () => new Set([...sailingAidongs, ...harborAidongs]),
     [harborAidongs, sailingAidongs],
   )
+  const homeAidongs = useMemo(
+    () => recruitedAidongs.filter((id) => !unavailableAidongs.has(id)),
+    [recruitedAidongs, unavailableAidongs],
+  )
+  const awayAidongs = useMemo(
+    () => recruitedAidongs.filter((id) => unavailableAidongs.has(id)),
+    [recruitedAidongs, unavailableAidongs],
+  )
 
   const roomOptions = useMemo<RoomOption[]>(() => [
     ...recruitedAidongs.map((characterId) => ({
@@ -202,6 +221,10 @@ export const LodgeScene = () => {
   const selectedChar = selectedRoom?.characterId ?? null
   const selectedRoomFurniture = selectedRoom ? lodgeRooms[selectedRoom.roomId]?.furniture ?? [] : []
   const selectedUnavailable = selectedChar ? unavailableAidongs.has(selectedChar) : false
+  const selectedNeeds = selectedChar ? needs[selectedChar] ?? INITIAL_NEEDS : null
+  const selectedMoodScore = selectedNeeds ? calcMoodScore(selectedNeeds) : 0
+  const selectedMood = selectedNeeds ? moodFromScore(selectedMoodScore, curZone === 4) : null
+  const selectedExpression = selectedMood ? moodToExpression(selectedMood) : undefined
   const hasLodgeInventory = Object.values(lodgeInventory).some((amount) => amount > 0)
 
   useEffect(() => {
@@ -426,7 +449,154 @@ export const LodgeScene = () => {
           </Alert>
         ) : null}
 
-        <Stack direction="row" spacing={1.5} sx={{ overflowX: 'auto', pb: 2, mb: 2 }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: 1,
+            mb: 2,
+          }}
+        >
+          {LODGE_SECTIONS.map((item) => (
+            <Button
+              key={item.id}
+              variant={section === item.id ? 'contained' : 'outlined'}
+              onClick={() => {
+                setSection(item.id)
+                if (item.id === 'decor') setTab('rooms')
+              }}
+              sx={{
+                alignItems: 'flex-start',
+                flexDirection: 'column',
+                minHeight: 68,
+                textAlign: 'left',
+              }}
+            >
+              <Typography sx={{ fontWeight: 800, fontSize: 13 }}>{item.label}</Typography>
+              <Typography variant="caption" sx={{ opacity: 0.8, fontSize: 11 }}>
+                {item.description}
+              </Typography>
+            </Button>
+          ))}
+        </Box>
+
+        {section === 'yard' && (
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, p: 2, mb: 2 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+              <Box>
+                <Typography variant="h2" sx={{ fontSize: 17 }}>마당</Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  숙소에 머무는 Aidong과 외부 활동 중인 Aidong을 구분해 보여줘요.
+                </Typography>
+              </Box>
+              <Chip label={`숙소 ${homeAidongs.length} / 외부 ${awayAidongs.length}`} size="small" color="primary" variant="outlined" />
+            </Stack>
+
+            {recruitedAidongs.length === 0 ? (
+              <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
+                <Typography sx={{ mb: 1 }}>아직 숙소에 온 Aidong이 없어요.</Typography>
+                <Button size="small" variant="contained" onClick={() => navigate('/voyage/board')}>
+                  항해로 만나러 가기
+                </Button>
+              </Box>
+            ) : (
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 1.5 }}>
+                {recruitedAidongs.map((characterId) => {
+                  const isAway = unavailableAidongs.has(characterId)
+                  const charNeeds = needs[characterId] ?? INITIAL_NEEDS
+                  const mood = moodFromScore(calcMoodScore(charNeeds), curZone === 4)
+                  return (
+                    <Box
+                      key={characterId}
+                      sx={{
+                        border: '1px solid',
+                        borderColor: isAway ? 'warning.main' : 'divider',
+                        borderRadius: 2,
+                        p: 1.25,
+                        textAlign: 'center',
+                        bgcolor: isAway ? 'rgba(255, 248, 225, 0.72)' : 'background.default',
+                      }}
+                    >
+                      <AidongSprite
+                        character={characterId}
+                        expression={moodToExpression(mood)}
+                        outfit={equippedOutfit[characterId]}
+                        size={108}
+                      />
+                      <Typography sx={{ fontWeight: 800 }}>{characterId}</Typography>
+                      <Stack direction="row" spacing={0.5} justifyContent="center" sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
+                        <Chip label={mood} size="small" sx={{ fontSize: 10 }} />
+                        <Chip
+                          label={isAway ? (sailingAidongs.has(characterId) ? '항해 중' : '항구 지원') : '숙소 대기'}
+                          size="small"
+                          color={isAway ? 'warning' : 'success'}
+                          variant={isAway ? 'filled' : 'outlined'}
+                          sx={{ fontSize: 10 }}
+                        />
+                      </Stack>
+                      <Stack direction="row" spacing={0.75} justifyContent="center" sx={{ mt: 1 }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => {
+                            setSelectedRoomId(characterId)
+                            setSection('rooms')
+                            setTab('rooms')
+                          }}
+                        >
+                          방
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          disabled={isAway}
+                          onClick={() => setCareTarget(characterId)}
+                        >
+                          케어
+                        </Button>
+                      </Stack>
+                    </Box>
+                  )
+                })}
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {section === 'practice' && (
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, p: 3, mb: 2 }}>
+            <Typography variant="h2" sx={{ fontSize: 17, mb: 1 }}>연습실</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              연습, 스케줄, 능력치 성장은 후속 기획에서 연결할 예정입니다. 지금은 숙소 허브 메뉴 안의 예약된 공간으로 둡니다.
+            </Typography>
+          </Box>
+        )}
+
+        {section === 'debut' && (
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, p: 3, mb: 2 }}>
+            <Typography variant="h2" sx={{ fontSize: 17, mb: 1 }}>데뷔 회의실</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+              데뷔 목표와 팀 편성은 후속 기획에서 확장합니다. 지금은 대표 무대 placeholder로 이동해 데뷔 route 흐름을 확인할 수 있어요.
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+              <Button variant="contained" onClick={() => navigate('/stage')}>대표 무대 열기</Button>
+              <Button variant="outlined" onClick={() => navigate('/island/lodge/myroom/collection')}>마이룸 콜렉션</Button>
+            </Stack>
+          </Box>
+        )}
+
+        {section === 'myroom' && (
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, p: 3, mb: 2 }}>
+            <Typography variant="h2" sx={{ fontSize: 17, mb: 1 }}>마이룸</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+              유저 정보, Aidong 목록, 도감, 콜렉션, 장부를 모아 보는 공간입니다. 9번 작업에서 route와 aggregation shell을 연결합니다.
+            </Typography>
+            <Button variant="contained" onClick={() => navigate('/island/lodge/myroom/info')}>마이룸 열기</Button>
+          </Box>
+        )}
+
+        {(section === 'rooms' || section === 'decor') && (
+          <Stack direction="row" spacing={1.5} sx={{ overflowX: 'auto', pb: 2, mb: 2 }}>
           {roomOptions.map((room) => {
             const isSelected = selectedRoom?.roomId === room.roomId
             const roomUnavailable = room.characterId ? unavailableAidongs.has(room.characterId) : false
@@ -492,8 +662,9 @@ export const LodgeScene = () => {
             )
           })}
         </Stack>
+        )}
 
-        {!selectedRoom ? (
+        {(section === 'rooms' || section === 'decor') && (!selectedRoom ? (
           <Box sx={{ p: 4, textAlign: 'center' }}>
             <Typography sx={{ mb: 2 }}>아직 열 수 있는 방이 없어요.</Typography>
             <Button onClick={() => navigate('/island/harbor')} variant="contained">
@@ -528,13 +699,52 @@ export const LodgeScene = () => {
               </Button>
             </Stack>
 
-            <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mb: 1 }}>
-              <Tab value="rooms" label="방 꾸미기" />
-              <Tab value="outfit" label="옷" disabled={!selectedChar || selectedUnavailable} />
-              <Tab value="food" label="밥" disabled={!selectedChar || selectedUnavailable} />
-            </Tabs>
+            {section === 'rooms' && (
+              <Tabs value={tab} onChange={(_, value) => setTab(value)} sx={{ mb: 1 }}>
+                <Tab value="rooms" label="방" />
+                <Tab value="outfit" label="옷" disabled={!selectedChar || selectedUnavailable} />
+                <Tab value="food" label="밥" disabled={!selectedChar || selectedUnavailable} />
+              </Tabs>
+            )}
 
-            {tab === 'rooms' && (
+            {section === 'decor' && (
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+                빈 방과 Aidong의 방 모두 꾸밀 수 있어요. 가구 구매와 배치는 lodge 전용 API로 저장됩니다.
+              </Typography>
+            )}
+
+            {section === 'rooms' && tab === 'rooms' && selectedChar && (
+              <Box>
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ flexWrap: 'wrap', gap: 2 }}>
+                  <AidongSprite
+                    character={selectedChar}
+                    expression={selectedExpression}
+                    outfit={equippedOutfit[selectedChar]}
+                    size={132}
+                  />
+                  <Box sx={{ flex: '1 1 240px' }}>
+                    <Typography sx={{ fontWeight: 800, mb: 0.5 }}>{selectedChar} 육성 슬롯</Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                      이 방은 밥주기, 케어, 옷입히기 같은 적극 육성 액션을 모아두는 곳입니다.
+                    </Typography>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                      {selectedMood && <Chip label={`기분 ${selectedMood}`} size="small" color="primary" variant="outlined" />}
+                      {selectedNeeds && Object.entries(selectedNeeds).map(([key, value]) => (
+                        <Chip key={key} label={`${key} ${value}`} size="small" />
+                      ))}
+                    </Stack>
+                  </Box>
+                </Stack>
+              </Box>
+            )}
+
+            {section === 'rooms' && tab === 'rooms' && !selectedChar && (
+              <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
+                <Typography>빈 방은 꾸미기 메뉴에서 가구를 배치할 수 있어요.</Typography>
+              </Box>
+            )}
+
+            {section === 'decor' && (
               <Box>
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 2 }}>
                   {selectedRoomFurniture.length > 0 ? selectedRoomFurniture.map((itemId) => (
@@ -688,7 +898,7 @@ export const LodgeScene = () => {
               </Box>
             )}
           </Box>
-        )}
+        ))}
       </Box>
 
       <Dialog open={inventoryOpen} onClose={() => setInventoryOpen(false)} maxWidth="sm" fullWidth>

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/backend/src/modules/my-aidong/routes.ts
  * ------------------------------------------------------------
  * 역할: 모듈 action API의 HTTP route를 정의한다.
@@ -10,7 +10,9 @@ import { getRequestUid } from '../../middleware/auth.js'
 import { asNumber, asString, ServiceError } from '../shared.js'
 import {
   addAidongAffinity,
+  applyAidongCareAction,
   grantAidongCodexItem,
+  getAidongCodexProgress,
   recruitAidong,
   requestAidongUpgrade,
   setAidongOutfit,
@@ -76,6 +78,28 @@ myAidongRouter.post('/outfit', async (req, res) => {
   }
 })
 
+
+// 숙소 케어 기본 action을 backend 권위로 실행한다.
+// M2 표면에서는 깨우기/아침밥/점심밥/저녁밥/재우기만 우선 지원한다.
+myAidongRouter.post('/care', async (req, res) => {
+  const uid = getRequestUid(req)
+  if (!uid) return res.status(401).json({ error: 'no_uid' })
+
+  const characterId = asString(req.body?.characterId)
+  const actionId = asString(req.body?.actionId)
+  if (!characterId) return res.status(400).json({ error: 'invalid_character_id' })
+  if (!actionId) return res.status(400).json({ error: 'invalid_action_id' })
+
+  try {
+    const result = await applyAidongCareAction(uid, characterId, actionId)
+    res.json({ ok: true, ...result })
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      return res.status(error.status).json({ error: error.code })
+    }
+    throw error
+  }
+})
 // Aidong 소지/착용 아이템은 hostStates.inventory에 보관하고, 여기서는 착용 상태만 toggle한다.
 myAidongRouter.post('/items/equip-toggle', async (req, res) => {
   const uid = getRequestUid(req)
@@ -97,6 +121,26 @@ myAidongRouter.post('/items/equip-toggle', async (req, res) => {
   }
 })
 
+
+// Aidong별 25칸 도감 progress 조회.
+// 저장 원장은 aidongCodexItems 수량 map이고, progress는 static catalog와 수량을 합쳐 파생한다.
+myAidongRouter.get('/codex-items/progress', async (req, res) => {
+  const uid = getRequestUid(req)
+  if (!uid) return res.status(401).json({ error: 'no_uid' })
+
+  const characterId = asString(req.query?.characterId)
+  if (!characterId) return res.status(400).json({ error: 'invalid_character_id' })
+
+  try {
+    const result = await getAidongCodexProgress(uid, characterId)
+    res.json({ ok: true, ...result })
+  } catch (error) {
+    if (error instanceof ServiceError) {
+      return res.status(error.status).json({ error: error.code })
+    }
+    throw error
+  }
+})
 // Aidong별 도감 아이템 원장 shell.
 // 실제 25종 catalog와 획득처가 확정되기 전까지는 itemId/amount/source만 기록한다.
 myAidongRouter.post('/codex-items/grant', async (req, res) => {

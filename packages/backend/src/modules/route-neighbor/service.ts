@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/backend/src/modules/route-neighbor/service.ts
  * ------------------------------------------------------------
  * 역할: 모듈별 domain rule과 상태 전이를 담당하는 service 계층이다.
@@ -7,8 +7,6 @@
  */
 import { getHostStateRepository } from '../../repositories/index.js'
 import { asNumber, requireModuleRepo, ServiceError, type LooseState } from '../shared.js'
-import { recruitAidong } from '../my-aidong/service.js'
-import { openDynamicAidongZone } from '../my-island/service.js'
 import { getRouteLandingCandidate, type RouteLandingCandidate } from './landing.js'
 
 const BOARD_SIZE = 30
@@ -208,7 +206,8 @@ export async function clearCurrentLanding(uid: string, landingId?: string) {
 
 // Aidong 만남 수락 shell:
 // 실제 encounter pool, 확률, 스토리 컷은 확정 전이므로 characterId를 직접 받는다.
-// route-neighbor는 수락 기록만 남기고, 영입과 가변 구역 소유권은 각 모듈 service에 맡긴다.
+// route-neighbor는 수락 기록과 후보 정보만 소유한다.
+// 실제 영입은 my-aidong action, 13구역 편입은 my-island slots/incorporate action이 따로 담당한다.
 export async function acceptAidongEncounter(
   uid: string,
   input: {
@@ -223,48 +222,45 @@ export async function acceptAidongEncounter(
   const acceptedEncounters = getAcceptedEncounters(progress)
   const encounterId = input.encounterId || `encounter-${input.characterId}`
   const zoneId = input.zoneId || toDynamicZoneId(input.characterId)
+  const existing = acceptedEncounters[encounterId]
 
-  if (acceptedEncounters[encounterId]) {
+  if (existing) {
     return {
       state,
+      encounter: existing,
       aidongState: await requireModuleRepo('my-aidong').getOrCreate(uid),
       islandState: await requireModuleRepo('my-island').getOrCreate(uid),
+      nextActions: ['my-aidong/recruit', 'my-island/slots/incorporate'],
       replayed: true,
     }
   }
 
-  const aidongState = await recruitAidong(uid, input.characterId)
-  const islandState = await openDynamicAidongZone(uid, {
-    zoneId,
+  const acceptedAt = Date.now()
+  const encounter = {
+    encounterId,
     characterId: input.characterId,
-    source: 'voyage-encounter',
-  })
+    zoneId,
+    acceptedAt,
+    status: 'accepted',
+  }
 
   const nextState = await repo.patch(uid, {
     progress: {
       ...progress,
       acceptedEncounters: {
         ...acceptedEncounters,
-        [encounterId]: {
-          characterId: input.characterId,
-          zoneId,
-          acceptedAt: Date.now(),
-          status: 'accepted',
-        },
+        [encounterId]: encounter,
       },
-      lastAcceptedEncounter: {
-        encounterId,
-        characterId: input.characterId,
-        zoneId,
-        acceptedAt: Date.now(),
-      },
+      lastAcceptedEncounter: encounter,
     },
   })
 
   return {
     state: nextState,
-    aidongState,
-    islandState,
+    encounter,
+    aidongState: await requireModuleRepo('my-aidong').getOrCreate(uid),
+    islandState: await requireModuleRepo('my-island').getOrCreate(uid),
+    nextActions: ['my-aidong/recruit', 'my-island/slots/incorporate'],
   }
 }
 

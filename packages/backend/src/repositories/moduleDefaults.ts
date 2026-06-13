@@ -1,10 +1,11 @@
-﻿/**
+/**
  * packages/backend/src/repositories/moduleDefaults.ts
  * ------------------------------------------------------------
  * 역할: 상태 저장소 접근을 캡슐화하는 repository 계층이다.
  * 연결: route/service가 memory와 Mongo 구현 차이를 알지 않도록 같은 인터페이스를 제공한다.
  * 주의: business rule은 service에 두고, repository는 읽기/쓰기와 기본 document 생성에 집중한다.
  */
+import type { AidongIslandStateDoc } from '../models/AidongIslandStateModel.js'
 import type { CodexStateDoc } from '../models/CodexStateModel.js'
 import type { DestinationIslandStateDoc } from '../models/DestinationIslandStateModel.js'
 import type { LodgeStateDoc } from '../models/LodgeStateModel.js'
@@ -184,6 +185,27 @@ export function createDestinationIslandDefault(
     localResources: seed.localResources ?? {},
     localInventory: seed.localInventory ?? {},
     hotspotStates: seed.hotspotStates ?? {},
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+export function createAidongIslandDefault(
+  uid: string,
+  seed: Partial<AidongIslandStateDoc> = {},
+): AidongIslandStateDoc {
+  const now = Date.now()
+
+  return {
+    uid,
+    moduleId: seed.moduleId ?? 'aidong-island',
+    currentIslandId: seed.currentIslandId,
+    currentNodeId: seed.currentNodeId,
+    visitedIslandIds: seed.visitedIslandIds ?? [],
+    visitedNodeIds: seed.visitedNodeIds ?? [],
+    metAidongIds: seed.metAidongIds ?? [],
+    recruitedAidongIds: seed.recruitedAidongIds ?? [],
+    recruitmentCandidates: seed.recruitmentCandidates ?? {},
+    interactionLog: seed.interactionLog ?? {},
     createdAt: now,
     updatedAt: now,
   }

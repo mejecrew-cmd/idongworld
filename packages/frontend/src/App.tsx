@@ -19,7 +19,7 @@
  *     ③ 로그인+온보딩완료 → /island (마이섬 본 게임)
  *   - "*" Route: 위에서 어디에도 매칭 안 되면 "/"로 되돌림 (404 방지).
  */
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { usePageTracking } from './lib/usePageTracking'
 import { accountStoreFacade } from './lib/storeFacades'
 
@@ -34,12 +34,12 @@ import { NamingToHeartScreen } from './screens/NamingToHeartScreen'
 import { HubHeartScene } from './screens/HubHeartScene'
 import { HarborScene } from './screens/HarborScene'
 import { NavigationBoardScene } from './screens/NavigationBoardScene'
-import { IslandMapScene } from './screens/IslandMapScene'
-import { IslandLandingScene } from './screens/IslandLandingScene'
 import { LodgeScene } from './screens/LodgeScene'
+import { MyRoomScreen } from './screens/MyRoomScreen'
 import { IslandFullMapScreen } from './screens/IslandFullMapScreen'
 import { IslandAreaPlaceholderScene } from './screens/IslandAreaPlaceholderScene'
 import { DebutStageScene } from './screens/DebutStageScene'
+import { StageScreen } from './screens/StageScreen'
 import { AssetCatalogScreen } from './screens/dev/AssetCatalogScreen'
 import { CodexScreen } from './screens/CodexScreen'
 
@@ -49,6 +49,10 @@ import { CustomsConfirmModal } from './components/CustomsConfirmModal'
 import { renderModuleRoutes } from './lib/moduleRoutes'
 
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
+const LegacyDebutRedirect = () => {
+  const { id } = useParams<{ id: string }>()
+  return <Navigate to={id ? `/stage/debut/${id}` : '/stage'} replace />
+}
 
 /**
  * 진입 가드(EntryGuard)
@@ -102,6 +106,13 @@ export const App = () => {
       <Route path="area/:areaNo" element={<IslandAreaPlaceholderScene />} />
       <Route path="harbor" element={<HarborScene />} />             {/* /island/harbor */}
       <Route path="lodge" element={<LodgeScene />} />               {/* /island/lodge */}
+      <Route path="lodge/myroom" element={<Navigate to="/island/lodge/myroom/info" replace />} />
+      <Route path="lodge/myroom/info" element={<MyRoomScreen />} />
+      <Route path="lodge/myroom/aidong" element={<MyRoomScreen />} />
+      <Route path="lodge/myroom/aidong/:id" element={<MyRoomScreen />} />
+      <Route path="lodge/myroom/codex" element={<MyRoomScreen />} />
+      <Route path="lodge/myroom/collection" element={<MyRoomScreen />} />
+      <Route path="lodge/myroom/ledger" element={<MyRoomScreen />} />
     </Route>
 
     {/* 도감 — HUD + 하단 네비 (마이섬 레이아웃 재사용) */}
@@ -112,13 +123,16 @@ export const App = () => {
     {/* 항해 — HUD만 (하단 네비 X, 항해 중단 방지) */}
     <Route path="/voyage" element={<VoyageLayout />}>
       <Route path="board" element={<NavigationBoardScene />} />            {/* 부루마블 보드 */}
-      <Route path="island/:id" element={<IslandMapScene />} />             {/* 칸 도착 (예비) */}
-      <Route path="island/:id/landing" element={<IslandLandingScene />} /> {/* 캐릭터 영입 */}
     </Route>
 
-    {/* 데뷔 스테이지 — 풀스크린 (시그니처 발화 화면) */}
-    <Route path="/debut/:id" element={<DebutStageScene />} />
+    {/* 대표 무대 — 마이섬 레이아웃을 쓰는 stage 허브 */}
+    <Route path="/stage" element={<MyIslandLayout />}>
+      <Route index element={<StageScreen />} />
+    </Route>
 
+    {/* 데뷔 공연 — 최신 route와 legacy compat */}
+    <Route path="/stage/debut/:id" element={<DebutStageScene />} />
+    <Route path="/debut/:id" element={<LegacyDebutRedirect />} />
     {/* 개발자·디자이너용 에셋 카탈로그 (개발 빌드만 권장) */}
     <Route path="/dev/catalog" element={<AssetCatalogScreen />} />
 

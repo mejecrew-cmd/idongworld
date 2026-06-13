@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/backend/src/modules/my-aidong/service.ts
  * ------------------------------------------------------------
  * 역할: 모듈별 domain rule과 상태 전이를 담당하는 service 계층이다.
@@ -8,6 +8,7 @@
 import { getHostStateRepository } from '../../repositories/index.js'
 import { requireModuleRepo, ServiceError, type LooseState } from '../shared.js'
 import { isAidongEquippableItem } from './itemCatalog.js'
+import { buildAidongCodexProgress, getAidongCodexItem } from './codexCatalog.js'
 
 // 초기 욕구값: userStore.ts의 recruitAidong()이 새 Aidong을 영입할 때 만들던 needs 기본값이다.
 // backend action API에서는 이 값을 myAidongStates.needs[characterId]에 저장한다.
@@ -18,6 +19,30 @@ const INITIAL_NEEDS = {
   hygiene: 8,
   fun: 7,
   health: 9,
+}
+
+type NeedKey = keyof typeof INITIAL_NEEDS
+
+const LODGE_CARE_ACTIONS: Record<string, {
+  label: string
+  needsRecover: Partial<Record<NeedKey, number>>
+  affinity: number
+  coinCost: number
+  dailyCap?: number
+}> = {
+  wake: { label: '깨우기', needsRecover: { energy: 3 }, affinity: 1, coinCost: 10, dailyCap: 1 },
+  breakfast: { label: '아침밥', needsRecover: { hunger: 5, social: 1 }, affinity: 1, coinCost: 20, dailyCap: 1 },
+  lunch: { label: '점심밥', needsRecover: { hunger: 5, fun: 1 }, affinity: 1, coinCost: 20, dailyCap: 1 },
+  dinner: { label: '저녁밥', needsRecover: { hunger: 5, social: 1 }, affinity: 1, coinCost: 20, dailyCap: 1 },
+  sleep: { label: '재우기', needsRecover: { energy: 5, health: 1 }, affinity: 1, coinCost: 0, dailyCap: 1 },
+}
+
+function clampNeed(value: number): number {
+  return Math.max(0, Math.min(10, value))
+}
+
+function getTodayKey(now = Date.now()): string {
+  return new Date(now).toISOString().slice(0, 10)
 }
 
 // 친밀도 레벨 계산:
@@ -200,6 +225,12 @@ export async function grantAidongCodexItem(
 ) {
   assertPositiveInteger(amount, 'invalid_amount')
 
+  const catalogItem = getAidongCodexItem(itemId)
+  if (!catalogItem) throw new ServiceError('unknown_aidong_codex_item', 400)
+  if (catalogItem.characterId !== characterId) {
+    throw new ServiceError('aidong_codex_item_character_mismatch', 409)
+  }
+
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
   if (!getRecruited(state).includes(characterId)) {
@@ -208,26 +239,45 @@ export async function grantAidongCodexItem(
 
   const aidongCodexItems = getNestedNumberMap(state, 'aidongCodexItems')
   const currentItems = aidongCodexItems[characterId] ?? {}
+  const nextItems = {
+    ...currentItems,
+    [itemId]: (currentItems[itemId] ?? 0) + amount,
+  }
   const aidongUpgradeState = getNestedLooseMap(state, 'aidongUpgradeState')
   const upgradeState = aidongUpgradeState[characterId] ?? {}
 
   return await repo.patch(uid, {
     aidongCodexItems: {
       ...aidongCodexItems,
-      [characterId]: {
-        ...currentItems,
-        [itemId]: (currentItems[itemId] ?? 0) + amount,
-      },
+      [characterId]: nextItems,
     },
     aidongUpgradeState: {
       ...aidongUpgradeState,
       [characterId]: {
         ...upgradeState,
+        lastCodexItemId: itemId,
         lastCodexItemSource: source,
         lastCodexItemAt: Date.now(),
+        lastCodexProgress: buildAidongCodexProgress(characterId, nextItems),
       },
     },
   })
+}
+
+export async function getAidongCodexProgress(uid: string, characterId: string) {
+  const repo = requireModuleRepo('my-aidong')
+  const state = await repo.getOrCreate(uid) as LooseState
+  if (!getRecruited(state).includes(characterId)) {
+    throw new ServiceError('aidong_not_recruited', 409)
+  }
+
+  const aidongCodexItems = getNestedNumberMap(state, 'aidongCodexItems')
+  const ownedItems = aidongCodexItems[characterId] ?? {}
+  return {
+    characterId,
+    ownedItems,
+    progress: buildAidongCodexProgress(characterId, ownedItems),
+  }
 }
 
 // Aidong 업그레이드 shell:
@@ -276,9 +326,86 @@ export async function requestAidongUpgrade(
     },
   })
 }
+// 숙소 케어 action shell:
+// M2에서는 Hunger/Clean/Mood/Energy 4파라미터 표면을 위해 최소 기본 케어 5종만 backend 권위로 처리한다.
+// 내부 저장은 기존 6욕구 needs를 유지하고, 화면에서만 4파라미터로 압축해서 보여준다.
+export async function applyAidongCareAction(uid: string, characterId: string, actionId: string) {
+  const action = LODGE_CARE_ACTIONS[actionId]
+  if (!action) throw new ServiceError('unsupported_care_action', 400)
 
+  const repo = requireModuleRepo('my-aidong')
+  const state = await repo.getOrCreate(uid) as LooseState
+  if (!getRecruited(state).includes(characterId)) {
+    throw new ServiceError('aidong_not_recruited', 409)
+  }
 
+  const needsMap = state.needs && typeof state.needs === 'object'
+    ? state.needs as Record<string, Record<NeedKey, number>>
+    : {}
+  const currentNeeds = { ...INITIAL_NEEDS, ...(needsMap[characterId] ?? {}) }
 
+  const careLog = state.careLog && typeof state.careLog === 'object'
+    ? state.careLog as Record<string, Record<string, { todayKey?: string; todayCount?: number; lastUsedAt?: number }>>
+    : {}
+  const charLog = careLog[characterId] ?? {}
+  const logEntry = charLog[actionId] ?? {}
+  const todayKey = getTodayKey()
+  const todayCount = logEntry.todayKey === todayKey ? Number(logEntry.todayCount ?? 0) : 0
+  if (action.dailyCap && todayCount >= action.dailyCap) {
+    throw new ServiceError('care_daily_cap', 409)
+  }
 
+  if (action.coinCost > 0) {
+    try {
+      await getHostStateRepository().mutateResource(uid, 'coins', -action.coinCost)
+    } catch (_error) {
+      throw new ServiceError('insufficient_host_resource', 409)
+    }
+  }
 
+  const nextNeeds = { ...currentNeeds }
+  for (const [key, delta] of Object.entries(action.needsRecover)) {
+    nextNeeds[key as NeedKey] = clampNeed((nextNeeds[key as NeedKey] ?? 0) + Number(delta))
+  }
 
+  const affinities = state.affinities && typeof state.affinities === 'object'
+    ? state.affinities as Record<string, { score?: number; level?: number }>
+    : {}
+  const currentAffinity = affinities[characterId] ?? { score: 0, level: 0 }
+  const score = Math.max(0, Number(currentAffinity.score ?? 0) + action.affinity)
+
+  const nextState = await repo.patch(uid, {
+    needs: {
+      ...needsMap,
+      [characterId]: nextNeeds,
+    },
+    affinities: {
+      ...affinities,
+      [characterId]: { score, level: affinityLevel(score) },
+    },
+    careLog: {
+      ...careLog,
+      [characterId]: {
+        ...charLog,
+        [actionId]: {
+          todayKey,
+          todayCount: todayCount + 1,
+          lastUsedAt: Date.now(),
+        },
+      },
+    },
+  })
+
+  const host = await getHostStateRepository().getOrCreate(uid)
+  return {
+    state: nextState,
+    host,
+    result: {
+      actionId,
+      label: action.label,
+      affinityDelta: action.affinity,
+      coinCost: action.coinCost,
+      needs: nextNeeds,
+    },
+  }
+}
