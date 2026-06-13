@@ -544,6 +544,43 @@ module action smoke:
 pnpm check:module-actions-smoke
 ```
 
+local live smoke 전체 묶음:
+
+```bash
+pnpm check:live-smoke:local
+```
+
+실행 순서:
+
+```text
+1. pnpm dev:mongo:local
+2. local Mongo TCP ready 대기
+3. pnpm dev:be:local-mongo
+4. backend /health ready 대기
+5. pnpm dev:fe
+6. frontend ready 대기
+7. pnpm check:module-actions-smoke
+8. pnpm check:e2e:smoke
+9. pnpm check:state-route-runtime
+10. child process cleanup
+```
+
+확인 기준:
+
+- `/health`에서 `mongo.connected=true`를 확인한다.
+- `/health`에서 `migration.legacyStateApiRemoved=true`를 확인한다.
+- `/health`에서 `migration.repositories.backend=mongo`를 확인한다.
+- backend module action smoke가 6월 POC 수직 루프를 통과한다.
+- Playwright route smoke가 core route, AREA-01~15, legacy redirect, 세관 UI 비강제 상태를 통과한다.
+- state-route runtime check가 `/api/state` 복귀와 legacy state route 재등장을 막는다.
+
+주의:
+
+- 이 명령은 local MongoDB, backend, frontend를 실제로 띄운다.
+- 기본 Mongo URI는 `mongodb://127.0.0.1:27017/idongworld`이다.
+- local standalone MongoDB 기준이므로 transaction은 기본 `false`다.
+- 실행 중 실패하면 출력된 하위 명령 이름을 기준으로 backend smoke, Playwright smoke, runtime check 중 어느 층이 깨졌는지 먼저 나눈다.
+
 실행 전제:
 
 - 다른 터미널에서 `pnpm dev:be:local-mongo`로 backend server를 먼저 실행한다.
@@ -603,7 +640,7 @@ pnpm check:frontend:state-route-runtime
 현재 기준:
 
 - 이 체크리스트는 전체 QA가 아니라 최소 smoke다.
-- 2026-05-29 실행 결과는 `.cloud/39_screen_qa_2026-05-29.md`에 기록했다.
+- 2026-05-29 실행 결과는 `.cloud/01_project_history_current_2026-06-13.md`에 기록했다.
 - 현재 자동 runtime gate는 통과했지만, 실제 클릭 기반 E2E 자동화는 아직 도입하지 않는다.
 - 실패하면 관련 action API, repository, frontend facade/sync 경계부터 확인한다.
 - Playwright 같은 본격 E2E 자동화는 화면 플로우가 더 안정된 뒤에 추가한다.
@@ -630,7 +667,7 @@ pnpm check:frontend:state-route-runtime
 - **2026-05-29**: Atlas를 future option으로 보류했다. 현재는 Atlas를 사용하지 않고 local MongoDB 기준 개발을 유지하며, 실제 사용 결정과 credential 준비 전에는 readiness 실행을 요구하지 않는다.
 - **2026-05-29**: Zone reward/action rule config화 기준을 현행화했다. 보상 숫자와 zone별 allowlist는 `balance.csv`에서 읽고, unlock/validation/idempotency는 backend service 코드에 유지한다.
 - **2026-05-29**: Route/Ship 임시 QA 기준을 보강했다. route-neighbor end 후 상태 초기화와 ship harbor/예약 필드 유지 여부를 `check:module-actions-smoke`에서 확인하도록 했다.
-- **2026-05-29**: 실제 화면 기준 수동 QA 1차 결과를 기록했다. `pnpm check:state-route-runtime:local`로 local Mongo/backend/frontend runtime gate를 통과했고, 남은 클릭 QA 항목은 `.cloud/39_screen_qa_2026-05-29.md`에 분리했다.
+- **2026-05-29**: 실제 화면 기준 수동 QA 1차 결과를 기록했다. `pnpm check:state-route-runtime:local`로 local Mongo/backend/frontend runtime gate를 통과했고, 남은 클릭 QA 항목은 `.cloud/01_project_history_current_2026-06-13.md`에 분리했다.
 - **2026-05-29**: Google/Twitter social login skeleton 기준을 추가했다. `/api/auth/session`은 provider metadata를 user document에 저장하고, module-local 상태는 건드리지 않는다.
 - **2026-05-29**: Route/Ship 항해 상태 경계를 임시 계약으로 명시했다. `routeNeighborStates`와 `shipStates`의 현재 책임, 미확정 항목, 회귀 테스트 기준을 분리해 기록했다.
 - **2026-05-29**: Customs rule 운용 상태를 임시 체제로 명시했다. 실제 플레이 루프 확정 전까지는 rule 삭제보다 POC/검증용 rule의 추적 가능성, adapter 경계, smoke 재현성을 우선한다.
@@ -645,4 +682,5 @@ pnpm check:frontend:state-route-runtime
 - **2026-05-29**: Zone action API 작성 기준을 추가했다. `collect`/`clear` validation, clearId 의미, reward authority 이동 원칙을 정리했다.
 - **2026-05-29**: state route 제거 runtime gate `pnpm check:state-route-runtime:local` 통과를 확인했다.
 - **2026-05-29**: runbook을 백엔드 작업자용 한글 매뉴얼로 재정리했다. 오래된 migration 설명과 누적 작업 로그를 제거하고, MongoDB, module storage/API, customs, auth, 검증 명령 중심으로 정리했다.
-- **2026-05-29**: 상태 API 제거 상세 계획은 `.cloud/37_legacy_state_removal_plan.md`로 분리했다.
+- **2026-05-29**: 상태 API 제거 상세 계획은 `.cloud/01_project_history_current_2026-06-13.md`로 분리했다.
+- **2026-06-13**: M5 live smoke 실행 기준을 추가했다. `pnpm check:live-smoke:local`이 local Mongo, backend, frontend를 띄우고 module action smoke, Playwright route smoke, state-route runtime check를 순서대로 실행하는 기준 명령임을 기록했다.

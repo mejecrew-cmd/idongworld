@@ -1,19 +1,33 @@
 # Module Rules
 
-## Current SoT Reading Order 2026-06-12
+## Current SoT Reading Order 2026-06-13
 
-신규 모듈 작업은 6/8 이전 next_work가 아니라 6/11 사이트맵과 6/12 로드맵을 우선한다.
+신규 모듈 작업은 오래된 next_work나 임시 설계 문서를 직접 기준으로 삼지 않는다.
 
 읽기 순서는 다음과 같다.
 
-1. `.cloud/개발기획서260605/사이트맵_260611_최종확정.md`
-2. `.cloud/개발기획서260605/_직접작성본/00_아이동월드_중앙기획서.md`
-3. `.cloud/개발기획서260605/_직접작성본/02_처리목록_총목록.md`
-4. `.cloud/개발기획서260605/모듈상세_M03_마이섬허브_260608.md`부터 M09, M21, M22까지의 모듈 상세 문서
-5. `.cloud/71_roadmap_2026-06_260612.md`
-6. `.cloud/72_next_work_2026-06-12_week1_a.md`
+1. `.cloud/01_project_history_current_2026-06-13.md`
+2. `.cloud/89_next_work_2026-07-01.md`
+3. `.cloud/71_roadmap_2026-06_260612.md`
+4. `.cloud/85_developer_onboarding_2026-06-12.md`
+5. 모듈 제작 순서는 `.cloud/02_module_creator_guide_2026-06-13.md`
+6. 이 문서 `.cloud/20_module_rules.md`
+7. backend 작업이면 `.cloud/30_backend_db_rules.md`
+8. frontend 작업이면 `.cloud/40_frontend_rules.md`
 
-중앙기획서가 가리키는 누락 문서와 링크 보정 후보는 `.cloud/73_sot_missing_docs_audit_2026-06-12.md`를 따른다.
+원본 기획서 폴더 `.cloud/개발기획서260605`는 기획 원문 archive로만 본다. 현재 구현 방향과 충돌하면 `.cloud/01_project_history_current_2026-06-13.md`와 최신 실행 보드를 우선한다.
+
+## M5 동결 기준 2026-06-13
+
+M5 이후 모듈 작업은 아래 완료 상태를 전제로 한다.
+
+- `my-island`는 15구역 static definition과 13개 fillable slot, AREA-02/AREA-13 anchor 잠금을 가진다.
+- Aidong 영입은 `my-aidong`, 마이섬 편입은 `my-island/slots/incorporate`가 담당한다.
+- `aidong-island`는 항해 중 만나는 아이동섬의 상륙, 이동, 상호작용, 영입 후보, 영입 action을 가진다.
+- `myroom`은 전용 collection 없이 account, host, my-aidong, codex, lodge를 읽는 aggregation shell이다.
+- Aidong별 25칸 도감 아이템 수량은 `my-aidong` 영역이 소유하고, `codex`는 기존 도감 표시/해금/등록 책임을 유지한다.
+- `/stage`와 `/stage/debut/:id`는 frontend placeholder route로 존재한다. 정식 stage/debut backend module과 포토카드 저장소는 7월 backlog 후보로 둔다.
+- `pnpm check:live-smoke:local`이 M5 기준 broad regression smoke이며, local Mongo/backend/frontend를 띄워 backend module smoke, Playwright route smoke, state-route runtime check를 순서대로 실행한다.
 
 ## Phase 1 Planning Change Notice 2026-06-08
 
@@ -23,7 +37,7 @@
 - 세관(customs)은 기술 infra와 미래 확장 후보로 보존하지만, Phase 1 사용자 핵심 루프에 강제하지 않는다.
 - "모듈 간 자원 이동은 customs"라는 기존 문구는 production급 cross-module debit/credit에 대한 기술 원칙으로 유지하되, 새 Phase 1 기획의 통 인벤토리·아이동 귀속 인벤토리 설계가 확정되기 전까지 신규 UX에 강제하지 않는다.
 - destination-island, ship/lodge inventory 분리, worldScope 기반 세관 목적지 판단은 POC/보류 후보로 분류한다.
-- 새 구현 순서는 `.cloud/51_next_work_2026-06-08.md`, 충돌 분류는 `.cloud/52_plan_change_conflict_map_2026-06-08.md`를 따른다.
+- 새 구현 순서와 과거 충돌 분류 요약은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
 
 ## Backend Ownership Rules 2026-05-24
 
@@ -231,3 +245,5 @@
 
 - **2026-06-05**: 모듈 개발 시 PixiJS를 destination island 등 화려한 탐험 scene에만 부분 도입하도록 범위를 명시했다.
 - **2026-06-05**: 모듈 캐릭터/UI/hotspot 반응 애니메이션은 Rive를 우선 검토하고, Spine/Live2D는 추후 필요 시 도입하도록 규칙을 추가했다.
+- **2026-06-13**: M5 동결 기준을 추가했다. 최신 실행 보드를 87번 M5로 올리고, 15구역, 아이동섬, 마이룸, 도감템, stage placeholder, live smoke 완료 상태를 신규 모듈 작업 전제로 기록했다.
+- **2026-06-13**: 모듈 제작 순서 문서 `.cloud/02_module_creator_guide_2026-06-13.md`를 추가했다. 신규 모듈은 이 제작자 가이드로 순서를 잡고, 이 문서는 규칙 확인용으로 사용한다.

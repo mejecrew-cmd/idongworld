@@ -11,17 +11,17 @@
 - 항구/항해/도착 섬 UI는 삭제하지 않고, 새 항해 보드 결정과 통 인벤토리 설계 이후 숨김·축소·재사용 여부를 정한다.
 - 기존 Playwright smoke의 세관 관련 항목은 새 core loop smoke로 재설계할 예정이다.
 - Phase 1 화면 우선순위는 숙소 허브, 메인 가변 구역, 항해 만남/수집, 통 인벤토리, 구역 배치 생산, 항구 입항/비우기 순서로 본다.
-- 상세 core loop와 화면별 역할은 `.cloud/53_core_loop_2026-06-08.md`를 따른다.
-- 웹 UI/UX 방향은 `.cloud/63_web_ui_ux_direction_2026-06-08.md`를 따른다. 웹은 모바일 게임 축소판이 아니라 깊이 있는 생활 육성 UI로 설계한다.
-- 주요 frontend 화면 영향도와 화면 작업 순서는 `.cloud/65_frontend_screen_impact_2026-06-08.md`를 따른다.
-- 검증과 테스트 재정렬 기준은 `.cloud/66_validation_test_realignment_2026-06-08.md`를 따른다.
-- 숙소 허브 화면의 방/마당/케어/연습/꾸미기/업그레이드 기준은 `.cloud/57_lodge_growth_hub_2026-06-08.md`를 따른다.
-- 구역 배치 자동 생산 화면 기준은 `.cloud/58_zone_placement_production_2026-06-08.md`를 따른다.
-- 아이동별 미니게임 스킨 화면 기준은 `.cloud/59_aidong_minigame_skin_model_2026-06-08.md`를 따른다.
-- 세관 UI 노출 정책은 `.cloud/56_customs_descope_2026-06-08.md`를 따른다. 기본값은 customs backend 유지, 사용자 필수 gate 비활성화다.
+- 상세 core loop와 화면별 역할은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
+- 웹 UI/UX 방향은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다. 웹은 모바일 게임 축소판이 아니라 깊이 있는 생활 육성 UI로 설계한다.
+- 주요 frontend 화면 영향도와 화면 작업 순서는 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
+- 검증과 테스트 재정렬 기준은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
+- 숙소 허브 화면의 방/마당/케어/연습/꾸미기/업그레이드 기준은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
+- 구역 배치 자동 생산 화면 기준은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
+- 아이동별 미니게임 스킨 화면 기준은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
+- 세관 UI 노출 정책은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다. 기본값은 customs backend 유지, 사용자 필수 gate 비활성화다.
 - Phase 1 core route에서는 세관 버튼, 세관 팝업, 모듈 이탈 세관 gate를 기본 노출하지 않는다.
 - 세관 UI는 `VITE_CUSTOMS_UI_ENABLED=true`, zone 이탈 gate는 `VITE_CUSTOMS_EXIT_GATE_ENABLED=true`, destination island 이탈 gate는 `VITE_DESTINATION_ISLAND_CUSTOMS_GATE_ENABLED=true`일 때만 compat/dev 경로로 노출한다.
-- 충돌 분류는 `.cloud/52_plan_change_conflict_map_2026-06-08.md`, 새 작업 순서는 `.cloud/51_next_work_2026-06-08.md`를 따른다.
+- 충돌 분류는 `.cloud/01_project_history_current_2026-06-13.md`, 새 작업 순서는 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
 
 ## 1. 현재 스택
 
@@ -157,10 +157,10 @@ pnpm dev:fe
 pnpm check:frontend:state-route-runtime
 ```
 
-local Mongo, backend, frontend를 한 번에 띄워 확인하려면 다음 명령을 우선 사용한다.
+local Mongo, backend, frontend를 한 번에 띄워 M5 broad regression을 확인하려면 다음 명령을 우선 사용한다.
 
 ```bash
-pnpm check:state-route-runtime:local
+pnpm check:live-smoke:local
 ```
 
 브라우저 기반 최소 화면 smoke가 필요하면 backend와 frontend를 띄운 뒤 다음 명령을 사용한다.
@@ -173,12 +173,13 @@ pnpm check:e2e:smoke
 
 - `/`에서 `/login`으로 이동하는지 확인한다.
 - `게스트로 시작` 클릭 후 `/title`로 이동하는지 확인한다.
-- `/island`, `/island/lodge`, `/island/harbor`, `/island/full-map`, `/voyage/board`, `/dev/catalog`가 브라우저에서 열리는지 확인한다.
-- `/voyage/island/shell` 같은 destination island POC route는 Phase 1 core route가 아니라 compat/dev route smoke 후보로 본다.
+- core route는 `/island`, `/island/full-map`, `/island/harbor`, `/island/lodge`, `/voyage/board?route=neighbor`, `/voyage/island/shell`, `/voyage/island/first-aidong-island`, `/voyage/island/first-aidong-island/land`, `/voyage/island/first-aidong-island/sub`, `/island/lodge/myroom/*`, `/stage`, `/stage/debut/:id`, `/codex`, `/dev/catalog`를 순회한다.
+- AREA route는 `/island/area/01`부터 `/island/area/15`까지 모두 최소 렌더링을 확인한다.
+- legacy redirect는 `/island/lodge/myroom`, `/voyage/island/first-aidong-island/landing`, `/debut/:id`, `/island/area/02`, `/island/area/13`를 확인한다.
+- `destination-shell-island`는 Phase 1 core route가 아니라 compat/dev route 후보지만, 삭제 방지와 route shell 유지를 위해 smoke에 포함한다.
 - 2026-06-08 이후 Phase 1 smoke에서는 세관 팝업을 필수 통과 조건으로 삼지 않는다.
-- 기존 세관 UI smoke는 backend customs 검증 또는 dev/검증 경로용 smoke로 분리한다.
-- 항구/숙소에 세관 편의 버튼을 두지 않는다.
-- 세관 UI를 다시 켤 때만 전용 자원/아이템을 가진 모듈 이탈 gate, 내 섬 구역 rule, destination-island 계열 갑판 적재 rule을 별도로 확인한다.
+- 항구/숙소에 세관 편의 버튼이 기본 노출되지 않는지 확인한다.
+- 포토카드 placeholder, full-map zone dialog, 항해 guard 같은 M5 핵심 회귀 지점을 포함한다.
 - 테스트 중 `/api/state` 호출이 발생하면 실패한다.
 - 이 E2E는 최소 smoke이며, first gacha, lodge item 착용, route landing clear, customs UI 세부 조작은 별도 확장 대상으로 둔다.
 
@@ -205,27 +206,27 @@ FRONTEND_URL=http://localhost:5174 pnpm check:frontend:state-route-runtime
 - zone clear 이후 host reward가 frontend 직접 지급이 아니라 backend 응답 병합으로 반영되는지 확인한다.
 - codex unlock/register, route-neighbor action, ship action 화면 흐름이 API split 이후에도 막히지 않는지 확인한다.
 - 이 목록은 전체 QA가 아니라 frontend/backend 연결의 최소 smoke다.
-- 2026-05-29 실행 결과는 `.cloud/39_screen_qa_2026-05-29.md`에 기록한다.
+- 2026-05-29 실행 결과는 `.cloud/01_project_history_current_2026-06-13.md`에 기록한다.
 
 ## 변경 기록
 
 - **2026-06-08**: 세관 UI/UX 제거 구현 기준을 추가했다. Phase 1 core route에서는 세관 버튼과 팝업을 기본 노출하지 않고, 관련 UI는 feature flag 뒤의 compat/dev 경로로만 둔다.
-- **2026-06-08**: 검증과 테스트 재정렬 문서 `.cloud/66_validation_test_realignment_2026-06-08.md`를 연결했다. `check:e2e:smoke`는 core route smoke와 compat/dev route smoke로 해석을 나누고, destination island POC route는 Phase 1 필수 route로 보지 않는다.
-- **2026-06-08**: Frontend 화면 영향도 조사 문서 `.cloud/65_frontend_screen_impact_2026-06-08.md`를 연결했다. `LodgeScene`, `IslandFullMapScreen`, `NavigationBoardScene`, `HarborScene`, `BottomNav`, `DestinationIslandScreen` 순서로 화면 작업 우선순위를 확인한다.
-- **2026-06-08**: 웹 UI/UX 방향 문서 `.cloud/63_web_ui_ux_direction_2026-06-08.md`를 연결했다. 모바일 게임 축소판이 아니라 넓은 화면과 패널을 활용하는 웹형 생활 육성 UI 기준을 추가했다.
+- **2026-06-08**: 검증과 테스트 재정렬 문서 `.cloud/01_project_history_current_2026-06-13.md`를 연결했다. `check:e2e:smoke`는 core route smoke와 compat/dev route smoke로 해석을 나누고, destination island POC route는 Phase 1 필수 route로 보지 않는다.
+- **2026-06-08**: Frontend 화면 영향도 조사 문서 `.cloud/01_project_history_current_2026-06-13.md`를 연결했다. `LodgeScene`, `IslandFullMapScreen`, `NavigationBoardScene`, `HarborScene`, `BottomNav`, `DestinationIslandScreen` 순서로 화면 작업 우선순위를 확인한다.
+- **2026-06-08**: 웹 UI/UX 방향 문서 `.cloud/01_project_history_current_2026-06-13.md`를 연결했다. 모바일 게임 축소판이 아니라 넓은 화면과 패널을 활용하는 웹형 생활 육성 UI 기준을 추가했다.
 - **2026-06-08**: 아이동별 미니게임 스킨 화면 기준을 연결했다. 미니게임은 공통 engine component와 Aidong별 skin layer를 분리하고, 결과 payload는 engine 기준을 유지한다.
 - **2026-06-08**: 구역 배치 자동 생산 화면 기준을 연결했다. 생산 구역 UI는 배치 슬롯, 예상 생산량, 누적 생산량, 회수 버튼, 효율/비효율 표시를 우선한다.
 - **2026-06-08**: 숙소 중심 육성 허브 기준을 연결했다. 숙소 화면은 방 카드, 마당, 선택 Aidong 상세, 케어·연습·꾸미기·업그레이드 진입을 우선하는 Phase 1 핵심 화면으로 본다.
 - **2026-06-08**: Customs De-scope 기준을 추가했다. Phase 1 smoke와 frontend 기본 UX에서는 세관 팝업을 필수 gate로 삼지 않고, 세관 UI는 명시적 flag 또는 dev/검증 경로 뒤에 둔다.
 - **2026-06-08**: 기획 변경 회의 이후 frontend Phase 1 기준을 추가했다. 세관 팝업과 destination island 이탈 gate는 POC/보류 후보로 낮추고, 숙소 중심 육성 허브와 통 인벤토리 흐름을 우선한다.
-- **2026-06-08**: Phase 1 core loop와 화면 우선순위 기준으로 `.cloud/53_core_loop_2026-06-08.md`를 연결했다.
+- **2026-06-08**: Phase 1 core loop와 화면 우선순위 기준으로 `.cloud/01_project_history_current_2026-06-13.md`를 연결했다.
 - **2026-05-29**: 최소 플레이 플로우 확인 항목을 추가했다. login, onboarding, gacha/recruit, zone clear, codex, route/ship 흐름은 전체 QA 전의 smoke 기준으로 본다.
 - **2026-06-01**: Aidong item 착용과 route landing clear의 frontend 연결 기준을 추가했다. 숙소 화면은 `toggleAidongEquippedItem`, 항해 보드는 `clearRouteLanding` action API를 우선 사용한다.
 - **2026-06-01**: Playwright 기반 최소 E2E smoke 기준을 추가했다. `pnpm check:e2e:smoke`는 guest login, 주요 route 진입, legacy `/api/state` 호출 부재를 브라우저에서 검증한다.
 - **2026-06-01**: 세관 팝업 UI 기준을 출구 게이트 방식으로 수정했다. 항구/숙소 편의 버튼이 아니라, 전용 자원/아이템을 가진 모듈을 떠나기 직전에 열고 전용 인벤토리가 빌 때까지 `나가기`를 막는다.
 - **2026-06-01**: 세관 팝업 rule 노출 기준을 보강했다. 내 섬 구역에서는 갑판 적재 rule을 숨기고, 배를 타고 도달한 구역에서만 배/갑판 관련 rule을 보여준다.
 - **2026-06-01**: 배 인벤토리 맥락의 세관 진입 기준을 추가했다. 항구 메인 편의 버튼은 두지 않되, `shipInventory`에 보유 자원이 있을 때 배 인벤토리 팝업 안에서 세관으로 들어갈 수 있다.
-- **2026-05-29**: 실제 화면 기준 QA의 runtime gate 기준을 보강했다. `pnpm check:state-route-runtime:local`을 우선 실행하고, 결과는 `.cloud/39_screen_qa_2026-05-29.md`에 기록한다.
+- **2026-05-29**: 실제 화면 기준 QA의 runtime gate 기준을 보강했다. 당시 기준은 `pnpm check:state-route-runtime:local` 우선 실행이었고, 결과는 `.cloud/01_project_history_current_2026-06-13.md`에 기록한다.
 - **2026-05-29**: Google/Twitter social login skeleton 기준을 추가했다. 기본 UI는 준비중으로 유지하고, `VITE_SOCIAL_LOGIN_ENABLED=true`와 Firebase provider 설정이 모두 준비된 뒤 실제 popup을 활성화한다.
 - **2026-05-29**: Frontend store 물리 분리는 보류하고 `storeFacades.ts`를 module별 접근 경계로 사용하는 규칙을 추가했다.
 - **2026-05-29**: frontend legacy fallback 제거 상태에 맞춰 문서를 전면 정리했다. `syncStore.ts`는 전용 API sync만 사용하고, `VITE_SPLIT_STATE_SYNC`는 rollback flag로 쓰지 않는다는 규칙을 명시했다.
@@ -257,3 +258,4 @@ FRONTEND_URL=http://localhost:5174 pnpm check:frontend:state-route-runtime
 
 - **2026-06-05**: PixiJS를 프론트 전체 엔진이 아니라 destination island와 미션/보상/조사 같은 화려한 연출이 필요한 장면에만 부분 도입하는 원칙을 추가했다.
 - **2026-06-05**: Spine/Live2D 대신 Rive를 캐릭터 반응, UI, 오브젝트 애니메이션의 1차 선택지로 쓰는 규칙을 추가했다.
+- **2026-06-13**: M5 Playwright smoke 기준을 현행화했다. core route, AREA-01~15, legacy redirect, 세관 UI 비강제, 포토카드 placeholder, full-map zone dialog, 항해 guard를 현재 smoke 범위로 기록했다.

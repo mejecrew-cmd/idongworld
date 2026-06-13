@@ -10,11 +10,11 @@
 - local MongoDB 기준 개발과 전용 collection 구조는 유지한다.
 - customs는 idempotency, audit log, resource adapter를 갖춘 기술 자산으로 보존한다.
 - 다만 Phase 1 사용자 핵심 루프에서는 세관을 필수 UX gate로 강제하지 않는다.
-- 세관의 세부 de-scope 정책은 `.cloud/56_customs_descope_2026-06-08.md`를 따른다.
+- 세관의 세부 de-scope 정책은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
 - 통 인벤토리, 아이동별 25 도감 아이템 인벤토리, 숙소 중심 육성 허브 설계가 확정되기 전까지 신규 schema migration은 보수적으로 진행한다.
 - 이전 `destination-island -> ship -> lodge` 세관 루프는 POC/보류 후보로 분류한다.
-- backend/API 영향도와 신규 API 후보는 `.cloud/64_backend_api_impact_2026-06-08.md`를 따른다.
-- 검증과 테스트 재정렬 기준은 `.cloud/66_validation_test_realignment_2026-06-08.md`를 따른다.
+- backend/API 영향도와 신규 API 후보는 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
+- 검증과 테스트 재정렬 기준은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
 
 ## 1. 기본 방향
 
@@ -25,6 +25,18 @@
 - host/global 자원은 host API가 소유한다.
 - Phase 1 신규 gameplay 보상은 domain action API가 권위 저장소에 직접 반영한다.
 - 실제 source/target module document 간 debit/credit이 필요한 경우에만 customs와 resource adapter를 통과한다.
+
+## 1.5. M5 검증 완료 기준 2026-06-13
+
+M5 이후 backend 작업은 아래 상태를 깨지 않는 것을 기본 전제로 둔다.
+
+- `pnpm check:live-smoke:local`은 local Mongo, backend, frontend를 모두 띄우는 broad regression smoke다.
+- 이 명령은 backend module action smoke, Playwright route smoke, state-route runtime check를 순서대로 실행한다.
+- M5 기준 live smoke는 실제로 1회 이상 통과했다.
+- backend module action smoke는 guest/account, my-island, ship prerequisite, route-neighbor, aidong-island, my-aidong, lodge, zone-garden production, myroom aggregation, route cleanup 흐름을 확인한다.
+- Playwright route smoke는 core route, AREA-01~15, legacy redirect, 세관 UI 비강제, 포토카드 placeholder, full-map zone dialog, 항해 guard를 확인한다.
+- `backendPersistence.test.ts`는 M5 기준으로 15구역 slot 방어, M21 도감/콜렉션 분리, M22 상륙/영입/편입 책임 분리를 포함한다.
+- stage/debut 결과 저장소와 정식 포토카드 저장소는 아직 backend 권위 module이 아니며 7월 backlog 후보로 둔다.
 
 ## 2. State Route 제거 상태
 
@@ -109,7 +121,7 @@
 - transaction이 꺼진 local 환경에서는 target credit 실패 시 source debit을 보상 rollback한다.
 - customs 결과는 `customsLogs`에 audit log로 남긴다.
 - 신규 gameplay 보상이 단일 권위 저장소로 들어가는 경우에는 customs보다 domain action API를 우선한다.
-- 사용자에게 세관 UI를 노출해야 하는 작업은 `.cloud/56_customs_descope_2026-06-08.md`의 재개 조건과 feature flag 기준을 먼저 확인한다.
+- 사용자에게 세관 UI를 노출해야 하는 작업은 `.cloud/01_project_history_current_2026-06-13.md`의 재개 조건과 feature flag 기준을 먼저 확인한다.
 
 ## 8. Codex Action API 규칙
 
@@ -127,7 +139,7 @@
 - 숙소 연습 상태는 `myAidongStates.practiceState` 후보 필드가 소유한다.
 - 도감 아이템 지급, 소비, 업그레이드 성공 판정은 `my-aidong` domain service 또는 전용 upgrade service 후보에서 검증한다.
 - 일반 재료 비용이 필요한 업그레이드는 `hostStates.inventory` 차감과 같은 트랜잭션 단위로 처리한다.
-- 도감 아이템과 업그레이드 경제의 상세 기준은 `.cloud/60_codex_upgrade_economy_2026-06-08.md`를 따른다.
+- 도감 아이템과 업그레이드 경제의 상세 기준은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
 
 ## 9. Auth 규칙
 
@@ -186,9 +198,9 @@ pnpm check:live-smoke:local
 ```
 
 - 이 명령은 local Mongo, backend, frontend를 함께 띄우는 넓은 회귀검사로 본다.
-- Phase 1 core loop 정의 자체로 보지 않는다.
+- Phase 1 core loop 정의 자체로 보지는 않지만, M5 동결 기준에서는 6월 POC 수직 루프가 깨지지 않았는지 보는 최상위 smoke로 사용한다.
 - customs, ship/lodge transfer, destination island POC 실패는 해당 기능 작업 중이거나 feature flag로 노출 중일 때만 blocker로 본다.
-- 새 검증 분류 기준은 `.cloud/66_validation_test_realignment_2026-06-08.md`를 따른다.
+- 새 검증 분류 기준은 `.cloud/01_project_history_current_2026-06-13.md`를 따른다.
 
 Atlas 사용 확정 뒤 전환 확인:
 
@@ -199,8 +211,8 @@ pnpm check:mongo:atlas
 ## 변경 기록
 
 - **2026-06-08**: 세관 UI/UX 제거 결정에 맞춰 customs 사용 기준을 수정했다. Phase 1 신규 gameplay 보상은 domain action API가 직접 권위 저장소에 반영하고, customs는 실제 cross-module debit/credit이 필요한 경우에만 사용한다.
-- **2026-06-08**: 검증과 테스트 재정렬 문서 `.cloud/66_validation_test_realignment_2026-06-08.md`를 연결했다. `check:live-smoke:local`은 broad regression으로 유지하되, customs/destination POC 실패를 Phase 1 core blocker로 자동 해석하지 않는다.
-- **2026-06-08**: Backend/API 영향도 조사 문서 `.cloud/64_backend_api_impact_2026-06-08.md`를 연결했다. 신규 schema migration은 새 API/model 영향도 분류를 확인한 뒤 보수적으로 진행한다.
+- **2026-06-08**: 검증과 테스트 재정렬 문서 `.cloud/01_project_history_current_2026-06-13.md`를 연결했다. `check:live-smoke:local`은 broad regression으로 유지하되, customs/destination POC 실패를 Phase 1 core blocker로 자동 해석하지 않는다.
+- **2026-06-08**: Backend/API 영향도 조사 문서 `.cloud/01_project_history_current_2026-06-13.md`를 연결했다. 신규 schema migration은 새 API/model 영향도 분류를 확인한 뒤 보수적으로 진행한다.
 - **2026-06-08**: 도감 아이템과 숙소 업그레이드 경제 기준을 추가했다. `codexStates`는 표시/등록 상태로 유지하고, 아이동별 도감 아이템 수량과 업그레이드/연습 상태는 `myAidongStates` 후보 필드가 소유하도록 정리했다.
 - **2026-06-08**: Customs De-scope 정책 문서를 연결했다. backend customs/API/log/adapter/rule은 유지하되, 신규 gameplay의 단일 저장소 보상은 domain action API를 우선하도록 명시했다.
 - **2026-06-08**: 기획 변경 회의 이후 Phase 1 기준을 추가했다. customs와 module resource adapter는 기술 자산으로 유지하지만, 사용자 핵심 루프의 필수 세관 gate는 보류한다.
@@ -216,3 +228,4 @@ pnpm check:mongo:atlas
 - **2026-05-29**: state route 제거 완료 상태에 맞춰 문서를 전면 정리했다. backend state route와 compatibility service 설명을 제거했다.
 - **2026-05-29**: MongoDB, module API, customs, auth, 검증 명령 중심의 현재 규칙만 남겼다.
 - **2026-05-29**: Google/Twitter social login session 규칙을 추가했다. `/api/auth/session`은 user document만 upsert하고 module-local 상태는 건드리지 않는다.
+- **2026-06-13**: M5 검증 완료 기준을 추가했다. `pnpm check:live-smoke:local` 통과 상태, backend module smoke 범위, Playwright route smoke 범위, M21/M22/15구역 persistence test 고정 상태를 backend 규칙에 반영했다.
