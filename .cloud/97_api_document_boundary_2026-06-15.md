@@ -59,7 +59,7 @@ route/service는 uid를 request body에서 신뢰하지 않는다.
 
 | Document/Collection | 소유 영역 | 주요 필드 | 대표 API |
 | --- | --- | --- | --- |
-| `users` | account/auth compat | `isGuest`, `nickname`, `openingSeen`, `onboardingComplete`, `hostName` | `/api/auth/*`, `/api/account/*` |
+| `users` | account/auth compat | `isGuest`, `authProvider`, `providerUid`, `emailNormalized`, `nickname`, `nicknameNormalized`, `signupProfileCompleted`, `timezoneCompleted`, `termsCompleted`, `termsAgreements`, `openingSeen`, `onboardingComplete`, `hostName` | `/api/auth/*`, `/api/account/*` |
 | `hostStates` | 전역 자원 | `coins`, `gems`, `diamonds`, `diceCount`, `inventory` | `/api/host/*` |
 | `myAidongStates` | Aidong 상태 | `recruitedAidongs`, `needs`, `affinities`, `equippedOutfit`, `equippedItems`, `aidongCodexItems`, `aidongUpgradeState` | `/api/modules/my-aidong/*` |
 | `myIslandStates` | 마이섬 구역 | `unlockedZones`, `zoneSlots`, `dynamicAidongZones`, `zoneProgress` | `/api/modules/my-island/*` |
@@ -121,6 +121,28 @@ DB document:
 
 ### 5.1 Auth API
 
+#### `GET /api/auth/social/providers`
+
+역할:
+
+- 로그인 화면에 노출할 소셜 provider 목록과 사용 가능 상태 조회
+- provider별 `enabled`, `planned`, `devOnly`, `disabled` 상태 전달
+- 화면 담당자가 버튼 목록과 준비 중 상태를 하드코딩하지 않도록 함
+
+수정 document:
+
+- 없음
+
+frontend client:
+
+- `api.getSocialProviders()`
+
+backend 경계:
+
+- provider 목록과 상태는 `packages/backend/src/auth/socialProviders.ts`가 소유한다.
+- 실제 provider token 검증은 `packages/backend/src/auth/socialProviderAdapters.ts`를 통해서만 수행한다.
+- route가 provider별 검증 분기문을 직접 늘리면 안 된다.
+
 #### `POST /api/auth/guest`
 
 역할:
@@ -137,12 +159,19 @@ frontend client:
 
 - `api.authGuest()`
 
+응답 경계:
+
+- `uid`, `user`
+- `account`: 공통 `AccountProgress`
+- `nextStep`: `login | signup | timezone | terms | title`
+
 #### `POST /api/auth/session`
 
 역할:
 
 - Firebase/social login session을 backend user로 생성 또는 갱신
-- provider는 `google`, `twitter`, `firebase` 후보
+- provider는 신규 계약 기준 `google`, `apple`, `x`, `kakao`, `naver`, `line`, `facebook`, `firebase` 후보
+- 기존 `twitter` 문자열은 backend helper에서 `x`로 normalize하는 호환 경로만 둔다.
 
 수정 document:
 
@@ -152,6 +181,49 @@ frontend client:
 frontend client:
 
 - `api.authSession(uid, request)`
+
+응답 경계:
+
+- `uid`, `user`
+- `account`: 공통 `AccountProgress`
+- `nextStep`: `login | signup | timezone | terms | title`
+
+#### `POST /api/auth/social/entry`
+
+역할:
+
+- 소셜 provider token 검증 후 backend 계정 진입점을 판정
+- 기존 계정이면 `isNew: false`와 공통 `nextStep` 반환
+- 신규 계정이면 최소 user shell을 만들고 `isNew: true`, `nextStep: signup` 반환
+
+수정 document:
+
+- `users`
+- 필요 시 `hostStates`
+
+frontend client:
+
+- `api.authSocialEntry(request)`
+
+backend 경계:
+
+- provider 검증은 `socialProviderAdapters.ts`를 통과해야 한다.
+- `{ authProvider, providerUid }`로 기존 계정을 조회한다.
+- provider email은 보조 정보이며 email만으로 자동 병합하지 않는다.
+- 로그인 이후 다른 소셜 아이디 연결/병합/충돌 처리는 이 API 범위가 아니다.
+
+응답 경계:
+
+- `ok`, `uid`, `user`, `isNew`
+- `account`: 공통 `AccountProgress`
+- `nextStep`: `login | signup | timezone | terms | title`
+
+오류:
+
+- `invalid_provider`
+- `provider_not_enabled`
+- `invalid_provider_token`
+- `provider_identity_missing`
 
 #### `GET /api/auth/me`
 
@@ -165,12 +237,239 @@ frontend client:
 
 ### 5.2 Account API
 
+#### `GET /api/account/bootstrap`
+
+역할:
+
+- 로그인 직후 또는 앱 재진입 시 다음 화면 판단에 필요한 account 진행 상태를 한 번에 조회
+- 화면은 `nextStep`을 기준으로 `signup`, `timezone`, `terms`, `title` 중 어디로 갈지 판단
+
+읽는 document:
+
+- `users`
+
+frontend client:
+
+- `api.getAccountBootstrap(uid)`
+
+응답 경계:
+
+- `ok`, `uid`
+- `user`: 화면 표시용 최소 user 요약
+- `provider`: auth provider 요약
+- `account`: 공통 `AccountProgress`
+- `nextStep`: `login | signup | timezone | terms | title`
+
+주의:
+
+- 화면 플로우 판단은 `GET /api/account/state`보다 이 API를 우선 사용한다.
+- 전역 자원, 모듈 상태, 인벤토리 요약은 이 API에 섞지 않는다.
+
+#### `POST /api/account/nickname/check`
+
+역할:
+
+- 회원가입 닉네임의 사용 가능 여부를 검사한다.
+- 닉네임 공백 정리, 8자 제한, 허용 문자, 금칙어, 중복 여부를 같은 정책으로 확인한다.
+
+읽는 document:
+
+- `users`
+
+frontend client:
+
+- `api.checkNickname(nickname, uid?)`
+
+응답 경계:
+
+- `ok`: 닉네임 사용 가능 여부와 같은 값
+- `available`: 닉네임 사용 가능 여부
+- `normalizedNickname`: backend가 저장할 표시용 닉네임
+- `reasons`: `empty`, `too_long`, `invalid_format`, `forbidden_word`, `duplicate`
+
+주의:
+
+- 이 API는 검사 전용이다.
+- 실제 가입 프로필 저장은 `POST /api/account/signup/profile`에서 다시 검증한다.
+- `uid`가 있으면 현재 계정이 이미 가진 닉네임은 중복으로 보지 않을 수 있다.
+
+#### `POST /api/account/signup/profile`
+
+역할:
+
+- 신규 소셜 계정의 회원가입 프로필을 저장한다.
+- 현재는 닉네임만 저장한다.
+- 프로필 이미지는 직접 선택하지 않고, 최초로 만나는 Aidong 얼굴을 쓰기 위한 `profileImageSource: first-aidong` 후보 값을 저장한다.
+
+수정 document:
+
+- `users.nickname`
+- `users.nicknameNormalized`
+- `users.signupProfileCompleted`
+- `users.profileImageSource`
+
+frontend client:
+
+- `api.completeSignupProfile(uid, nickname)`
+
+응답 경계:
+
+- `ok`, `uid`, `user`
+- `account`: 공통 `AccountProgress`
+- `nextStep`: 정상 저장 후 보통 `timezone`
+
+주의:
+
+- 저장 전에 `nickname/check`와 같은 정책으로 다시 검증한다.
+- 중복/금칙어/길이 오류는 400과 `reasons`로 반환한다.
+- 가입 플로우의 권위 저장 API이므로 화면은 `PATCH /api/account/state`로 닉네임을 저장하지 않는다.
+
+#### `POST /api/account/preferences/timezone`
+
+역할:
+
+- 가입 플로우 또는 계정 환경 설정에서 케어/알림 기준 timezone을 저장한다.
+- backend는 IANA timezone 형식인지 최종 검증한다.
+- 시간대 저장이 끝나면 `timezoneCompleted: true`로 반영하고 다음 단계는 보통 `terms`가 된다.
+
+수정 document:
+
+- `users.timeZone`
+- `users.detectedTimeZone`
+- `users.utcOffsetMinutes`
+- `users.timezoneCompleted`
+
+frontend client:
+
+- `api.saveAccountTimeZone(uid, request)`
+
+요청 경계:
+
+```ts
+{
+  timeZone: string
+  detectedTimeZone?: string
+  utcOffsetMinutes?: number
+}
+```
+
+응답 경계:
+
+- `ok`, `uid`
+- `timeZone`, `detectedTimeZone`, `utcOffsetMinutes`
+- `account`: 공통 `AccountProgress`
+- `nextStep`: `login | signup | timezone | terms | title`
+
+오류:
+
+- `empty`
+- `invalid_timezone`
+- `invalid_detected_timezone`
+- `invalid_utc_offset`
+
+주의:
+
+- timezone 목록 UI와 검색은 frontend가 담당한다.
+- backend는 저장 직전에 `Intl.DateTimeFormat` 기반으로 IANA timezone 유효성을 검증한다.
+- `utcOffsetMinutes`는 browser가 계산해 전달하는 보조 표시값이며, 권위 timezone은 `timeZone`이다.
+
+#### `GET /api/account/terms/current`
+
+역할:
+
+- 현재 적용 중인 약관 버전과 필수/선택 항목을 조회한다.
+- 화면 담당자는 이 응답으로 약관 체크박스와 전문 링크/버전 표시를 구성한다.
+
+수정 document:
+
+- 없음
+
+frontend client:
+
+- `api.getCurrentTerms()`
+
+응답 경계:
+
+```ts
+{
+  ok: true
+  terms: {
+    serviceTermsVersion: string
+    privacyPolicyVersion: string
+    marketingTermsVersion: string
+    ageGateVersion: string
+    required: Array<'service' | 'privacy' | 'age'>
+    optional: Array<'marketing'>
+  }
+}
+```
+
+주의:
+
+- 현재 약관 버전은 `packages/backend/src/account/termsPolicy.ts` static config가 소유한다.
+- 나중에 운영 약관 버전 관리가 필요해지면 terms config collection으로 승격할 수 있다.
+
+#### `POST /api/account/terms/agree`
+
+역할:
+
+- 필수 약관 동의와 선택 약관 동의 여부를 저장한다.
+- 서비스 이용 약관, 개인정보 처리방침, age-gate가 현재 버전과 맞아야 한다.
+- 선택 마케팅 약관은 동의하지 않아도 되지만 `marketingAccepted: false`로 명시 저장한다.
+
+수정 document:
+
+- `users.termsAgreements`
+- `users.termsCompleted`
+
+frontend client:
+
+- `api.agreeTerms(uid, request)`
+
+요청 경계:
+
+```ts
+{
+  serviceTermsVersion: string
+  privacyPolicyVersion: string
+  marketingTermsVersion?: string
+  marketingAccepted: boolean
+  ageConfirmed?: boolean
+  ageGateVersion?: string
+}
+```
+
+응답 경계:
+
+- `ok`, `uid`
+- `termsAgreements`
+- `account`: 공통 `AccountProgress`
+- `nextStep`: 정상 저장 후 보통 `title`
+
+오류:
+
+- `invalid_payload`
+- `service_terms_required`
+- `privacy_policy_required`
+- `service_terms_version_mismatch`
+- `privacy_policy_version_mismatch`
+- `marketing_terms_version_mismatch`
+- `marketing_accepted_required_boolean`
+- `age_confirmed_required`
+
+주의:
+
+- `marketingAccepted`는 선택 약관이지만 API payload에서는 boolean 필수다.
+- 체크하지 않은 경우도 `false`로 보내야 하고, backend도 `false`로 저장한다.
+- 약관 저장 후 화면 이동은 response의 `nextStep`을 기준으로 한다.
+
 #### `GET /api/account/state`
 
 역할:
 
 - account 성격의 상태 조회
-- 화면 첫 진입, auth bootstrap, onboarding 판단에 사용
+- 기존 account state 호환 조회
+- 신규 화면 플로우 판단은 `GET /api/account/bootstrap`을 우선 사용
 
 읽는 document:
 
@@ -179,6 +478,12 @@ frontend client:
 frontend client:
 
 - `api.getAccountState(uid)`
+
+응답 경계:
+
+- `state`: account state 호환 payload
+- `account`: 공통 `AccountProgress`
+- `nextStep`: `login | signup | timezone | terms | title`
 
 #### `PATCH /api/account/state`
 
@@ -195,6 +500,12 @@ frontend client:
 frontend client:
 
 - `api.patchAccountState(uid, patch)`
+
+응답 경계:
+
+- `state`: account state 호환 payload
+- `account`: 공통 `AccountProgress`
+- `nextStep`: `login | signup | timezone | terms | title`
 
 주의:
 
@@ -1312,3 +1623,6 @@ DB에 저장되는 항해 관련 값은 다음에 한정한다.
 ## 24. 변경 이력
 
 - 2026-06-15: 현재 backend route와 frontend API client 기준으로 API/document 경계 문서 작성.
+- 2026-06-15: 닉네임 검사와 가입 프로필 저장 API를 추가했다. `users.nicknameNormalized`, `users.signupProfileCompleted`, `users.profileImageSource` 경계와 frontend client 이름을 명시했다.
+- 2026-06-15: 시간대 저장 API를 추가했다. `users.timeZone`, `users.detectedTimeZone`, `users.utcOffsetMinutes`, `users.timezoneCompleted` 경계와 frontend `saveAccountTimeZone()` client 이름을 명시했다.
+- 2026-06-15: 현재 약관 조회와 약관 동의 저장 API를 추가했다. `users.termsAgreements`, `users.termsCompleted` 경계와 frontend `getCurrentTerms()`/`agreeTerms()` client 이름을 명시했다.

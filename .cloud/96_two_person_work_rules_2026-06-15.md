@@ -83,6 +83,35 @@
 
 화면이 임시로 local state에 저장해도 되는 정보와 DB에 저장해야 하는 정보는 반드시 구분한다.
 
+로그인 화면의 소셜 provider 버튼도 같은 원칙을 따른다.
+
+- 화면 담당자는 provider 버튼 목록을 직접 확정하지 않는다.
+- API 담당자는 `GET /api/auth/social/providers`와 `api.getSocialProviders()`를 제공한다.
+- 화면 담당자는 `enabled` provider만 실제 로그인 가능 버튼으로 처리한다.
+- `planned` provider는 준비 중 표시 또는 비활성 버튼으로 처리한다.
+- provider token 검증, 계정 생성, 기존 계정 판정은 backend/API 담당 범위다.
+
+회원가입 닉네임 검증도 같은 원칙을 따른다.
+
+- 화면 담당자는 8자 제한, 금칙어, 중복 검사 정책을 화면 안에 재구현하지 않는다.
+- API 담당자는 `POST /api/account/nickname/check`, `POST /api/account/signup/profile`, `api.checkNickname()`, `api.completeSignupProfile()`을 제공한다.
+- 화면 담당자는 입력 UI와 오류 표시를 만들고, 실제 사용 가능 여부와 저장은 API 응답을 따른다.
+- 닉네임 저장 후 다음 단계 판단은 `nextStep`을 기준으로 처리한다.
+
+가입 시간대 설정도 같은 원칙을 따른다.
+
+- 화면 담당자는 현재 감지 시간대 표시, 검색 UI, 선택 리스트를 만든다.
+- API 담당자는 `POST /api/account/preferences/timezone`과 `api.saveAccountTimeZone()`을 제공한다.
+- IANA timezone 최종 유효성 검증과 `timezoneCompleted` 저장은 backend/API 담당 범위다.
+- 시간대 저장 후 다음 단계 판단은 `nextStep`을 기준으로 처리한다.
+
+약관 동의도 같은 원칙을 따른다.
+
+- 화면 담당자는 전체 동의/필수/선택 체크 UI와 약관 보기 UI를 만든다.
+- API 담당자는 `GET /api/account/terms/current`, `POST /api/account/terms/agree`, `api.getCurrentTerms()`, `api.agreeTerms()`를 제공한다.
+- 필수 약관 버전 검증, age-gate 검증, 선택 약관 `false` 저장은 backend/API 담당 범위다.
+- 약관 저장 후 다음 단계 판단은 `nextStep`을 기준으로 처리한다.
+
 ## 5. 권위 상태 기준
 
 현재 프로젝트의 권위 상태 기준은 다음과 같다.
