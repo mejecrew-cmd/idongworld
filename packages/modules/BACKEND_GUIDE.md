@@ -313,6 +313,13 @@ VITE_MODULE_ACTION_API_SYNC=false
 - 현재 항해 세션의 위치.
 - 여러 항해 창을 막는 mutex.
 
+현재 route-neighbor API 계약:
+
+- `start`: route id와 초기 board position을 응답하지만 DB에는 현재 항해 상태를 저장하지 않는다.
+- `roll`: frontend session이 넘긴 `routeId`, `boardPosition`을 검증하고, 주사위 소모와 landing 후보 응답을 처리한다. 현재 칸은 저장하지 않는다.
+- `landing/current`: legacy/compat endpoint이며, 세션 landing 후보 복구용으로 쓰지 않는다.
+- `landing/clear`: `landingId`, `routeId`, `boardPosition`을 받아 보상 확정 결과만 저장한다.
+- `end`: DB 출항 상태를 종료시키는 API가 아니라 no-op/compat endpoint다.
 영속 DB에 기록하는 항해 결과:
 
 - 주사위 소모와 지급.
@@ -491,3 +498,4 @@ backend service 검증:
 - **2026-05-24**: 모듈 개발 시 전용 backend 저장소와 API를 사용하는 지침 문서를 신설했다.
 - **2026-06-13**: 미니게임 skin catalog 초안을 반영했다. `my-aidong/minigame-skins.csv`와 backend reader를 기준으로 공통 engine과 Aidong별 skin을 연결하고, 보상 수치와 zone allowlist는 후속 balance/config 후보로 유지한다.
 - **2026-06-13**: 항해 세션 상태 기준을 현행화했다. 현재 route, 현재 칸, 출항/정박 여부는 브라우저 탭/창별 session state이며 DB에는 영속 결과만 저장한다.
+- **2026-06-13**: route-neighbor API의 현재 계약을 추가했다. start/roll/current/clear/end가 세션 진행 상태를 저장하지 않고 영속 결과만 다루는 기준을 모듈 제작자용으로 정리했다.

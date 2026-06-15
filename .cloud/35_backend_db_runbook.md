@@ -212,6 +212,25 @@ POST /api/modules/{zoneId}/collect
 POST /api/modules/{zoneId}/clear
 ```
 
+route-neighbor 현재 계약:
+
+- `POST /api/modules/route-neighbor/start`
+  - 입력: `uid`, `routeId`.
+  - 응답: 세션 시작에 필요한 `routeId`, 초기 `boardPosition`, 현재 route-neighbor state.
+  - DB 저장: 현재 route/current cell을 저장하지 않는다.
+- `POST /api/modules/route-neighbor/roll`
+  - 입력: `uid`, `steps`, `routeId`, `boardPosition`.
+  - 응답: 확정된 `steps`, session 기준 `boardPosition`, landing 후보, host dice 변경 결과.
+  - DB 저장: 주사위 소모와 필요한 영속 결과만 저장한다. 현재 칸은 저장하지 않는다.
+- `GET /api/modules/route-neighbor/landing/current`
+  - 호환 endpoint다. 현재 세션 landing 후보를 DB에서 복구하는 용도로 쓰지 않는다.
+- `POST /api/modules/route-neighbor/landing/clear`
+  - 입력: `uid`, `landingId`, `routeId`, `boardPosition`.
+  - 응답: 보상 확정 결과, route-neighbor/local resource 호환 기록, 관련 module state.
+  - DB 저장: `landings.cleared` 같은 결과 이력은 저장할 수 있지만 `landings.last` 같은 세션 후보는 저장하지 않는다.
+- `POST /api/modules/route-neighbor/end`
+  - no-op/compat endpoint다. DB 출항 상태를 지우는 API로 쓰지 않는다.
+
 zone action 작성 기준:
 
 - `collect`와 `clear`는 `packages/backend/src/modules/zone/service.ts`의 zone action rule을 통과해야 한다.
@@ -690,3 +709,4 @@ pnpm check:frontend:state-route-runtime
 - **2026-05-29**: 상태 API 제거 상세 계획은 `.cloud/01_project_history_current_2026-06-13.md`로 분리했다.
 - **2026-06-13**: M5 live smoke 실행 기준을 추가했다. `pnpm check:live-smoke:local`이 local Mongo, backend, frontend를 띄우고 module action smoke, Playwright route smoke, state-route runtime check를 순서대로 실행하는 기준 명령임을 기록했다.
 - **2026-06-13**: 항해 세션 경계를 현행화했다. 출항/정박 여부, 현재 route, 현재 칸은 DB가 아니라 브라우저 탭/창별 세션 상태이며, DB에는 주사위 소모와 보상 같은 영속 결과만 남긴다.
+- **2026-06-13**: route-neighbor 현재 API 계약을 runbook에 추가했다. start/roll/current/clear/end가 어떤 값을 응답하고 어떤 값을 DB에 저장하지 않는지 작업자용 기준으로 명시했다.

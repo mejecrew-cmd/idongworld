@@ -79,6 +79,14 @@ frontend 구현 기준:
 - 항구에서 항해 시작 버튼을 누르면 그 탭의 항해 세션을 새로 시작한다. 같은 탭에서 항구로 돌아와 다시 누르면 처음부터 다시 시작한다.
 - 여러 탭에서 항해를 시작해도 각 탭의 항해 세션은 독립적이다.
 - 주사위 소모, 보상 지급, Aidong 영입처럼 영속 결과가 생기는 순간에만 backend action API를 호출하고 응답을 store에 병합한다.
+
+현재 구현 기준:
+
+- 항해 세션 저장소는 `packages/frontend/src/lib/voyageSessionStore.ts`다.
+- 신규 항해 UI는 `voyageSessionFacade`를 사용한다.
+- `routeNeighborStoreFacade`의 `currentRoute`, `boardPosition`은 legacy/compat 용도로만 본다.
+- `syncStore.ts`는 `currentRoute`, `boardPosition`, route-neighbor 현재 항해 상태를 hydrate/flush하지 않는다.
+- `actionApiSync.ts`는 action 응답에 `currentRoute`, `boardPosition`이 섞여 와도 persisted `userStore`에 병합하지 않는다.
 ## 5. Sync 규칙
 
 - frontend sync는 항상 account, host, module 전용 API를 사용한다.
@@ -196,6 +204,8 @@ pnpm check:e2e:smoke
 - 2026-06-08 이후 Phase 1 smoke에서는 세관 팝업을 필수 통과 조건으로 삼지 않는다.
 - 항구/숙소에 세관 편의 버튼이 기본 노출되지 않는지 확인한다.
 - 포토카드 placeholder, full-map zone dialog, 항해 guard 같은 M5 핵심 회귀 지점을 포함한다.
+- 항구 화면에 `현재 배가 항해 중입니다`, `출항 중` 같은 DB 기반 출항 문구가 나오지 않는지 확인한다.
+- 항해 세션은 `sessionStorage`의 `idongworld-voyage-session`에만 있고, `localStorage`의 `idongworld-user`에는 `activeSession`이나 해당 session id가 들어가지 않는지 확인한다.
 - 테스트 중 `/api/state` 호출이 발생하면 실패한다.
 - 이 E2E는 최소 smoke이며, first gacha, lodge item 착용, route landing clear, customs UI 세부 조작은 별도 확장 대상으로 둔다.
 
@@ -277,3 +287,4 @@ FRONTEND_URL=http://localhost:5174 pnpm check:frontend:state-route-runtime
 
 
 - **2026-06-13**: 항해 세션 UI 규칙을 추가했다. 현재 route, 현재 칸, 출항 여부는 persisted Zustand나 DB에 두지 않고 탭/창별 session state로 관리한다.
+- **2026-06-13**: 항해 세션 구현 완료 기준을 추가했다. `voyageSessionStore`, `voyageSessionFacade`, `syncStore` 제외 대상, `actionApiSync` 방어막, Playwright storage smoke 기준을 문서화했다.

@@ -12,6 +12,17 @@ function mergeRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' ? value as Record<string, unknown> : {}
 }
 
+const RUNTIME_ONLY_KEYS = new Set(['currentRoute', 'boardPosition'])
+
+function stripRuntimeOnlyKeys(state: Record<string, unknown>): Record<string, unknown> {
+  const patch: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(state)) {
+    if (RUNTIME_ONLY_KEYS.has(key)) continue
+    patch[key] = value
+  }
+  return patch
+}
+
 export function applyHostActionState(host: unknown): void {
   const state = mergeRecord(host)
   if (!Object.keys(state).length) return
@@ -38,7 +49,7 @@ export function applyAccountActionState(account: unknown): void {
 }
 
 export function applyModuleActionState(state: unknown): void {
-  const patch = mergeRecord(state)
+  const patch = stripRuntimeOnlyKeys(mergeRecord(state))
   if (!Object.keys(patch).length) return
   userStoreRuntimeFacade.setState(patch as Partial<UserState>)
 }

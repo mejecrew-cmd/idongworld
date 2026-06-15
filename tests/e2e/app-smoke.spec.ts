@@ -181,6 +181,12 @@ test('backend and frontend smoke path works without legacy state API calls', asy
   })
 
   await expectNoLegacyStateCalls(page, async () => {
+    await page.goto('/island/harbor')
+    await expect(page.locator('body')).not.toContainText('현재 배가 항해 중입니다')
+    await expect(page.locator('body')).not.toContainText('출항 중')
+  })
+
+  await expectNoLegacyStateCalls(page, async () => {
     await page.evaluate(() => {
       const raw = window.localStorage.getItem('idongworld-user')
       if (!raw) return
@@ -196,6 +202,47 @@ test('backend and frontend smoke path works without legacy state API calls', asy
     await expect(page).toHaveURL(/\/island\/harbor$/)
     await page.getByTestId('bottom-nav-voyage').click()
     await expect(page).toHaveURL(/\/island\/harbor$/)
+  })
+
+  await expectNoLegacyStateCalls(page, async () => {
+    await page.goto('/island/harbor')
+    await page.evaluate(() => {
+      window.sessionStorage.setItem('idongworld-voyage-session', JSON.stringify({
+        state: {
+          activeSession: {
+            sessionId: 'smoke-session',
+            routeId: 'neighbor',
+            boardPosition: 3,
+            lastRoll: 3,
+            startedAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        version: 0,
+      }))
+    })
+    await page.goto('/voyage/board?route=neighbor')
+    await expect(page).toHaveURL(/\/voyage\/board\?route=neighbor$/)
+
+    const storageSnapshot = await page.evaluate(() => {
+      const userRaw = window.localStorage.getItem('idongworld-user')
+      const sessionRaw = window.sessionStorage.getItem('idongworld-voyage-session')
+      const userState = userRaw ? JSON.parse(userRaw).state ?? {} : {}
+      const voyageState = sessionRaw ? JSON.parse(sessionRaw).state ?? {} : {}
+      return {
+        userHasActiveSession: Object.prototype.hasOwnProperty.call(userState, 'activeSession'),
+        userMentionsSmokeSession: JSON.stringify(userState).includes('smoke-session'),
+        voyageRouteId: voyageState.activeSession?.routeId,
+        voyageBoardPosition: voyageState.activeSession?.boardPosition,
+      }
+    })
+
+    expect(storageSnapshot).toEqual({
+      userHasActiveSession: false,
+      userMentionsSmokeSession: false,
+      voyageRouteId: 'neighbor',
+      voyageBoardPosition: 3,
+    })
   })
 
   expect(pageErrors, 'page runtime errors').toEqual([])

@@ -8,7 +8,7 @@
  * 가구 구매와 방별 배치/해제는 lodge 전용 API로 처리한다.
  *
  * 방 꾸미기는 빈 방과 Aidong의 방 모두에서 가능하다.
- * 다만 항해 중이거나 항구 지원 배치 중인 Aidong은 방 자체를 꾸밀 수는 있지만,
+ * 다만 항구 지원 배치 중인 Aidong은 방 자체를 꾸밀 수는 있지만,
  * 밥주기, 케어, 옷입히기 같은 Aidong 상태 변경 액션은 막는다.
  */
 import { useEffect, useMemo, useState } from 'react'
@@ -108,12 +108,6 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {}
 }
 
-function getAssignedAidongs(value: unknown): string[] {
-  return Object.values(asRecord(value)).filter((characterId): characterId is string => (
-    typeof characterId === 'string' && characterId.length > 0
-  ))
-}
-
 function toNumberRecord(value: unknown): Record<string, number> {
   const result: Record<string, number> = {}
   for (const [key, raw] of Object.entries(asRecord(value))) {
@@ -184,7 +178,6 @@ export const LodgeScene = () => {
   const [careTarget, setCareTarget] = useState<AidongCharacterId | null>(null)
   const [sailingAidongs, setSailingAidongs] = useState<Set<string>>(new Set())
   const [harborAidongs, setHarborAidongs] = useState<Set<string>>(new Set())
-  const [hasActiveVoyage, setHasActiveVoyage] = useState(false)
   const [furnitureItems, setFurnitureItems] = useState<DecorItemConfig[]>(FALLBACK_FURNITURE)
   const [lodgeInventory, setLodgeInventory] = useState<Record<string, number>>({})
   const [lodgeFurniture, setLodgeFurniture] = useState<Record<string, number>>({})
@@ -241,35 +234,24 @@ export const LodgeScene = () => {
     if (!uid) return
     let cancelled = false
 
-    const loadVoyageCrew = async () => {
+    const loadHarborSupportCrew = async () => {
       try {
-        const [routeResponse, shipResponse] = await Promise.all([
-          api.getModuleState(uid, 'route-neighbor'),
-          api.getModuleState(uid, 'ship'),
-        ])
+        const shipResponse = await api.getModuleState(uid, 'ship')
         if (cancelled) return
 
-        const routeState = asRecord(routeResponse.state)
-        const active = typeof routeState.currentRoute === 'string' && routeState.currentRoute.length > 0
         const shipState = asRecord(shipResponse.state)
         const harborAssignedChars = Array.isArray(shipState.harborAssignedChars)
           ? shipState.harborAssignedChars.filter((id): id is string => typeof id === 'string' && id.length > 0)
           : []
 
-        setHasActiveVoyage(active)
         setHarborAidongs(new Set(harborAssignedChars))
-        setSailingAidongs(active
-          ? new Set([
-            ...getAssignedAidongs(shipState.cabinAssignments),
-            ...getAssignedAidongs(shipState.deckAssignments),
-          ])
-          : new Set())
+        setSailingAidongs(new Set())
       } catch (error) {
-        console.warn('[lodge] failed to load voyage crew state', error)
+        console.warn('[lodge] failed to load harbor support crew state', error)
       }
     }
 
-    void loadVoyageCrew()
+    void loadHarborSupportCrew()
 
     return () => {
       cancelled = true
@@ -441,10 +423,9 @@ export const LodgeScene = () => {
 
       <Box sx={{ p: 2 }}>
         {lodgeStateLoading && <LinearProgress sx={{ mb: 2 }} />}
-
-        {(hasActiveVoyage && sailingAidongs.size > 0) || harborAidongs.size > 0 ? (
+        {harborAidongs.size > 0 ? (
           <Alert severity="info" sx={{ mb: 2 }}>
-            항해 중이거나 항구 지원 배치 중인 Aidong의 방은 꾸밀 수 있지만,
+            항구 지원 배치 중인 Aidong의 방은 꾸밀 수 있지만,
             밥주기, 케어, 옷입히기는 숙소에 있을 때만 가능해요.
           </Alert>
         ) : null}

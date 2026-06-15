@@ -285,6 +285,30 @@ myIslandStates.zoneSlots
 
 즉, 사용자는 항해에서 아이동섬을 만나고, 상륙하고, 영입한 뒤, 별도로 마이섬 slot을 선택해 편입한다.
 
+### 8.2 항해 세션 권위 구현 완료 상태
+
+2026-06-13 구현으로 아래 상태가 실제 코드에 반영됐다.
+
+- `packages/frontend/src/lib/voyageSessionStore.ts`가 탭/창별 항해 세션을 `sessionStorage`에 저장한다.
+- `packages/frontend/src/screens/HarborScene.tsx`는 `route-neighbor` DB 상태를 읽어 출항 중 UI를 표시하지 않는다. 항구는 항상 정박 화면이다.
+- `packages/frontend/src/screens/NavigationBoardScene.tsx`와 `BottomNav.tsx`는 현재 route와 현재 칸을 `voyageSessionFacade`에서 읽는다.
+- `packages/frontend/src/lib/syncStore.ts`는 `currentRoute`, `boardPosition`, `route-neighbor` 현재 항해 상태를 hydrate/flush하지 않는다.
+- `packages/frontend/src/lib/actionApiSync.ts`는 action 응답에 `currentRoute`, `boardPosition`이 섞여 와도 `userStore`에 병합하지 않는다.
+- `packages/backend/src/modules/route-neighbor/service.ts`는 `start`/`roll`/`end`로 현재 항해 상태를 DB에 저장하지 않는다.
+- `packages/backend/src/modules/ship/service.ts`는 `route-neighbor.currentRoute`를 보고 배 변경이나 배치를 막지 않는다.
+- `LodgeScene`은 DB의 현재 항해 상태로 Aidong을 전역 “항해 중” 처리하지 않는다.
+
+검증 기준도 함께 갱신됐다.
+
+- backend persistence test는 route-neighbor가 현재 route/current cell을 영속 저장하지 않는지 확인한다.
+- backend smoke script는 `roll`/`landing/clear`가 세션 payload를 받고 영속 결과만 남기는지 확인한다.
+- Playwright smoke는 항구에 출항 중 문구가 나오지 않는지, 항해 세션이 `sessionStorage`에만 있고 `idongworld-user` localStorage에 들어가지 않는지 확인한다.
+
+앞으로 항해 관련 코드를 수정할 때 가장 먼저 확인할 문서는 아래다.
+
+```text
+.cloud/91_next_work_2026-06-13_voyage_session_authority.md
+```
 ## 9. 숙소와 마이룸
 
 숙소는 단순 배치 화면이 아니라 성장 허브가 되는 방향이다.
@@ -481,3 +505,4 @@ Codex는 다음 기준에서 벗어나면 안 된다.
 - **2026-06-13**: `.cloud` 문서 정리를 위해 지금까지의 작업 히스토리를 현재 구현 기준으로 요약했다. 오래된 next_work, 임시 충돌 지도, 임시 설계 조각이 Codex와 신규 개발자를 혼란스럽게 하지 않도록 이 문서를 기준 히스토리로 세웠다.
 - **2026-06-13**: 새 모듈 제작자가 따라갈 수 있는 `.cloud/02_module_creator_guide_2026-06-13.md`를 기준 문서로 추가했다.
 - **2026-06-13**: 항해 세션 권위 결정을 추가했다. 출항/정박 여부, 현재 route, 현재 칸, 세션 내 landing 후보는 DB가 아니라 브라우저 탭/창별 세션 상태로 관리하고, DB에는 주사위 소모와 보상 지급 같은 영속 결과만 기록한다.
+- **2026-06-13**: 항해 세션 권위 구현 완료 상태를 반영했다. frontend `voyageSessionStore`, 항구/항해 화면, route-neighbor backend 계약, ship lock 제거, sync/persist 제외, Playwright smoke 기준을 현재 구현 기준으로 기록했다.

@@ -100,6 +100,16 @@ DB에 저장해야 하는 값:
 같은 계정이 여러 항해 창을 열 수 있으므로 항해 session은 탭/창별로 독립적이어야 한다. 서버가 `isVoyaging` 같은 user-level flag를 갖는 순간 이 요구를 깨뜨린다.
 
 항구 API와 항구 화면은 항상 “배가 항구에 정박해 있다”는 전제로 동작한다. 항구에서 항해 시작을 누르면 해당 브라우저 세션의 항해가 처음부터 시작된다.
+
+현재 구현 기준:
+
+- `routeNeighborStates` schema/default/spec에는 `currentRoute`, `boardPosition`을 두지 않는다.
+- `route-neighbor/start`는 route id와 초기 board position을 응답할 수 있지만 DB에 저장하지 않는다.
+- `route-neighbor/roll`은 frontend session이 넘긴 `routeId`, `boardPosition`을 검증하고 주사위 소모와 landing 후보만 처리한다.
+- `route-neighbor/landing/clear`는 session payload 또는 landing id를 근거로 보상 확정 결과만 DB에 기록한다.
+- `route-neighbor/end`는 DB 출항 상태를 지우는 API가 아니라 no-op/compat 응답이다.
+- `ship` service는 `route-neighbor.currentRoute`를 읽어 배 변경, 선실/갑판 배치, 항구 지원 배치를 막지 않는다.
+- frontend sync는 `currentRoute`, `boardPosition`을 hydrate/flush하지 않는다.
 ## 5. Module API 규칙
 
 - 단순 상태 sync는 `GET/PUT/PATCH /api/modules/{moduleId}/state`를 사용한다.
@@ -257,3 +267,4 @@ pnpm check:mongo:atlas
 
 
 - **2026-06-13**: 항해 세션 상태 저장 금지 규칙을 추가했다. 출항/정박 여부, 현재 route, 현재 칸은 브라우저 세션 상태이며 DB에는 영속 결과만 기록한다.
+- **2026-06-13**: 항해 세션 권위 구현 완료 기준을 추가했다. route-neighbor schema/default/spec, start/roll/clear/end 계약, ship lock 제거, frontend sync 제외 기준을 backend 규칙에 반영했다.

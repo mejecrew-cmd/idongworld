@@ -230,6 +230,8 @@ export const codexStoreFacade = {
   fullyRegisterCodex: (id: AidongCharacterId) => getUserState().fullyRegisterCodex(id),
 }
 
+// Legacy facade: currentRoute/boardPosition은 더 이상 DB나 localStorage 권위 상태가 아니다.
+// 신규 항해 화면은 voyageSessionFacade를 사용한다.
 export const routeNeighborStoreFacade = {
   useCurrentRoute: () => useUserStore((state) => state.currentRoute),
   useBoardPosition: () => useUserStore((state) => state.boardPosition),

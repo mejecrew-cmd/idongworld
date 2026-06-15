@@ -291,23 +291,88 @@ Select-String -Path packages/backend/src/modules/ship/service.ts,packages/backen
 
 ## 7. frontend sync와 persisted field 정리
 
-- [ ] `SYNCED_KEYS` 또는 hydrate/flush 대상에 `currentRoute`, `boardPosition`이 포함되어 있으면 제거하거나 legacy/compat로 분리한다.
-- [ ] `userStore` 타입에서 voyage runtime field가 계속 필요하면 “legacy/compat only” 주석을 달거나 session store로 이동한다.
-- [ ] action API 응답 병합에서 현재 항해 위치를 persisted store에 병합하지 않는다.
-- [ ] session state와 DB state 이름이 섞이지 않도록 type 이름을 정리한다.
+- [x] `SYNCED_KEYS` 또는 hydrate/flush 대상에 `currentRoute`, `boardPosition`이 포함되어 있으면 제거하거나 legacy/compat로 분리한다.
+- [x] `userStore` 타입에서 voyage runtime field가 계속 필요하면 “legacy/compat only” 주석을 달거나 session store로 이동한다.
+- [x] action API 응답 병합에서 현재 항해 위치를 persisted store에 병합하지 않는다.
+- [x] session state와 DB state 이름이 섞이지 않도록 type 이름을 정리한다.
+
+처리 결과:
+
+- `packages/frontend/src/lib/syncStore.ts`에서 `SYNCED_KEYS`의 `currentRoute`, `boardPosition`을 제거했다.
+- `syncStore`의 flush/hydrate 대상에서 `route-neighbor` module state를 제외했다. 이제 frontend auth bootstrap은 route-neighbor DB state를 `userStore`에 병합하지 않는다.
+- `previewSplitSyncPatches()`의 `routeNeighbor`는 빈 patch만 반환한다. 현재 항해 진행 상태는 sync 대상이 아니라 session store 대상이다.
+- `packages/frontend/src/lib/actionApiSync.ts`에 `RUNTIME_ONLY_KEYS` 방어막을 추가했다. backend action 응답에 legacy `currentRoute`, `boardPosition`이 섞여 와도 `userStore`에 병합하지 않는다.
+- `packages/frontend/src/stores/userStore.ts`의 `currentRoute`, `boardPosition`, `startVoyage`, `movePosition`, `endVoyage`는 legacy localStorage 항해 구현으로 주석 처리했다. 신규 화면은 `voyageSessionStore`를 사용해야 한다.
+- `packages/frontend/src/lib/storeFacades.ts`의 `routeNeighborStoreFacade`도 legacy facade로 명시했다. 신규 항해 화면은 `voyageSessionFacade`를 사용한다.
+- `packages/frontend/src/screens/LodgeScene.tsx`에서 `route-neighbor.currentRoute` 조회를 제거했다. 숙소는 DB의 현재 항해 상태를 근거로 Aidong을 “항해 중” 처리하지 않고, 항구 지원 배치 상태만 ship state에서 읽는다.
+
+검증:
+
+```bash
+pnpm --filter frontend typecheck
+rg -n "api\.getModuleState\(uid, 'route-neighbor'\)|currentRoute|boardPosition|hasActiveVoyage|routeState" packages/frontend/src/lib/syncStore.ts packages/frontend/src/lib/actionApiSync.ts packages/frontend/src/screens/LodgeScene.tsx packages/frontend/src/stores/userStore.ts packages/frontend/src/lib/storeFacades.ts
+Select-String -Path packages/frontend/src/lib/syncStore.ts,packages/frontend/src/lib/actionApiSync.ts,packages/frontend/src/stores/userStore.ts,packages/frontend/src/lib/storeFacades.ts,packages/frontend/src/screens/LodgeScene.tsx -Pattern ([char]0xFFFD),([char]0x0007),([char]0x000B)
+```
+
+결과:
+
+- frontend typecheck 통과.
+- `syncStore`, `actionApiSync`, `LodgeScene`에는 route-neighbor DB 현재 항해 상태 조회가 남아 있지 않다.
+- `userStore`와 `routeNeighborStoreFacade`의 `currentRoute`, `boardPosition` 참조는 legacy/compat 주석이 붙은 잔여 field로만 남아 있다.
+- 한글 깨짐 문자와 제어문자 없음.
 
 완료 기준:
 
-- persisted Zustand에 현재 항해 진행 상태가 남지 않는다.
+- persisted Zustand에 현재 항해 진행 상태가 신규 sync 대상으로 남지 않는다.
 - frontend hydrate 후 항해 세션이 자동 복구되지 않는다.
 
 ## 8. 테스트와 smoke 갱신
 
-- [ ] backend persistence test에서 `currentRoute`/`boardPosition` 영속 저장 기대를 제거한다.
-- [ ] route-neighbor 테스트는 주사위 소모와 보상 지급 같은 영속 결과만 확인한다.
-- [ ] frontend 또는 Playwright smoke에 항구 화면이 항상 정박 상태로 보이는지 확인하는 케이스를 추가한다.
-- [ ] 가능하면 sessionStorage/localStorage 검사로 항해 세션이 `idongworld-user` persist에 들어가지 않는지 확인한다.
-- [ ] core smoke와 compat smoke 분리 작업의 선행 조건으로 이 변경을 문서화한다.
+- [x] backend persistence test에서 `currentRoute`/`boardPosition` 영속 저장 기대를 제거한다.
+- [x] route-neighbor 테스트는 주사위 소모와 보상 지급 같은 영속 결과만 확인한다.
+- [x] frontend 또는 Playwright smoke에 항구 화면이 항상 정박 상태로 보이는지 확인하는 케이스를 추가한다.
+- [x] 가능하면 sessionStorage/localStorage 검사로 항해 세션이 `idongworld-user` persist에 들어가지 않는지 확인한다.
+- [x] core smoke와 compat smoke 분리 작업의 선행 조건으로 이 변경을 문서화한다.
+
+처리 결과:
+
+- `packages/backend/src/backendPersistence.test.ts`는 이미 5번 작업에서 새 계약에 맞춰져 있음을 확인했다.
+  - `startRoute`는 `routeId`, 초기 `boardPosition`을 응답으로만 반환하고, state에는 `currentRoute`, `boardPosition`을 저장하지 않는다고 검증한다.
+  - `rollRoute`는 session payload의 `routeId`, `boardPosition`을 받아 주사위 소모와 landing 후보 응답만 확인한다.
+  - `landing/clear`는 `landings.last`가 아니라 `landings.cleared` 같은 영속 결과만 확인한다.
+  - `endRoute`는 current route/board position을 DB에서 지우는 action이 아니라 no-op compat 응답임을 확인한다.
+- `packages/backend/scripts/smoke-module-actions.mjs`, `packages/backend/scripts/smoke-persistence.mjs`, `packages/backend/scripts/smoke-state-route-removed.mjs`의 문법 검사를 통과했다.
+- `tests/e2e/app-smoke.spec.ts`에 항구 화면이 항상 정박 화면인지 확인하는 smoke를 추가했다.
+  - `/island/harbor`에서 `현재 배가 항해 중입니다`, `출항 중` 문구가 나오지 않는지 확인한다.
+- `tests/e2e/app-smoke.spec.ts`에 storage 분리 검증을 추가했다.
+  - `localStorage`의 `idongworld-user`에 legacy `currentRoute`, `boardPosition`을 넣어도 `/voyage/board?route=neighbor` 직접 진입은 항구로 돌아간다.
+  - `sessionStorage`의 `idongworld-voyage-session`에 현재 항해 세션을 넣으면 보드로 진입한다.
+  - 이때 `idongworld-user`에는 `activeSession`이나 해당 session id가 들어가지 않는다.
+- Playwright 전체 smoke 실행은 별도 frontend/backend dev server가 필요하므로 이번 단계에서는 `pnpm check:e2e:smoke --list`로 spec 수집과 파싱만 확인했다. 실제 브라우저 구동 smoke는 서버를 띄운 뒤 실행한다.
+
+검증:
+
+```bash
+pnpm --filter frontend typecheck
+pnpm --filter backend typecheck
+pnpm --filter backend check:model-specs
+pnpm test packages/backend/src/backendPersistence.test.ts
+pnpm check:e2e:smoke --list
+node --check packages/backend/scripts/smoke-module-actions.mjs
+node --check packages/backend/scripts/smoke-persistence.mjs
+node --check packages/backend/scripts/smoke-state-route-removed.mjs
+Select-String -Path tests/e2e/app-smoke.spec.ts -Pattern ([char]0xFFFD),([char]0x0007),([char]0x000B)
+```
+
+결과:
+
+- frontend typecheck 통과.
+- backend typecheck 통과.
+- backend model spec 검사 통과.
+- `backendPersistence.test.ts` 39개 테스트 통과.
+- Playwright smoke spec 수집 통과.
+- backend smoke script 문법 검사 통과.
+- e2e spec 한글 깨짐 문자와 제어문자 없음.
 
 완료 기준:
 
@@ -315,11 +380,30 @@ Select-String -Path packages/backend/src/modules/ship/service.ts,packages/backen
 
 ## 9. 문서와 changelog 현행화
 
-- [ ] 구현 결과를 `.cloud/01_project_history_current_2026-06-13.md`에 반영한다.
-- [ ] `.cloud/30_backend_db_rules.md`, `.cloud/35_backend_db_runbook.md`, `.cloud/40_frontend_rules.md`의 구현 완료 상태를 갱신한다.
-- [ ] `packages/modules/BACKEND_GUIDE.md`에 실제 변경된 API 계약을 반영한다.
-- [ ] `.cloud/89_next_work_2026-07-01.md`의 core/compat smoke 분리 항목과 연결한다.
-- [ ] 한글 깨짐 문자와 BEL 제어문자를 검사한다.
+- [x] 구현 결과를 `.cloud/01_project_history_current_2026-06-13.md`에 반영한다.
+- [x] `.cloud/30_backend_db_rules.md`, `.cloud/35_backend_db_runbook.md`, `.cloud/40_frontend_rules.md`의 구현 완료 상태를 갱신한다.
+- [x] `packages/modules/BACKEND_GUIDE.md`에 실제 변경된 API 계약을 반영한다.
+- [x] `.cloud/89_next_work_2026-07-01.md`의 core/compat smoke 분리 항목과 연결한다.
+- [x] 한글 깨짐 문자와 BEL 제어문자를 검사한다.
+
+처리 결과:
+
+- `.cloud/01_project_history_current_2026-06-13.md`에 항해 세션 권위 구현 완료 상태를 추가했다.
+- `.cloud/30_backend_db_rules.md`에 route-neighbor schema/default/spec, start/roll/clear/end 계약, ship lock 제거, frontend sync 제외 기준을 추가했다.
+- `.cloud/35_backend_db_runbook.md`에 route-neighbor 현재 API 계약을 작업자용으로 정리했다.
+- `.cloud/40_frontend_rules.md`에 `voyageSessionStore`, `voyageSessionFacade`, `syncStore` 제외 대상, `actionApiSync` 방어막, Playwright storage smoke 기준을 추가했다.
+- `packages/modules/BACKEND_GUIDE.md`에 모듈 제작자가 따라야 할 route-neighbor API 계약을 추가했다.
+- `.cloud/89_next_work_2026-07-01.md`의 깨진 코드블록을 복구하고, M6 core/compat smoke 분리의 선행 전제로 항해 세션 권위 구현 완료 상태를 연결했다.
+
+검증:
+
+```bash
+Select-String -Path .cloud/01_project_history_current_2026-06-13.md,.cloud/30_backend_db_rules.md,.cloud/35_backend_db_runbook.md,.cloud/40_frontend_rules.md,packages/modules/BACKEND_GUIDE.md,.cloud/89_next_work_2026-07-01.md -Pattern ([char]0xFFFD),([char]0x0007),([char]0x000B)
+```
+
+결과:
+
+- 갱신한 문서에서 한글 깨짐 문자와 BEL/VT 제어문자 없음.
 
 완료 기준:
 
@@ -348,3 +432,6 @@ Select-String -Path packages/backend/src/modules/ship/service.ts,packages/backen
 - **2026-06-13**: 4번 항해 보드 session state 전환을 완료했다. `NavigationBoardScene`과 `BottomNav`는 더 이상 `route-neighbor` DB 현재 항해 상태를 조회하지 않고, 탭/창별 `voyageSessionFacade`만으로 route, 현재 칸, landing 후보, 복귀를 처리한다. `pnpm --filter frontend typecheck` 통과.
 - **2026-06-13**: 5번 route-neighbor backend API 계약 정리를 완료했다. `start`/`end`는 현재 항해 상태를 DB에 쓰지 않고, `roll`/`landing/clear`는 frontend session payload의 `routeId`와 `boardPosition`을 받아 영속 결과만 처리한다. route-neighbor schema/default/spec에서 `currentRoute`, `boardPosition`을 제거했고 typecheck/model spec/script 문법 검사를 통과했다.
 - **2026-06-13**: 6번 ship backend 계약 정리를 완료했다. `ship` service에서 `route-neighbor.currentRoute`를 읽던 전역 출항 lock을 제거했고, ship backend는 배 종류/선실/갑판/꾸미기/인벤토리 같은 영속 배 상태만 관리하게 했다. `pnpm --filter backend typecheck`와 smoke script 문법 검사를 통과했다.
+- **2026-06-13**: 7번 frontend sync와 persisted field 정리를 완료했다. `syncStore` hydrate/flush에서 route-neighbor 현재 항해 상태를 제거했고, action API 응답 병합에서도 `currentRoute`, `boardPosition`을 차단했다. `LodgeScene`은 더 이상 DB route state로 항해 중 Aidong을 판단하지 않는다. `pnpm --filter frontend typecheck` 통과.
+- **2026-06-13**: 8번 테스트와 smoke 갱신을 완료했다. Playwright smoke에 항구 정박 화면 검증과 `sessionStorage`/`localStorage` 분리 검증을 추가했고, backend persistence test와 smoke script 문법 검사를 통과했다.
+- **2026-06-13**: 9번 문서와 changelog 현행화를 완료했다. 히스토리, backend/db 규칙, runbook, frontend 규칙, 모듈 backend guide, 7월 next_work에 항해 세션 권위 구현 완료 상태와 검증 기준을 반영했다.

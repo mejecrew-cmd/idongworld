@@ -20,7 +20,7 @@ const SYNCED_KEYS = [
   'affinities', 'needs',
   'unlockedZones', 'zoneSlots', 'dynamicAidongZones',
   'unlockedDiaries', 'unlockedCodexEntries', 'codexFullyRegistered', 'inventory',
-  'diceCount', 'boardPosition', 'currentRoute',
+  'diceCount',
   'harborAssignedChars', 'harborLastChargedAt',
   'equippedOutfit', 'equippedItems',
 ] as const
@@ -37,7 +37,7 @@ const MY_AIDONG_KEYS = [
 ] as const
 const MY_ISLAND_KEYS = ['unlockedZones', 'zoneSlots', 'dynamicAidongZones'] as const
 const CODEX_KEYS = ['unlockedDiaries', 'unlockedCodexEntries', 'codexFullyRegistered'] as const
-const ROUTE_NEIGHBOR_KEYS = ['currentRoute', 'boardPosition'] as const
+const ROUTE_NEIGHBOR_KEYS = [] as const
 const SHIP_KEYS = ['harborAssignedChars', 'harborLastChargedAt'] as const
 const ACCOUNT_KEYS = ['isGuest', 'nickname', 'openingSeen', 'onboardingComplete', 'hostName'] as const
 
@@ -45,7 +45,7 @@ function pickKeys(keys: readonly string[]) {
   const state = userStoreRuntimeFacade.getRecord()
   const patch: Record<string, unknown> = {}
   for (const key of keys) {
-    patch[key] = key === 'currentRoute' && state[key] === undefined ? null : state[key]
+    patch[key] = state[key]
   }
   return patch
 }
@@ -69,7 +69,6 @@ async function flushSplitState(uid: string) {
     api.patchModuleState(uid, 'my-aidong', pickKeys(MY_AIDONG_KEYS)),
     api.patchModuleState(uid, 'my-island', pickKeys(MY_ISLAND_KEYS)),
     api.patchModuleState(uid, 'codex', pickKeys(CODEX_KEYS)),
-    api.patchModuleState(uid, 'route-neighbor', pickKeys(ROUTE_NEIGHBOR_KEYS)),
     api.patchModuleState(uid, 'ship', pickKeys(SHIP_KEYS)),
   ])
 }
@@ -109,7 +108,6 @@ async function hydrateSplitState(uid: string) {
     myAidong,
     myIsland,
     codex,
-    routeNeighbor,
     ship,
   ] = await Promise.all([
     api.getAccountState(uid),
@@ -117,7 +115,6 @@ async function hydrateSplitState(uid: string) {
     api.getModuleState(uid, 'my-aidong'),
     api.getModuleState(uid, 'my-island'),
     api.getModuleState(uid, 'codex'),
-    api.getModuleState(uid, 'route-neighbor'),
     api.getModuleState(uid, 'ship'),
   ])
 
@@ -127,7 +124,6 @@ async function hydrateSplitState(uid: string) {
     ...mergeRecord(myAidong.state),
     ...mergeRecord(myIsland.state),
     ...mergeRecord(codex.state),
-    ...mergeRecord(routeNeighbor.state),
     ...mergeRecord(ship.state),
     firebaseUid: uid,
   } as Partial<UserState>)

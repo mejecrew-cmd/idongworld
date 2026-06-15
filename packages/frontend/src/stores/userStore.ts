@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 📁 stores/userStore.ts — 사용자 상태 (Zustand) — 게임의 두뇌
  * ───────────────────────────────────────────────
  * 📌 역할: 게임의 모든 사용자 상태를 한 곳에 보관.
@@ -7,7 +7,7 @@
  *           - 진행 (onboardingComplete, hostName)
  *           - 캐릭터 (recruitedAidongs, affinities, needs, careLog)
  *           - 마이섬 (unlockedZones, unlockedDiaries, codex...)
- *           - 항해 (currentRoute, boardPosition, diceCount, harborAssignedChars)
+ *           - 항해 보조 자원 (diceCount, harborAssignedChars)
  *           - 옷 (equippedOutfit)
  *
  * 🔗 연결:
@@ -104,7 +104,9 @@ export interface UserState {
   codexFullyRegistered: string[]
   inventory: Record<string, number>
 
-  // 항해
+  // 항해 보조 자원
+  // currentRoute와 boardPosition은 예전 localStorage 항해 구현의 legacy field다.
+  // 신규 항해 진행 상태는 lib/voyageSessionStore.ts의 sessionStorage에만 둔다.
   currentRoute?: string
   boardPosition: number
   diceCount: number
@@ -275,7 +277,7 @@ export const useUserStore = create<UserState>()(
             : [...s.codexFullyRegistered, char],
         })),
 
-      // 항해 시작 — 보드 위치 리셋
+      // legacy 항해 시작 — 신규 화면에서는 voyageSessionStore.startSession을 사용한다.
       startVoyage: (routeId) =>
         set({ currentRoute: routeId, boardPosition: 0 }),
 
@@ -287,11 +289,11 @@ export const useUserStore = create<UserState>()(
         return roll
       },
 
-      // 보드 위치 N칸 전진 (30칸 mod 한 바퀴 자동 복귀)
+      // legacy 보드 위치 이동 — 신규 화면에서는 voyageSessionStore.movePosition을 사용한다.
       movePosition: (steps) =>
         set((s) => ({ boardPosition: (s.boardPosition + steps) % 30 })),
 
-      // 항해 종료 — 마이섬 복귀
+      // legacy 항해 종료 — 신규 화면에서는 voyageSessionStore.endSession을 사용한다.
       endVoyage: () =>
         set({ currentRoute: undefined, boardPosition: 0 }),
 
