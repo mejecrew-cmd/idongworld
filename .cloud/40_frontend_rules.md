@@ -79,6 +79,9 @@ frontend 구현 기준:
 - 항구에서 항해 시작 버튼을 누르면 그 탭의 항해 세션을 새로 시작한다. 같은 탭에서 항구로 돌아와 다시 누르면 처음부터 다시 시작한다.
 - 여러 탭에서 항해를 시작해도 각 탭의 항해 세션은 독립적이다.
 - 주사위 소모, 보상 지급, Aidong 영입처럼 영속 결과가 생기는 순간에만 backend action API를 호출하고 응답을 store에 병합한다.
+- 항해 세션은 탭별로 독립이지만, host 자원과 계정에 남는 action 결과는 다른 탭의 local mirror에도 반영되어야 한다.
+- `actionApiSync.ts`는 backend action 응답을 `BroadcastChannel`과 storage event fallback으로 다른 탭에 전파한다.
+- cross-tab action sync는 `activeSession`, `currentRoute`, `boardPosition` 같은 항해 runtime field를 전파하지 않는다.
 
 현재 구현 기준:
 
@@ -288,3 +291,4 @@ FRONTEND_URL=http://localhost:5174 pnpm check:frontend:state-route-runtime
 
 - **2026-06-13**: 항해 세션 UI 규칙을 추가했다. 현재 route, 현재 칸, 출항 여부는 persisted Zustand나 DB에 두지 않고 탭/창별 session state로 관리한다.
 - **2026-06-13**: 항해 세션 구현 완료 기준을 추가했다. `voyageSessionStore`, `voyageSessionFacade`, `syncStore` 제외 대상, `actionApiSync` 방어막, Playwright storage smoke 기준을 문서화했다.
+- **2026-06-15**: 멀티탭 host/action sync 기준을 추가했다. 항해 세션은 탭별 독립으로 유지하되, 주사위 같은 host 자원은 backend action 응답을 `BroadcastChannel`로 다른 탭 local mirror에 반영한다.

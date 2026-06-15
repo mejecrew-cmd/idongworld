@@ -213,6 +213,11 @@ function getSlotByLanding(route: ReturnType<typeof buildNeighborRoute>, landing:
   return Number.isInteger(position) ? route.slots[position] ?? null : null
 }
 
+function landingMatchesSlot(route: ReturnType<typeof buildNeighborRoute>, landing: RouteLandingCandidate, slot: BoardSlot): boolean {
+  const landingSlot = getSlotByLanding(route, landing)
+  return !!landingSlot && landingSlot.index === slot.index && landing.slotType === slot.type
+}
+
 export const NavigationBoardScene = () => {
   const [params] = useSearchParams()
   const navigate = useNavigate()
@@ -288,11 +293,15 @@ export const NavigationBoardScene = () => {
     const landing = activeSession?.landing as RouteLandingCandidate | undefined
     if (!currentRoute || !landing || landing.status === 'cleared') return
     const slot = getSlotByLanding(route, landing)
-    if (!slot) return
+    if (!slot || slot.index !== boardPosition || landing.slotType !== slot.type) {
+      setArrivedLanding(null)
+      voyageSessionFacade.clearLanding()
+      return
+    }
     setArrivedLanding(landing)
     setArrivedSlot(slot)
     setPhase('arrived')
-  }, [activeSession?.landing, currentRoute, route])
+  }, [activeSession?.landing, boardPosition, currentRoute, route])
 
   const loadShipMenu = async () => {
     if (!uid || !currentRoute) return
@@ -402,37 +411,13 @@ export const NavigationBoardScene = () => {
     }, 80)
   }
 
-  const enterDestinationLanding = async (landing: RouteLandingCandidate) => {
-    const path = landing.screenPath
-    if (!path) return false
-
-    try {
-      if (MODULE_ACTION_API_SYNC && uid && landing.mission) {
-        const response = await api.clearRouteLanding(uid, landing.landingId, { routeId: landing.routeId, boardPosition: landing.boardPosition })
-        applyActionApiResponse(response)
-      }
-      setArrivedLanding(null)
-      setArrivedSlot(null)
-      voyageSessionFacade.clearLanding()
-      setPhase('idle')
-      navigate(path)
-      return true
-    } catch (error) {
-      console.warn('[route-neighbor] destination landing enter failed', error)
-      alert('도착 섬으로 들어가기 전 보상을 정리하지 못했어요. 잠시 뒤 다시 시도해 주세요.')
-      return true
-    }
-  }
-
   const handleSlotAction = async () => {
     if (!arrivedSlot) return
 
-    if (arrivedLanding?.screenPath) {
-      const handled = await enterDestinationLanding(arrivedLanding)
-      if (handled) return
-    }
+    const landingForSlot = arrivedLanding && landingMatchesSlot(route, arrivedLanding, arrivedSlot) ? arrivedLanding : null
 
     // 캐릭터·home 분기 (라우터 navigate)
+    // 도착섬 입장은 실제로 발견 가능한 아이동이 배치된 character 칸에서만 허용한다.
     if (arrivedSlot.type === 'character' && arrivedSlot.characterId) {
       navigate(`/voyage/island/${arrivedSlot.characterId}/landing`)
       return
@@ -445,7 +430,7 @@ export const NavigationBoardScene = () => {
     if (MODULE_ACTION_API_SYNC && (arrivedSlot.type === 'resource' || arrivedSlot.type === 'treasure')) {
       const uid = accountStoreFacade.getFirebaseUid()
       if (uid) {
-        void api.clearRouteLanding(uid, arrivedLanding?.landingId, { routeId: arrivedLanding?.routeId, boardPosition: arrivedLanding?.boardPosition })
+        void api.clearRouteLanding(uid, landingForSlot?.landingId, { routeId: landingForSlot?.routeId, boardPosition: landingForSlot?.boardPosition })
           .then((response) => applyActionApiResponse(response))
           .catch((error) => console.warn('[route-neighbor] landing clear action api failed', error))
           .finally(() => {
@@ -480,6 +465,8 @@ export const NavigationBoardScene = () => {
     voyageSessionFacade.clearLanding()
     setPhase('idle')
   }
+
+  const canEnterAidongIsland = arrivedSlot?.type === 'character' && !!arrivedSlot.characterId
 
   const assignShipSlot = async (kind: 'cabin' | 'deck', slotId: string, current?: string) => {
     if (!uid || shipLoading) return
@@ -820,11 +807,7 @@ export const NavigationBoardScene = () => {
                 {arrivedSlot.type === 'home' && '한 바퀴 돌아 마이섬에 돌아왔어요!'}
               </Typography>
               <Button variant="contained" size="large" onClick={handleSlotAction} fullWidth>
-                {arrivedLanding?.screenPath
-                  ? '도착 섬으로 들어가기'
-                  : arrivedSlot.type === 'character'
-                    ? '만나러 가기'
-                    : '계속'}
+                {canEnterAidongIsland ? '도착 섬으로 들어가기' : '계속'}
               </Button>
             </>
           )}

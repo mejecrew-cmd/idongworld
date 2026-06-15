@@ -1,4 +1,4 @@
-﻿/**
+/**
  * packages/backend/src/index.ts
  * ------------------------------------------------------------
  * 역할: Express backend entrypoint. Mongo 연결, repository 초기화, 공통 middleware, API route mount를 담당한다.

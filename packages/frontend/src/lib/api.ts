@@ -137,6 +137,12 @@ async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T> {
 export const api = {
   health: () => apiFetch<{ status: string }>('/health'),
 
+  debugReset: (uid: string) =>
+    apiFetch<{ ok: boolean; account?: unknown; host?: unknown; modules?: Record<string, unknown> }>('/api/debug/reset', {
+      method: 'POST',
+      uid,
+    }),
+
   authGuest: () =>
     apiFetch<{ uid: string; user: unknown }>('/api/auth/guest', {
       method: 'POST',

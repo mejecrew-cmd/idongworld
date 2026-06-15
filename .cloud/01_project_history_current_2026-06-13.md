@@ -294,6 +294,8 @@ myIslandStates.zoneSlots
 - `packages/frontend/src/screens/NavigationBoardScene.tsx`와 `BottomNav.tsx`는 현재 route와 현재 칸을 `voyageSessionFacade`에서 읽는다.
 - `packages/frontend/src/lib/syncStore.ts`는 `currentRoute`, `boardPosition`, `route-neighbor` 현재 항해 상태를 hydrate/flush하지 않는다.
 - `packages/frontend/src/lib/actionApiSync.ts`는 action 응답에 `currentRoute`, `boardPosition`이 섞여 와도 `userStore`에 병합하지 않는다.
+- `actionApiSync.ts`는 backend action 응답을 다른 탭에도 전파한다. 따라서 한 탭에서 주사위를 소모하거나 보상을 받으면 다른 탭의 host 자원 mirror도 action 응답 기준으로 갱신된다.
+- 이 cross-tab sync는 host/account/module 영속 결과만 대상으로 하고, 항해 `activeSession`은 전파하지 않는다.
 - `packages/backend/src/modules/route-neighbor/service.ts`는 `start`/`roll`/`end`로 현재 항해 상태를 DB에 저장하지 않는다.
 - `packages/backend/src/modules/ship/service.ts`는 `route-neighbor.currentRoute`를 보고 배 변경이나 배치를 막지 않는다.
 - `LodgeScene`은 DB의 현재 항해 상태로 Aidong을 전역 “항해 중” 처리하지 않는다.
@@ -506,3 +508,4 @@ Codex는 다음 기준에서 벗어나면 안 된다.
 - **2026-06-13**: 새 모듈 제작자가 따라갈 수 있는 `.cloud/02_module_creator_guide_2026-06-13.md`를 기준 문서로 추가했다.
 - **2026-06-13**: 항해 세션 권위 결정을 추가했다. 출항/정박 여부, 현재 route, 현재 칸, 세션 내 landing 후보는 DB가 아니라 브라우저 탭/창별 세션 상태로 관리하고, DB에는 주사위 소모와 보상 지급 같은 영속 결과만 기록한다.
 - **2026-06-13**: 항해 세션 권위 구현 완료 상태를 반영했다. frontend `voyageSessionStore`, 항구/항해 화면, route-neighbor backend 계약, ship lock 제거, sync/persist 제외, Playwright smoke 기준을 현재 구현 기준으로 기록했다.
+- **2026-06-15**: 멀티탭 host/action 동기화를 반영했다. 항해 위치와 landing 후보는 탭별 세션으로 유지하지만, 주사위와 보상 같은 영속 action 결과는 `actionApiSync`가 다른 탭의 local mirror에도 전파한다.

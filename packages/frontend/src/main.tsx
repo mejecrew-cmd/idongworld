@@ -20,6 +20,7 @@ import { theme } from './theme/theme'
 import { App } from './App'
 import './i18n'
 import { startSync, bootstrapAuth } from './lib/syncStore'
+import { startActionApiCrossTabSync } from './lib/actionApiSync'
 import { bootstrapVNRunner } from './lib/vnBootstrap'
 import { bootstrapGacha } from './lib/gachaBootstrap'
 import { bootstrapHost } from './lib/hostBootstrap'
@@ -66,6 +67,9 @@ bootstrapVNRunner()
 bootstrapGacha()
 bootstrapCustoms()         // host 사용 — bootstrapHost 이후
 bootstrapCutsceneRunner()  // 시범 callSiteId 등록
+
+// 3b. backend action 결과를 다른 탭의 local mirror에도 반영
+startActionApiCrossTabSync()
 
 // 4. 앱 시작 시점에 backend 인증 시도 → 실패해도 무시하고 진행
 void bootstrapAuth().then(() => startSync())

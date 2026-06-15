@@ -14,11 +14,13 @@
 import { useState } from 'react'
 import { Box, IconButton, Drawer, Typography, Button, Stack, Chip, Divider } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import { api } from '@/lib/api'
 import type { AidongCharacterId } from '@/stores/userStore'
 import {
   accountStoreFacade,
   hostStoreFacade,
   myAidongStoreFacade,
+  voyageSessionFacade,
 } from '@/lib/storeFacades'
 
 const ALL_AIDONGS: AidongCharacterId[] = ['황금멍', '춤냥', '양털곰', '단풍볼', '날카여우']
@@ -44,11 +46,32 @@ export const DebugPanel = () => {
   if (!import.meta.env.DEV) return null
 
   const [open, setOpen] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const navigate = useNavigate()
   const firebaseUid = accountStoreFacade.useFirebaseUid()
   const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
 
   const recruitAll = () => ALL_AIDONGS.forEach((id) => myAidongStoreFacade.recruitAidong(id))
+
+  const resetAllProgress = async () => {
+    if (resetting) return
+    if (!confirm('상태 완전 초기화? 배, 숙소, 선실, 인벤토리, 가구 배치까지 모두 초기화됩니다.')) return
+
+    setResetting(true)
+    try {
+      const uid = accountStoreFacade.getFirebaseUid()
+      if (uid) await api.debugReset(uid)
+      voyageSessionFacade.endSession()
+      accountStoreFacade.logout()
+      navigate('/login', { replace: true })
+      setOpen(false)
+    } catch (error) {
+      console.warn('[debug] reset failed', error)
+      alert('전체 리셋에 실패했어요. 서버 연결과 로그인 상태를 확인해 주세요.')
+    } finally {
+      setResetting(false)
+    }
+  }
 
   return (
     <>
@@ -159,15 +182,10 @@ export const DebugPanel = () => {
             variant="outlined"
             color="warning"
             fullWidth
-            onClick={() => {
-              if (confirm('상태 완전 초기화?')) {
-                accountStoreFacade.logout()
-                navigate('/login')
-                setOpen(false)
-              }
-            }}
+            disabled={resetting}
+            onClick={() => { void resetAllProgress() }}
           >
-            ↺ 전체 리셋
+            {resetting ? '리셋 중...' : '↺ 전체 리셋'}
           </Button>
         </Box>
       </Drawer>
