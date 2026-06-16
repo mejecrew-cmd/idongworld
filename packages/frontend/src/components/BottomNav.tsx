@@ -1,6 +1,7 @@
 import { Box, Typography } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { voyageSessionFacade } from '@/lib/storeFacades'
+import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
 const TABS = [
   { id: 'island', label: '마이섬', path: '/island', mark: '섬' },
@@ -16,6 +17,14 @@ const ROUTE_ALIASES: Record<string, 'neighbor'> = {
 
 function normalizeRouteId(routeId: string | undefined): 'neighbor' | undefined {
   return routeId ? ROUTE_ALIASES[routeId] : undefined
+}
+
+function isTabActive(tabId: string, pathname: string, tabPath: string): boolean {
+  if (tabId === 'voyage') return pathname.startsWith('/voyage') || pathname === '/island/harbor'
+  if (tabId === 'island') return pathname.startsWith('/island') && pathname !== '/island/harbor'
+
+  const rootPath = tabPath.split('/')[1]
+  return pathname.startsWith(rootPath ? `/${rootPath}` : tabPath)
 }
 
 export const BottomNav = () => {
@@ -36,15 +45,17 @@ export const BottomNav = () => {
       component="nav"
       sx={{
         position: 'fixed',
-        left: { xs: 10, sm: 18 },
-        right: { xs: 10, sm: 18 },
+        left: '50%',
+        width: { xs: 'calc(100% - 20px)', sm: 'calc(100% - 28px)' },
+        maxWidth: GAME_STAGE_WIDTH,
+        transform: 'translateX(-50%)',
         bottom: { xs: 10, sm: 14 },
-        height: 66,
+        height: { xs: 60, sm: 66 },
         p: 0.75,
         zIndex: 100,
         display: 'grid',
         gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-        gap: 0.5,
+        gap: { xs: 0.35, sm: 0.5 },
         bgcolor: 'rgba(255,254,250,0.92)',
         border: '1px solid rgba(62,155,143,0.18)',
         borderRadius: 2,
@@ -53,8 +64,7 @@ export const BottomNav = () => {
       }}
     >
       {TABS.map((tab) => {
-        const rootPath = tab.path.split('/')[1]
-        const active = location.pathname.startsWith(rootPath ? `/${rootPath}` : tab.path)
+        const active = isTabActive(tab.id, location.pathname, tab.path)
         return (
           <Box
             key={tab.id}
@@ -77,6 +87,7 @@ export const BottomNav = () => {
               cursor: 'pointer',
               userSelect: 'none',
               borderRadius: 1.5,
+              overflow: 'hidden',
               bgcolor: active ? 'primary.main' : 'transparent',
               color: active ? 'primary.contrastText' : 'text.secondary',
               backgroundImage: active
@@ -92,8 +103,8 @@ export const BottomNav = () => {
           >
             <Box
               sx={{
-                width: 24,
-                height: 24,
+                width: { xs: 22, sm: 24 },
+                height: { xs: 22, sm: 24 },
                 borderRadius: 1.25,
                 display: 'grid',
                 placeItems: 'center',
@@ -106,7 +117,7 @@ export const BottomNav = () => {
             >
               {tab.mark}
             </Box>
-            <Typography sx={{ fontSize: 11, fontWeight: active ? 900 : 800, lineHeight: 1.1 }}>
+            <Typography sx={{ fontSize: { xs: 10, sm: 11 }, fontWeight: active ? 900 : 800, lineHeight: 1.1, whiteSpace: 'nowrap' }}>
               {tab.label}
             </Typography>
           </Box>

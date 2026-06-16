@@ -23,7 +23,9 @@ import {
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { ROUTE_CATALOG } from '@/data/board'
+import { PHASE_COLOR, PHASE_LABEL, getZoneById, getZoneKindLabel } from '@/data/zones'
 import { BoardIcon } from '@/components/AidongSprite'
+import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { CustomsTransferDialog } from '@/components/CustomsTransferDialog'
 import { api, type DecorItemConfig, type ShipTypeConfig } from '@/lib/api'
@@ -39,6 +41,7 @@ import {
 
 const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
+const HARBOR_ZONE = getZoneById('harbor')
 const FALLBACK_CABIN_FURNITURE: DecorItemConfig[] = [
   { itemId: 'hammock', label: '해먹', cost: 0, defaultOwned: 1 },
   { itemId: 'lamp', label: '선실등', cost: 0, defaultOwned: 1 },
@@ -215,6 +218,13 @@ export const HarborScene = () => {
   const selectedCabinAidong = selectedCabinSlot ? shipState.cabinAssignments[selectedCabinSlot] : undefined
   const selectedCabinFurniture = selectedCabinSlot ? shipState.cabins[selectedCabinSlot]?.furniture ?? [] : []
 
+  useEffect(() => {
+    if (!selectedAidong) return
+    if (harborAssignedChars.includes(selectedAidong as AidongCharacterId) || shipAssignedAidongs.has(selectedAidong)) {
+      setSelectedAidong(null)
+    }
+  }, [harborAssignedChars, selectedAidong, shipAssignedAidongs])
+
   const loadShip = async () => {
     if (!uid) return
     setShipLoading(true)
@@ -261,6 +271,16 @@ export const HarborScene = () => {
     if (!uid || shipLoading) return
     const characterId = current ? undefined : selectedAidong ?? undefined
     if (!current && !characterId) return
+    if (characterId && harborAssignedChars.includes(characterId as AidongCharacterId)) {
+      setShipError('항구 지원 중인 아이동은 먼저 항구 지원 배치를 해제해 주세요.')
+      setSelectedAidong(null)
+      return
+    }
+    if (characterId && shipAssignedAidongs.has(characterId)) {
+      setShipError('이미 배에 배치된 아이동입니다. 다른 슬롯으로 옮기려면 현재 슬롯을 먼저 비워 주세요.')
+      setSelectedAidong(null)
+      return
+    }
 
     setShipLoading(true)
     setShipError(null)
@@ -385,50 +405,63 @@ export const HarborScene = () => {
 
   return (
     <Box sx={{ p: 0 }}>
-      <ScreenHeader category="마이섬" title="항구" subtitle="배 관리 · 아이동 배치 · 출항" />
+      <ScreenHeader
+        category="마이섬"
+        title="항구"
+        subtitle={HARBOR_ZONE ? `${HARBOR_ZONE.areaNo} · ${getZoneKindLabel(HARBOR_ZONE)}` : '배 관리 · 아이동 배치 · 출항'}
+      />
 
-      <Box
-        sx={{
-          position: 'relative',
-          width: '100%',
-          aspectRatio: '16/7',
-          backgroundImage: 'url(/assets/배경/myisland_harbor_evening.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+      <GameStage>
         <Box
           sx={{
-            position: 'absolute',
-            top: 16,
-            left: 16,
-            bgcolor: 'rgba(255,255,255,0.9)',
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 1,
+            position: 'relative',
+            width: '100%',
+            aspectRatio: '16/7',
+            backgroundImage: 'url(/assets/배경/myisland_harbor_evening.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
         >
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            항구 · 출항 준비
-          </Typography>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 16,
+              left: 16,
+              bgcolor: 'rgba(255,255,255,0.9)',
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+            }}
+          >
+            {HARBOR_ZONE && (
+              <Stack direction="row" spacing={0.5} sx={{ mb: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
+                <Chip label={HARBOR_ZONE.areaNo} size="small" color="primary" sx={{ height: 20, fontSize: 10 }} />
+                <Chip label={getZoneKindLabel(HARBOR_ZONE)} size="small" color="warning" sx={{ height: 20, fontSize: 10 }} />
+                <Chip label={PHASE_LABEL[HARBOR_ZONE.phase]} size="small" sx={{ height: 20, fontSize: 10, bgcolor: PHASE_COLOR[HARBOR_ZONE.phase] }} />
+              </Stack>
+            )}
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              항구 · 출항 준비
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 16,
+              left: 16,
+              bgcolor: 'rgba(0,0,0,0.5)',
+              color: 'white',
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+            }}
+          >
+            <Typography variant="caption">주사위 보유 🎲 {diceCount}</Typography>
+          </Box>
         </Box>
-        <Box
-          sx={{
-            position: 'absolute',
-            bottom: 16,
-            left: 16,
-            bgcolor: 'rgba(0,0,0,0.5)',
-            color: 'white',
-            px: 1.5,
-            py: 0.5,
-            borderRadius: 1,
-          }}
-        >
-          <Typography variant="caption">주사위 보유 🎲 {diceCount}</Typography>
-        </Box>
-      </Box>
+      </GameStage>
 
-      <Box sx={{ p: 3 }}>
+      <GameStage stageSx={{ px: 3, py: 3 }}>
         {chargedToast && (
           <Alert severity="success" sx={{ mb: 2 }}>
             🎲 +{chargedToast} 주사위 충전 (항구 친구 {harborAssignedChars.length}명)
@@ -470,15 +503,17 @@ export const HarborScene = () => {
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 2 }}>
                   {recruitedAidongs.map((id) => {
                     const harborAssigned = harborAssignedChars.includes(id)
+                    const shipAssigned = shipAssignedAidongs.has(id)
+                    const unavailable = harborAssigned || shipAssigned
                     return (
                       <Button
                         key={id}
                         size="small"
                         variant={selectedAidong === id ? 'contained' : 'outlined'}
-                        disabled={harborAssigned}
+                        disabled={unavailable}
                         onClick={() => setSelectedAidong(selectedAidong === id ? null : id)}
                       >
-                        {id}{harborAssigned ? ' · 항구 지원 중' : ''}
+                        {id}{harborAssigned ? ' · 항구 지원 중' : shipAssigned ? ' · 승선 중' : ''}
                       </Button>
                     )
                   })}
@@ -529,6 +564,7 @@ export const HarborScene = () => {
                           return
                         }
                         shipStoreFacade.toggleHarborAssign(id)
+                        if (!assigned && selectedAidong === id) setSelectedAidong(null)
                         if (MODULE_ACTION_API_SYNC) {
                           const currentUid = accountStoreFacade.getFirebaseUid()
                           if (currentUid) {
@@ -627,7 +663,7 @@ export const HarborScene = () => {
                 🎁 항로 구매하기 · Phase 2
               </Button>
             </Stack>
-      </Box>
+      </GameStage>
 
       <Dialog open={inventoryOpen} onClose={() => setInventoryOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>배 인벤토리</DialogTitle>
@@ -693,7 +729,7 @@ export const HarborScene = () => {
                   <Chip label="아직 배치된 가구가 없어요" size="small" variant="outlined" />
                 )}
               </Stack>
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(94px, 1fr))', gap: 1 }}>
                 {cabinFurnitureItems.map((item) => (
                   <Box key={item.itemId} sx={{ textAlign: 'center', p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                     <Box

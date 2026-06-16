@@ -1,6 +1,7 @@
 import { Box, Chip, Typography } from '@mui/material'
 import { getCurrentZone } from '@/data/schedZone'
 import { hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
+import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
 const ZONE_LABEL = ['휴식', '아침', '정오', '저녁', '밤']
 const ZONE_TONE = ['#9d8150', '#67bda4', '#e0a742', '#f27f75', '#5c7890']
@@ -19,14 +20,17 @@ export const HUD = () => {
       sx={{
         position: 'fixed',
         top: { xs: 8, sm: 12 },
-        left: { xs: 8, sm: 16 },
-        right: { xs: 8, sm: 16 },
-        height: 52,
+        left: '50%',
+        width: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 24px)' },
+        maxWidth: GAME_STAGE_WIDTH,
+        transform: 'translateX(-50%)',
+        minHeight: 52,
         px: { xs: 1, sm: 1.5 },
         zIndex: 100,
         display: 'flex',
         alignItems: 'center',
-        gap: 1,
+        gap: { xs: 0.5, sm: 1 },
+        overflow: 'hidden',
         color: 'text.primary',
         bgcolor: 'rgba(255,254,250,0.9)',
         border: '1px solid rgba(62,155,143,0.18)',
@@ -41,6 +45,7 @@ export const HUD = () => {
           display: 'flex',
           alignItems: 'center',
           gap: 0.75,
+          flex: { xs: '0 1 86px', sm: '0 0 auto' },
         }}
       >
         <Box
@@ -59,10 +64,10 @@ export const HUD = () => {
           동
         </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Typography sx={{ fontSize: 12, fontWeight: 900, lineHeight: 1.1, whiteSpace: 'nowrap' }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 900, lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             아이동월드
           </Typography>
-          <Typography sx={{ fontSize: 10, color: 'text.secondary', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
+          <Typography sx={{ fontSize: 10, color: 'text.secondary', lineHeight: 1.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             오늘의 섬
           </Typography>
         </Box>
@@ -81,7 +86,7 @@ export const HUD = () => {
         }}
       />
 
-      <Box sx={{ flex: 1, minWidth: 6 }} />
+      <Box sx={{ flex: 1, minWidth: 0 }} />
 
       <HudItem label="코인" value={coins} tone="#e0a742" />
       <HudItem label="젬" value={gems} tone="#67bda4" />
@@ -106,23 +111,24 @@ const HudItem = ({
   <Box
     sx={{
       height: 32,
-      minWidth: compact ? 44 : 56,
-      px: compact ? 0.7 : 0.9,
+      minWidth: { xs: compact ? 38 : 42, sm: compact ? 44 : 56 },
+      px: { xs: 0.45, sm: compact ? 0.7 : 0.9 },
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
       borderRadius: 1.5,
       bgcolor: 'rgba(255,255,255,0.72)',
       border: `1px solid ${tone}33`,
+      overflow: 'hidden',
     }}
   >
-    <Typography sx={{ fontSize: 9, color: 'text.secondary', lineHeight: 1, whiteSpace: 'nowrap' }}>
+    <Typography sx={{ fontSize: { xs: 8, sm: 9 }, color: 'text.secondary', lineHeight: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
       {label}
     </Typography>
     <Typography
       sx={{
         color: tone,
-        fontSize: 13,
+        fontSize: { xs: 11, sm: 13 },
         fontWeight: 900,
         lineHeight: 1.2,
         fontVariantNumeric: 'tabular-nums',

@@ -1,0 +1,2 @@
+export const GAME_STAGE_WIDTH = 1180
+export const VOYAGE_BOARD_STAGE_WIDTH = 860

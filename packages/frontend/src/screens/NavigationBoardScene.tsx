@@ -33,10 +33,13 @@ import {
 } from '@mui/material'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { buildNeighborRoute, SLOT_TYPE_COLOR, type BoardSlot } from '@/data/board'
+import { PHASE_LABEL, getZoneById, getZoneKindLabel } from '@/data/zones'
 import { BoardIcon } from '@/components/AidongSprite'
 import { CareModal } from '@/components/CareModal'
 import { CustomsTransferDialog } from '@/components/CustomsTransferDialog'
+import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
+import { VOYAGE_BOARD_STAGE_WIDTH } from '@/theme/gameStage'
 import * as host from '@idongworld/host'
 import { api, type DecorItemConfig, type ShipTypeConfig } from '@/lib/api'
 import type { AidongCharacterId } from '@/stores/userStore'
@@ -80,6 +83,7 @@ const ROUTE_ALIASES: Record<string, 'neighbor'> = {
   neighbor: 'neighbor',
   'route-neighbor': 'neighbor',
 }
+const HARBOR_ZONE = getZoneById('harbor')
 
 const FALLBACK_CABIN_FURNITURE: DecorItemConfig[] = [
   { itemId: 'hammock', label: '해먹', cost: 0, defaultOwned: 1 },
@@ -218,6 +222,37 @@ function landingMatchesSlot(route: ReturnType<typeof buildNeighborRoute>, landin
   return !!landingSlot && landingSlot.index === slot.index && landing.slotType === slot.type
 }
 
+const BOARD_COLUMNS = 9
+const BOARD_ROWS = 8
+
+function getPerimeterCell(index: number): { gridColumn: number; gridRow: number } {
+  if (index < BOARD_COLUMNS) return { gridColumn: index + 1, gridRow: 1 }
+  if (index < BOARD_COLUMNS + BOARD_ROWS - 2) return { gridColumn: BOARD_COLUMNS, gridRow: index - BOARD_COLUMNS + 2 }
+  if (index < BOARD_COLUMNS * 2 + BOARD_ROWS - 2) {
+    return {
+      gridColumn: BOARD_COLUMNS - (index - (BOARD_COLUMNS + BOARD_ROWS - 2)),
+      gridRow: BOARD_ROWS,
+    }
+  }
+  return {
+    gridColumn: 1,
+    gridRow: BOARD_ROWS - 1 - (index - (BOARD_COLUMNS * 2 + BOARD_ROWS - 2)),
+  }
+}
+
+function getSlotCaption(slot: BoardSlot): string {
+  if (slot.index === 0) return '항구'
+  if (slot.type === 'character') return slot.characterId ?? '친구섬'
+  return slot.label
+}
+
+function getPhaseLabel(phase: Phase): string {
+  if (phase === 'rolling') return '굴리는 중'
+  if (phase === 'moving') return '이동 중'
+  if (phase === 'arrived') return '도착'
+  return '대기'
+}
+
 export const NavigationBoardScene = () => {
   const [params] = useSearchParams()
   const navigate = useNavigate()
@@ -277,6 +312,7 @@ export const NavigationBoardScene = () => {
   const hasShipInventory = Object.values(shipState.shipInventory).some((amount) => amount > 0)
   const selectedCabinAidong = selectedCabinSlot ? shipState.cabinAssignments[selectedCabinSlot] : undefined
   const selectedCabinFurniture = selectedCabinSlot ? shipState.cabins[selectedCabinSlot]?.furniture ?? [] : []
+  const currentBoardSlot = route.slots[boardPosition] ?? route.slots[0]
 
   useEffect(() => {
     if (routeId !== 'neighbor') return
@@ -536,103 +572,275 @@ export const NavigationBoardScene = () => {
   }
 
   return (
-    <Box sx={{ p: 2, pb: 4 }}>
+    <Box sx={{ pb: 4 }}>
       <ScreenHeader category="항해" title="이웃섬 보드" subtitle={route.name} />
       {/* 헤더 */}
-      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2, mt: 1 }}>
-        <Button
-          size="small"
-          onClick={() => navigate('/island/harbor')}
-        >
-          ← 항구
-        </Button>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h2" sx={{ fontSize: 18 }}>{route.name}</Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>{route.subtitle}</Typography>
-        </Box>
-        <Chip label={`🎲 ${diceCount}`} size="small" />
-        <Chip label={`📍 ${boardPosition}/${route.slotsCount - 1}`} size="small" color="primary" />
-      </Stack>
+      <GameStage sx={{ mb: 2 }} stageSx={{ px: 2, pt: 1 }}>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Button
+            size="small"
+            onClick={() => navigate('/island/harbor')}
+          >
+            ← 항구
+          </Button>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h2" sx={{ fontSize: 18 }}>{route.name}</Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>{route.subtitle}</Typography>
+          </Box>
+          <Chip label={`🎲 ${diceCount}`} size="small" />
+          <Chip label={`📍 ${boardPosition}/${route.slotsCount - 1}`} size="small" color="primary" />
+        </Stack>
+      </GameStage>
 
-      {/* 보드 그리드 6×5 */}
-      <Box
-        sx={{
+      {HARBOR_ZONE && (
+        <GameStage
+          stageWidth={VOYAGE_BOARD_STAGE_WIDTH}
+          sx={{ mb: 2 }}
+          stageSx={{
+            p: 1.5,
+            border: '2px solid #9d8150',
+            bgcolor: 'rgba(255,244,203,0.94)',
+            borderRadius: 1,
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'auto 1fr auto' },
+            gap: 1,
+            alignItems: { xs: 'flex-start', sm: 'center' },
+            boxShadow: '0 10px 22px rgba(157,129,80,0.16)',
+          }}
+        >
+          <Box sx={{ fontSize: 32, lineHeight: 1 }}>{HARBOR_ZONE.emoji}</Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontSize: { xs: 16, sm: 20 }, fontWeight: 900, lineHeight: 1.15 }}>
+              {HARBOR_ZONE.areaNo} · {HARBOR_ZONE.name}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              항해 보드는 이 anchor 구역에서 출항하고, 한 바퀴 후 같은 항구로 귀항합니다.
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+            <Chip label={getZoneKindLabel(HARBOR_ZONE)} size="small" color="warning" />
+            <Chip label={PHASE_LABEL[HARBOR_ZONE.phase]} size="small" />
+          </Stack>
+        </GameStage>
+      )}
+
+      {/* 외곽 보드 + 중앙 상태창 */}
+      <GameStage
+        stageWidth={VOYAGE_BOARD_STAGE_WIDTH}
+        sx={{ mb: 3 }}
+        stageSx={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: 0.5,
-          mb: 3,
-          p: 1,
-          bgcolor: 'rgba(74, 124, 220, 0.08)',
+          gridTemplateColumns: `repeat(${BOARD_COLUMNS}, 1fr)`,
+          gridTemplateRows: {
+            xs: `repeat(${BOARD_ROWS}, clamp(38px, 10vw, 50px))`,
+            sm: `repeat(${BOARD_ROWS}, 62px)`,
+          },
+          gap: { xs: 0.35, sm: 0.75 },
+          p: { xs: 0.65, sm: 1.25 },
+          bgcolor: 'rgba(20, 92, 112, 0.08)',
+          border: '1px solid rgba(62,155,143,0.18)',
           borderRadius: 2,
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.65), 0 14px 30px rgba(66,86,80,0.12)',
         }}
       >
+        <Box
+          sx={{
+            gridColumn: '2 / 9',
+            gridRow: '2 / 8',
+            minHeight: { xs: 214, sm: 330 },
+            p: { xs: 1, sm: 2 },
+            borderRadius: 1.5,
+            bgcolor: 'rgba(255,254,250,0.92)',
+            border: '1px solid rgba(62,155,143,0.2)',
+            boxShadow: '0 12px 28px rgba(66,86,80,0.12)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: { xs: 0.75, sm: 1.5 },
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap', gap: 1 }}>
+            <Chip label={getPhaseLabel(phase)} color={phase === 'idle' ? 'default' : 'primary'} size="small" />
+            <Chip label={`위치 ${boardPosition}/${route.slotsCount - 1}`} size="small" />
+            <Chip label={`주사위 ${diceCount}`} size="small" />
+            {HARBOR_ZONE && (
+              <Chip
+                label={`${HARBOR_ZONE.areaNo} 출발 anchor`}
+                color="warning"
+                size="small"
+                variant={currentBoardSlot.type === 'home' ? 'filled' : 'outlined'}
+              />
+            )}
+          </Stack>
+
+          <Box>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700 }}>
+              현재 칸
+            </Typography>
+            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mt: 0.75 }}>
+              <Box
+                sx={{
+                  width: 54,
+                  height: 54,
+                  display: { xs: 'none', sm: 'grid' },
+                  borderRadius: 1.5,
+                  placeItems: 'center',
+                  fontSize: 28,
+                  bgcolor: SLOT_TYPE_COLOR[currentBoardSlot.type],
+                  border: '1px solid rgba(0,0,0,0.12)',
+                }}
+              >
+                {currentBoardSlot.type === 'character' && currentBoardSlot.characterId ? '🐾' : currentBoardSlot.emoji}
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="h2" sx={{ fontSize: { xs: 16, sm: 22 }, lineHeight: 1.15 }}>
+                  {getSlotCaption(currentBoardSlot)}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
+                  {route.name} · {route.subtitle}
+                </Typography>
+                {currentBoardSlot.type === 'home' && HARBOR_ZONE && (
+                  <Stack direction="row" spacing={0.5} sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
+                    <Chip label={HARBOR_ZONE.areaNo} size="small" color="primary" sx={{ height: 20, fontSize: 10 }} />
+                    <Chip label={getZoneKindLabel(HARBOR_ZONE)} size="small" color="warning" sx={{ height: 20, fontSize: 10 }} />
+                    <Chip label={PHASE_LABEL[HARBOR_ZONE.phase]} size="small" sx={{ height: 20, fontSize: 10 }} />
+                  </Stack>
+                )}
+              </Box>
+            </Stack>
+          </Box>
+
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography
+              variant="h2"
+              sx={{
+                fontSize: { xs: 34, sm: 58 },
+                lineHeight: 1,
+                mb: 1,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              {lastRoll !== null ? lastRoll : '🎲'}
+            </Typography>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="center">
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleRoll}
+                disabled={phase !== 'idle' || diceCount <= 0}
+              >
+                {phase === 'idle' ? '주사위 굴리기' : phase === 'rolling' ? '굴리는 중...' : '이동 중...'}
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => { void returnToHarbor() }}
+                disabled={returningToHarbor}
+              >
+                {returningToHarbor ? '항구로 복귀 중...' : '항구 복귀'}
+              </Button>
+            </Stack>
+          </Box>
+
+          {diceCount <= 0 && (
+            <Alert severity="info" sx={{ py: 0.5 }}>
+              주사위가 부족합니다. 항구 지원 배치로 충전할 수 있어요.
+            </Alert>
+          )}
+        </Box>
+
         {route.slots.map((slot) => {
           const isCurrent = slot.index === boardPosition
+          const cell = getPerimeterCell(slot.index)
           return (
             <Box
               key={slot.index}
               sx={{
-                aspectRatio: '1',
+                gridColumn: cell.gridColumn,
+                gridRow: cell.gridRow,
+                minWidth: 0,
+                minHeight: { xs: 'clamp(38px, 10vw, 50px)', sm: 62 },
                 bgcolor: SLOT_TYPE_COLOR[slot.type],
-                border: isCurrent ? '3px solid' : '1px solid',
-                borderColor: isCurrent ? 'primary.main' : 'rgba(0,0,0,0.1)',
+                border: isCurrent ? '2px solid' : '1px solid',
+                borderColor: isCurrent ? '#246b6f' : 'rgba(0,0,0,0.12)',
                 borderRadius: 1,
-                p: 0.5,
+                p: { xs: 0.25, sm: 0.5 },
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
                 position: 'relative',
-                fontSize: 10,
                 textAlign: 'center',
-                transform: isCurrent ? 'scale(1.05)' : 'none',
-                transition: 'all 0.3s',
-                boxShadow: isCurrent ? '0 0 12px rgba(74,124,220,0.6)' : 'none',
+                transform: isCurrent ? 'translateY(-2px)' : 'none',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease',
+                boxShadow: isCurrent ? '0 10px 18px rgba(36,107,111,0.24)' : '0 2px 5px rgba(66,86,80,0.08)',
               }}
             >
               {slot.type === 'character' && slot.characterId ? (
-                <Box sx={{ width: 36, height: 36 }}>
-                  <BoardIcon character={slot.characterId} size={36} />
+                <Box sx={{ width: { xs: 24, sm: 34 }, height: { xs: 24, sm: 34 }, overflow: 'hidden' }}>
+                  <Box sx={{ transform: { xs: 'scale(0.72)', sm: 'none' }, transformOrigin: 'top left' }}>
+                    <BoardIcon character={slot.characterId} size={34} />
+                  </Box>
                 </Box>
               ) : (
-                <Box sx={{ fontSize: 22 }}>{slot.emoji}</Box>
+                <Box sx={{ fontSize: { xs: 16, sm: 23 }, lineHeight: 1 }}>{slot.emoji}</Box>
               )}
-              <Box sx={{ fontSize: 9, mt: 0.3, fontWeight: isCurrent ? 600 : 400, color: 'rgba(0,0,0,0.7)' }}>
-                {slot.index === 0 ? '시작' : slot.type === 'character' ? slot.characterId : ''}
+              <Box
+                sx={{
+                  mt: 0.25,
+                  maxWidth: '100%',
+                  fontSize: { xs: 7, sm: 9 },
+                  lineHeight: 1.05,
+                  fontWeight: isCurrent ? 800 : 600,
+                  color: 'rgba(0,0,0,0.72)',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {slot.index === 0 ? '항구' : slot.type === 'character' ? slot.characterId : slot.index}
               </Box>
+              {slot.index === 0 && HARBOR_ZONE && (
+                <Box
+                  sx={{
+                    mt: 0.25,
+                    px: 0.4,
+                    borderRadius: 0.75,
+                    bgcolor: 'rgba(255,254,250,0.76)',
+                    color: '#7b5b1d',
+                    fontSize: 8,
+                    fontWeight: 900,
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {HARBOR_ZONE.areaNo}
+                </Box>
+              )}
               {isCurrent && (
-                <Box sx={{ position: 'absolute', top: -6, right: -6, fontSize: 16 }}>⛵</Box>
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: -16,
+                    right: -10,
+                    width: { xs: 22, sm: 30 },
+                    height: { xs: 22, sm: 30 },
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    bgcolor: '#fffefa',
+                    border: '2px solid #246b6f',
+                    boxShadow: '0 6px 12px rgba(36,107,111,0.24)',
+                    fontSize: { xs: 13, sm: 18 },
+                  }}
+                >
+                  ⛵
+                </Box>
               )}
             </Box>
           )
         })}
-      </Box>
+      </GameStage>
 
-      {/* 컨트롤 */}
-      <Box sx={{ textAlign: 'center', mb: 2 }}>
-        <Typography variant="h2" sx={{ fontSize: 48, mb: 1 }}>
-          {lastRoll !== null ? lastRoll : '🎲'}
-        </Typography>
-        <Stack direction="row" spacing={1} justifyContent="center">
-          <Button
-            variant="contained"
-            size="large"
-            onClick={handleRoll}
-            disabled={phase !== 'idle' || diceCount <= 0}
-          >
-            {phase === 'idle' ? '주사위 굴리기' : phase === 'rolling' ? '굴리는 중...' : '이동 중...'}
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => { void returnToHarbor() }}
-            disabled={returningToHarbor}
-          >
-            {returningToHarbor ? '복귀 중...' : '마이섬 복귀'}
-          </Button>
-        </Stack>
-      </Box>
-
-      <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2, mb: 3 }}>
+      <GameStage sx={{ mb: 3 }} stageSx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2} sx={{ mb: 2 }}>
           <Box>
             <Typography variant="h2" sx={{ fontSize: 18 }}>항해 중 배 메뉴</Typography>
@@ -768,7 +976,7 @@ export const NavigationBoardScene = () => {
             </Box>
           </Box>
         </Stack>
-      </Box>
+      </GameStage>
 
       {/* 칸 도착 모달 */}
       <Modal open={phase === 'arrived' && !!arrivedSlot} onClose={() => {}}>
@@ -804,7 +1012,7 @@ export const NavigationBoardScene = () => {
                 {arrivedSlot.type === 'storm' && '폭풍을 만났지만 무사히 빠져나왔어요. (🪙 -10)'}
                 {arrivedSlot.type === 'resource' && '자원이 풍부한 섬이에요. (🥐 음식 1·💎 기억조각 1)'}
                 {arrivedSlot.type === 'empty' && '잔잔한 바다. (🪙 +2)'}
-                {arrivedSlot.type === 'home' && '한 바퀴 돌아 마이섬에 돌아왔어요!'}
+                {arrivedSlot.type === 'home' && '한 바퀴 돌아 항구에 도착했어요!'}
               </Typography>
               <Button variant="contained" size="large" onClick={handleSlotAction} fullWidth>
                 {canEnterAidongIsland ? '도착 섬으로 들어가기' : '계속'}
@@ -881,7 +1089,7 @@ export const NavigationBoardScene = () => {
                   <Chip label="아직 배치된 가구가 없어요" size="small" variant="outlined" />
                 )}
               </Stack>
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(94px, 1fr))', gap: 1 }}>
                 {cabinFurnitureItems.map((item) => (
                   <Box key={item.itemId} sx={{ textAlign: 'center', p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                     <Box

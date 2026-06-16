@@ -77,11 +77,11 @@ export function getRouteLandingCandidate(routeId: string, position: number): Rou
       routeId,
       boardPosition,
       slotType: 'home',
-      label: '마이섬',
+      label: '항구',
       targetWorldScope: 'home-island',
-      landingModuleId: 'my-island',
-      action: 'return-home',
-      screenPath: '/island',
+      landingModuleId: 'ship',
+      action: 'return-harbor',
+      screenPath: '/island/harbor',
     }
   }
 

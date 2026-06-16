@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Alert, Box, Button, Chip, LinearProgress, Stack, Tab, Tabs, Typography } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AidongSprite } from '@/components/AidongSprite'
+import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { api } from '@/lib/api'
 import { accountStoreFacade, codexStoreFacade, hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
@@ -205,12 +206,13 @@ export const MyRoomScreen = () => {
   ]
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1040, mx: 'auto', pb: 12 }}>
+    <Box sx={{ p: 0, pb: 12 }}>
       <ScreenHeader category="숙소" title="마이룸" subtitle="정보·Aidong·도감·콜렉션·장부" />
-      <Typography variant="h1" sx={{ mt: 2, mb: 1 }}>마이룸</Typography>
-      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-        여러 모듈에 흩어진 상태를 한 곳에서 읽어 보는 aggregation shell입니다.
-      </Typography>
+      <GameStage stageSx={{ px: 3, py: 3 }}>
+        <Typography variant="h1" sx={{ mb: 1 }}>마이룸</Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
+          여러 모듈에 흩어진 상태를 한 곳에서 읽어 보는 aggregation shell입니다.
+        </Typography>
 
       {loading && <LinearProgress sx={{ mb: 2 }} />}
       {error && <Alert severity="warning" sx={{ mb: 2 }}>{error}</Alert>}
@@ -339,15 +341,16 @@ export const MyRoomScreen = () => {
         </Box>
       )}
 
-      {tab === 'ledger' && (
-        <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, p: 2 }}>
-          <Typography variant="h2" sx={{ fontSize: 18, mb: 1 }}>장부</Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            현재는 전용 ledger collection 없이 기존 account, host, my-aidong, codex, lodge state를 읽어 생성한 요약입니다.
-          </Typography>
-          <Chip sx={{ mt: 1 }} label={`생성 시각 ${new Date(Number(asRecord(summary?.ledger).generatedAt ?? Date.now())).toLocaleString()}`} />
-        </Box>
-      )}
+        {tab === 'ledger' && (
+          <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, p: 2 }}>
+            <Typography variant="h2" sx={{ fontSize: 18, mb: 1 }}>장부</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              현재는 전용 ledger collection 없이 기존 account, host, my-aidong, codex, lodge state를 읽어 생성한 요약입니다.
+            </Typography>
+            <Chip sx={{ mt: 1 }} label={`생성 시각 ${new Date(Number(asRecord(summary?.ledger).generatedAt ?? Date.now())).toLocaleString()}`} />
+          </Box>
+        )}
+      </GameStage>
     </Box>
   )
 }

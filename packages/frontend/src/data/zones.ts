@@ -229,3 +229,18 @@ export const PHASE_COLOR: Record<ZonePhase, string> = {
   3: '#C8A2FF',
   4: '#A2FFC8',
 }
+
+export const ZONE_BY_ID = new Map(ZONES.map((zone) => [zone.id, zone]))
+export const ZONE_BY_AREA_NO = new Map(ZONES.map((zone) => [zone.areaNo, zone]))
+
+export function getZoneById(id: string): Zone | undefined {
+  return ZONE_BY_ID.get(id)
+}
+
+export function getZoneByAreaNo(areaNo: string): Zone | undefined {
+  return ZONE_BY_AREA_NO.get(areaNo)
+}
+
+export function getZoneKindLabel(zone: Zone): string {
+  return zone.kind === 'anchor' ? 'anchor 구역' : '편입 슬롯'
+}

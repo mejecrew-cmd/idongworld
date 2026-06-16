@@ -16,7 +16,7 @@
 import { useState, useMemo } from 'react'
 import { Box, Typography, Modal, Button, Chip, Stack, LinearProgress, Divider } from '@mui/material'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ZONES, PHASE_LABEL, PHASE_COLOR, type Zone } from '@/data/zones'
+import { ZONES, PHASE_LABEL, PHASE_COLOR, getZoneKindLabel, type Zone } from '@/data/zones'
 import { MiniGameModal, type MiniGameId } from '@/components/MiniGameModal'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { api } from '@/lib/api'
@@ -464,7 +464,7 @@ export const IslandFullMapScreen = () => {
                   sx={{ bgcolor: PHASE_COLOR[selected.phase] }}
                 />
                 <Chip
-                  label={selected.kind === 'anchor' ? 'anchor 구역' : '편입 슬롯'}
+                  label={getZoneKindLabel(selected)}
                   size="small"
                   color={selected.kind === 'anchor' ? 'warning' : 'primary'}
                   variant="outlined"

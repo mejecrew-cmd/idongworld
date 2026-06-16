@@ -121,7 +121,7 @@ const BUTTON_TYPES = [
 ]
 
 const BOARD_SLOT_TYPES = [
-  { id: 'home',      emoji: '🏝️', label: '마이섬',     desc: '시작·도착 칸. 한 바퀴 돌아오면 마이섬 복귀.', color: SLOT_TYPE_COLOR.home },
+  { id: 'home',      emoji: '⚓', label: '항구',       desc: '시작·도착 칸. 한 바퀴 돌아오면 항구 복귀.', color: SLOT_TYPE_COLOR.home },
   { id: 'character', emoji: '🐾', label: '이웃 친구섬', desc: '본진 4명 중 1명. 도착 시 영입 시나리오 진입.', color: SLOT_TYPE_COLOR.character },
   { id: 'treasure',  emoji: '💎', label: '보물',       desc: '도착 시 코인 +30~60.', color: SLOT_TYPE_COLOR.treasure },
   { id: 'storm',     emoji: '🌀', label: '폭풍',       desc: '도착 시 코인 -10. 페널티 약함.', color: SLOT_TYPE_COLOR.storm },

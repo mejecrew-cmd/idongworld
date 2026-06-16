@@ -14,6 +14,7 @@
  *   - 톤: 잔잔·낮은 채도. 게임 흐름 방해 최소.
  */
 import { Box, Typography, Chip } from '@mui/material'
+import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
 interface ScreenHeaderProps {
   category: string
@@ -34,8 +35,9 @@ export const ScreenHeader = ({ category, title, subtitle, overlay = false }: Scr
       sx={{
         position: overlay ? 'absolute' : 'sticky',
         top: 0,
-        left: 0,
-        right: 0,
+        width: '100%',
+        maxWidth: GAME_STAGE_WIDTH,
+        mx: 'auto',
         zIndex: 10,
         bgcolor: bg,
         backdropFilter: 'blur(6px)',
@@ -44,6 +46,7 @@ export const ScreenHeader = ({ category, title, subtitle, overlay = false }: Scr
         display: 'flex',
         alignItems: 'center',
         gap: 1.5,
+        minWidth: 0,
         borderBottom: overlay ? 'none' : '1px solid rgba(0,0,0,0.08)',
         pointerEvents: 'none', // 클릭 통과 (오프닝 시퀀스 등)
       }}
@@ -56,6 +59,7 @@ export const ScreenHeader = ({ category, title, subtitle, overlay = false }: Scr
           color: chipColor,
           fontWeight: 600,
           letterSpacing: 0.5,
+          flex: '0 0 auto',
         }}
       />
       <Typography
@@ -65,7 +69,7 @@ export const ScreenHeader = ({ category, title, subtitle, overlay = false }: Scr
         {title}
       </Typography>
       {subtitle && (
-        <Typography variant="caption" sx={{ color, opacity: 0.7, whiteSpace: 'nowrap' }}>
+        <Typography variant="caption" sx={{ color, opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {subtitle}
         </Typography>
       )}

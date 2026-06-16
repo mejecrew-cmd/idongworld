@@ -32,7 +32,9 @@ import type { AidongCharacterId } from '@/stores/userStore'
 import { AidongSprite, OUTFIT_OPTIONS } from '@/components/AidongSprite'
 import { CareModal } from '@/components/CareModal'
 import { CustomsTransferDialog } from '@/components/CustomsTransferDialog'
+import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
+import { PHASE_COLOR, PHASE_LABEL, getZoneById, getZoneKindLabel } from '@/data/zones'
 import { INITIAL_NEEDS, calcMoodScore, moodFromScore, moodToExpression } from '@/data/needs'
 import { getCurrentZone } from '@/data/schedZone'
 import { api, type DecorItemConfig } from '@/lib/api'
@@ -41,6 +43,7 @@ import { accountStoreFacade, hostStoreFacade, myAidongStoreFacade } from '@/lib/
 
 const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
+const LODGE_ZONE = getZoneById('lodge')
 
 const EMPTY_ROOMS = [
   { roomId: 'empty-room-1', label: '빈 방 1' },
@@ -385,43 +388,56 @@ export const LodgeScene = () => {
 
   return (
     <Box sx={{ p: 0 }}>
-      <ScreenHeader category="마이섬" title="숙소" subtitle="방을 꾸미고 쉬는 Aidong을 돌봐요." />
+      <ScreenHeader
+        category="마이섬"
+        title="숙소"
+        subtitle={LODGE_ZONE ? `${LODGE_ZONE.areaNo} · ${getZoneKindLabel(LODGE_ZONE)}` : '방을 꾸미고 쉬는 Aidong을 돌봐요.'}
+      />
 
-      <Box
-        sx={{
-          position: 'relative',
-          width: '100%',
-          aspectRatio: '16/6',
-          backgroundImage: 'url(/assets/배경/myisland_harbor_warm.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+      <GameStage>
         <Box
           sx={{
-            position: 'absolute',
-            top: 16,
-            left: 16,
-            bgcolor: 'rgba(255,255,255,0.92)',
-            px: 1.5,
-            py: 0.75,
-            borderRadius: 2,
-            boxShadow: '0 10px 24px rgba(80, 57, 30, 0.16)',
+            position: 'relative',
+            width: '100%',
+            aspectRatio: '16/6',
+            backgroundImage: 'url(/assets/배경/myisland_harbor_warm.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
           }}
         >
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
-            {hostName ? `${hostName}의 숙소` : 'Aidong 숙소'}
-          </Typography>
-          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            보유 코인 {coins}
-          </Typography>
-          <Button size="small" variant="outlined" sx={{ mt: 0.75 }} onClick={() => setInventoryOpen(true)}>
-            숙소 인벤토리
-          </Button>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 16,
+              left: 16,
+              bgcolor: 'rgba(255,255,255,0.92)',
+              px: 1.5,
+              py: 0.75,
+              borderRadius: 2,
+              boxShadow: '0 10px 24px rgba(80, 57, 30, 0.16)',
+            }}
+          >
+            {LODGE_ZONE && (
+              <Stack direction="row" spacing={0.5} sx={{ mb: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
+                <Chip label={LODGE_ZONE.areaNo} size="small" color="primary" sx={{ height: 20, fontSize: 10 }} />
+                <Chip label={getZoneKindLabel(LODGE_ZONE)} size="small" color="warning" sx={{ height: 20, fontSize: 10 }} />
+                <Chip label={PHASE_LABEL[LODGE_ZONE.phase]} size="small" sx={{ height: 20, fontSize: 10, bgcolor: PHASE_COLOR[LODGE_ZONE.phase] }} />
+              </Stack>
+            )}
+            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+              {hostName ? `${hostName}의 숙소` : 'Aidong 숙소'}
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              보유 코인 {coins}
+            </Typography>
+            <Button size="small" variant="outlined" sx={{ mt: 0.75 }} onClick={() => setInventoryOpen(true)}>
+              숙소 인벤토리
+            </Button>
+          </Box>
         </Box>
-      </Box>
+      </GameStage>
 
-      <Box sx={{ p: 2 }}>
+      <GameStage stageSx={{ px: 2, py: 2 }}>
         {lodgeStateLoading && <LinearProgress sx={{ mb: 2 }} />}
         {harborAidongs.size > 0 ? (
           <Alert severity="info" sx={{ mb: 2 }}>
@@ -735,7 +751,7 @@ export const LodgeScene = () => {
                   )}
                 </Stack>
 
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 1 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(108px, 1fr))', gap: 1 }}>
                   {furnitureItems.map((item) => {
                     const placed = selectedRoomFurniture.includes(item.itemId)
                     const owned = (lodgeFurniture[item.itemId] ?? 0) + item.defaultOwned
@@ -814,7 +830,7 @@ export const LodgeScene = () => {
                 <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1 }}>
                   착용 아이템은 전역 보관소에서 사용해요.
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 1 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(86px, 1fr))', gap: 1 }}>
                   {OUTFIT_OPTIONS.map((option) => {
                     const isOn = (equippedOutfit[selectedChar] ?? 'none') === option.id
                     return (
@@ -834,7 +850,7 @@ export const LodgeScene = () => {
                 <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mt: 2, mb: 1 }}>
                   전역 보관소 아이템
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 1 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(108px, 1fr))', gap: 1 }}>
                   {AIDONG_ITEMS.map((item) => {
                     const owned = inventory[item.id] ?? 0
                     const isEquipped = (equippedItems[selectedChar] ?? []).includes(item.id)
@@ -861,7 +877,7 @@ export const LodgeScene = () => {
                 <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary', mb: 1 }}>
                   보유 코인 {coins} / 현재 시간대 {['휴식', '아침', '점심', '저녁', '밤'][curZone]}
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 1 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(86px, 1fr))', gap: 1 }}>
                   {FOODS.map((food) => (
                     <Button
                       key={food.id}
@@ -880,7 +896,7 @@ export const LodgeScene = () => {
             )}
           </Box>
         ))}
-      </Box>
+      </GameStage>
 
       <Dialog open={inventoryOpen} onClose={() => setInventoryOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>숙소 인벤토리</DialogTitle>
