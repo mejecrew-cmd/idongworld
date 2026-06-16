@@ -215,7 +215,10 @@ export const HubHeartScene = () => {
 
         {/* 메인 액션 */}
         <Stack direction="row" spacing={1.5} sx={{ mb: 3, flexWrap: 'wrap', gap: 1 }}>
-          <Button variant="contained" onClick={() => navigate('/island/harbor')}>
+          <Button variant="contained" onClick={() => navigate('/island')}>
+            🏝️ 마이섬 허브
+          </Button>
+          <Button variant="outlined" onClick={() => navigate('/island/harbor')}>
             ⛵ 항구로 가기
           </Button>
           <Button variant="outlined" onClick={() => navigate('/island/full-map')}>

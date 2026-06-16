@@ -42,6 +42,8 @@ import { DebutStageScene } from './screens/DebutStageScene'
 import { StageScreen } from './screens/StageScreen'
 import { AssetCatalogScreen } from './screens/dev/AssetCatalogScreen'
 import { CodexScreen } from './screens/CodexScreen'
+import { ShopScreen } from './screens/ShopScreen'
+import { SettingsScreen } from './screens/SettingsScreen'
 
 import { MyIslandLayout, VoyageLayout, FullScreenLayout } from './components/Layouts'
 import { DebugPanel } from './components/DebugPanel'
@@ -118,6 +120,14 @@ export const App = () => {
     {/* 도감 — HUD + 하단 네비 (마이섬 레이아웃 재사용) */}
     <Route path="/codex" element={<MyIslandLayout />}>
       <Route index element={<CodexScreen />} />
+    </Route>
+
+    {/* 상점/설정 — 기능 연결 전 placeholder */}
+    <Route path="/shop" element={<MyIslandLayout />}>
+      <Route index element={<ShopScreen />} />
+    </Route>
+    <Route path="/setting" element={<MyIslandLayout />}>
+      <Route index element={<SettingsScreen />} />
     </Route>
 
     {/* 항해 — HUD만 (하단 네비 X, 항해 중단 방지) */}

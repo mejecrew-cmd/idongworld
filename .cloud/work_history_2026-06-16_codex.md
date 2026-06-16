@@ -149,3 +149,18 @@
 - Updated `/codex` to use the shared responsive `GameStage` frame instead of its own `maxWidth: 1024` container.
 - The Codex header, tabs, character grid, material grid, trophy placeholder, and footer now align with the same responsive width as the Island screens.
 - Verification: `pnpm.cmd --filter frontend typecheck` passed.
+
+## Follow-up Change - Hub Nav Toggle Default
+
+- Added a `마이섬 허브` action to the Hub main navigation buttons.
+- Made `마이섬 허브` the selected/default button on `/island`.
+- Changed `항구로 가기` to an outlined navigation button so only the current Hub action is highlighted.
+- Verification: `pnpm.cmd --filter frontend typecheck` passed.
+
+## Follow-up Change - Shop and Settings Placeholders
+
+- Added `/shop` with a responsive placeholder screen for future shop sections.
+- Added `/setting` with a responsive placeholder screen for future settings sections.
+- Routed both pages through `MyIslandLayout` so HUD and bottom navigation remain visible.
+- This prevents the Shop and Settings bottom-nav tabs from falling through to the wildcard route and returning to the entry/title flow.
+- Verification: `pnpm.cmd --filter frontend typecheck` passed.
