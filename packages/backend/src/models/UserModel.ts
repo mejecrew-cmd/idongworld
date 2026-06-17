@@ -23,6 +23,11 @@ const UserSchema = new Schema(
     gems: { type: Number, required: true, default: 0 },
     openingSeen: { type: Boolean, required: true, default: false },
     onboardingComplete: { type: Boolean, required: true, default: false },
+    soundSettings: {
+      type: Schema.Types.Mixed,
+      required: true,
+      default: () => ({ bgmVolume: 100, sfxVolume: 100 }),
+    },
     recruitedAidongs: { type: [String], required: true, default: [] },
     firstGachaCandidate: String,
     firstGachaAttempts: { type: Number, required: true, default: 0 },

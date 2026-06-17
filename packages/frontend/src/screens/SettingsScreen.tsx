@@ -1,80 +1,235 @@
-import { Box, Button, Chip, Stack, Typography } from '@mui/material'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import type { ReactNode } from 'react'
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Slider,
+  Stack,
+  Switch,
+  Typography,
+} from '@mui/material'
 import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
+import {
+  SOUND_VOLUME_MAX,
+  SOUND_VOLUME_MIN,
+  SOUND_VOLUME_STEP,
+} from '@/data/settings'
+import { settingsStoreFacade } from '@/lib/storeFacades'
 
-const SETTING_ROWS = [
-  { title: '계정', desc: '로그인 정보, 닉네임, 호스트 이름 설정을 배치할 예정입니다.' },
-  { title: '사운드', desc: '배경음, 효과음, 음량 조절 옵션을 연결할 자리입니다.' },
-  { title: '화면', desc: '해상도, 접근성, 표시 밀도 같은 UI 옵션을 정리할 예정입니다.' },
-  { title: '데이터', desc: '저장, 동기화, 초기화 관련 기능이 들어올 영역입니다.' },
-]
+const miscSettings = [
+  '언어',
+  '계정 관리',
+  '고객센터',
+  '이용약관',
+  '개인정보 처리방침',
+  '로그아웃',
+] as const
 
 export const SettingsScreen = () => {
-  const navigate = useNavigate()
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [activeDialog, setActiveDialog] = useState<(typeof miscSettings)[number] | null>(null)
+  const soundSettings = settingsStoreFacade.useSoundSettings()
 
   return (
-    <Box sx={{ p: 0, pb: 12 }}>
+    <Box sx={{ p: 0, pb: 14 }}>
       <ScreenHeader category="설정" title="환경 설정" subtitle="준비 중" />
-      <GameStage stageSx={{ px: 3, py: 3 }}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1, flexWrap: 'wrap', gap: 1 }}>
-          <Typography variant="h1" sx={{ fontSize: 22, flex: 1, minWidth: 180 }}>
-            설정
-          </Typography>
-          <Chip label="기능 연결 전" color="primary" variant="outlined" />
-        </Stack>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-          현재는 설정 화면의 형태만 준비되어 있습니다.
+      <GameStage stageSx={{ px: { xs: 2.5, sm: 3 }, pt: 3, pb: 5 }}>
+        <Typography variant="h1" sx={{ fontSize: 22, mb: 3.5 }}>
+          설정
         </Typography>
 
-        <Stack spacing={1.25}>
-          {SETTING_ROWS.map((row) => (
-            <Box
-              key={row.title}
-              sx={{
-                bgcolor: 'background.paper',
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 2,
-                p: 2,
-              }}
-            >
-              <Stack direction="row" spacing={1.5} alignItems="center">
-                <Box
+        <Stack spacing={2.75}>
+          <SettingsSection title="사운드 설정">
+            <VolumeControl
+              label="BGM"
+              value={soundSettings.bgmVolume}
+              onChange={settingsStoreFacade.setBgmVolume}
+            />
+            <VolumeControl
+              label="효과음"
+              value={soundSettings.sfxVolume}
+              onChange={settingsStoreFacade.setSfxVolume}
+            />
+          </SettingsSection>
+
+          <SettingsSection title="알림 설정" flush>
+            <SettingRowShell>
+              <Typography
+                sx={{
+                  minWidth: 0,
+                  flex: 1,
+                  fontWeight: 800,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                푸시알림
+              </Typography>
+              <Switch
+                checked={pushEnabled}
+                onChange={(event) => setPushEnabled(event.target.checked)}
+                sx={{ flex: '0 0 auto', mr: -1 }}
+              />
+            </SettingRowShell>
+          </SettingsSection>
+
+          <SettingsSection title="기타 설정" flush>
+            <Stack divider={<Divider flexItem />}>
+              {miscSettings.map((label) => (
+                <Button
+                  key={label}
+                  fullWidth
+                  onClick={() => setActiveDialog(label)}
                   sx={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 1.5,
-                    display: 'grid',
-                    placeItems: 'center',
-                    bgcolor: 'rgba(242,127,117,0.1)',
-                    color: '#f27f75',
-                    fontWeight: 900,
-                    flex: '0 0 auto',
+                    minHeight: 52,
+                    px: 2.25,
+                    minWidth: 0,
+                    justifyContent: 'space-between',
+                    borderRadius: 0,
+                    color: label === '로그아웃' ? 'error.main' : 'text.primary',
+                    gap: 1,
                   }}
                 >
-                  설
-                </Box>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: 900 }}>{row.title}</Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    {row.desc}
+                  <Typography
+                    component="span"
+                    sx={{
+                      minWidth: 0,
+                      flex: 1,
+                      fontWeight: 800,
+                      textAlign: 'left',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {label}
                   </Typography>
-                </Box>
-              </Stack>
-            </Box>
-          ))}
-        </Stack>
-
-        <Stack direction="row" spacing={1} sx={{ mt: 3, flexWrap: 'wrap', gap: 1 }}>
-          <Button variant="contained" onClick={() => navigate('/island')}>
-            마이섬으로
-          </Button>
-          <Button variant="outlined" onClick={() => navigate('/shop')}>
-            상점으로
-          </Button>
+                  <Box
+                    component="span"
+                    sx={{
+                      flex: '0 0 auto',
+                      color: 'text.secondary',
+                      fontSize: 18,
+                      lineHeight: 1,
+                    }}
+                  >
+                    &gt;
+                  </Box>
+                </Button>
+              ))}
+            </Stack>
+          </SettingsSection>
         </Stack>
       </GameStage>
+
+      <Dialog
+        open={activeDialog !== null}
+        onClose={() => setActiveDialog(null)}
+        disableScrollLock
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {activeDialog}
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            해당 기능은 준비 중입니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setActiveDialog(null)}>닫기</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
+
+const SettingsSection = ({
+  title,
+  children,
+  flush = false,
+}: {
+  title: string
+  children: ReactNode
+  flush?: boolean
+}) => (
+  <Box component="section">
+    <Typography
+      variant="h2"
+      sx={{
+        fontSize: 16,
+        mb: 1,
+        px: 0.5,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {title}
+    </Typography>
+    <Box
+      sx={{
+        bgcolor: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider',
+        borderRadius: 2,
+        p: flush ? 0 : 2.25,
+        overflow: 'hidden',
+      }}
+    >
+      {children}
+    </Box>
+  </Box>
+)
+
+const SettingRowShell = ({ children }: { children: ReactNode }) => (
+  <Box
+    sx={{
+      minHeight: 52,
+      px: 2.25,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+    }}
+  >
+    {children}
+  </Box>
+)
+
+const VolumeControl = ({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+}) => (
+  <Box sx={{ py: 0.45 }}>
+    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.15, gap: 1 }}>
+      <Typography sx={{ minWidth: 0, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {label}
+      </Typography>
+      <Typography variant="body2" sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}>
+        {value}%
+      </Typography>
+    </Stack>
+    <Slider
+      value={value}
+      min={SOUND_VOLUME_MIN}
+      max={SOUND_VOLUME_MAX}
+      step={SOUND_VOLUME_STEP}
+      onChange={(_, nextValue) => onChange(Array.isArray(nextValue) ? nextValue[0] : nextValue)}
+      aria-label={`${label} 음량`}
+      sx={{ width: 'calc(100% - 12px)', mx: 0.75, py: 0.5 }}
+    />
+  </Box>
+)

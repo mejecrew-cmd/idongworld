@@ -81,11 +81,11 @@ export const HubHeartScene = () => {
   }, [recruitedAidongs, unlockedDiaries, autoDiaryShown])
 
   return (
-    <Box sx={{ minHeight: '100%', pb: 6 }}>
+    <Box sx={{ p: 0, pb: 12 }}>
       <ScreenHeader category="마이섬" title="허브" subtitle={hostName ? `${hostName}의 SOOKSO` : undefined} />
 
       {/* 마이섬 풀샷 (배경 + 캐릭터들) */}
-      <GameStage sx={{ mb: 2 }}>
+      <GameStage sx={{ mb: 2 }} stageSx={{ px: 3, py: 3 }}>
         <Box
           sx={{
             position: 'relative',
@@ -194,7 +194,7 @@ export const HubHeartScene = () => {
         </Box>
       </GameStage>
 
-      <GameStage stageSx={{ px: 3 }}>
+      <GameStage stageSx={{ px: 3, py: 3 }}>
         {/* 영입 진행도 */}
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 2 }}>
           {ALL_AIDONGS.map((id) => {

@@ -1,28 +1,26 @@
-﻿/**
+/**
  * packages/frontend/src/screens/LoginScreen.tsx
  * ------------------------------------------------------------
- * 역할: 게스트 로그인과 소셜 로그인 진입점을 제공하는 첫 화면이다.
- * 연결: guest는 backend `/api/auth/guest`, social은 Firebase Auth와 `/api/auth/session` skeleton을 사용한다.
- * 주의: Google/Twitter 버튼은 기본적으로 준비중 상태이며, `VITE_SOCIAL_LOGIN_ENABLED=true`일 때만 실제 popup을 연다.
+ * Role: first account entry screen with login/signup UI shells.
+ * Note: social auth buttons are UI-only for now; guest login is the only active path.
  */
-import { useEffect, useState } from 'react'
-import { Alert, Box, Button, Stack, Tooltip, Typography } from '@mui/material'
+import { useState } from 'react'
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { api } from '@/lib/api'
 import { trackEvent } from '@/lib/analytics'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { accountStoreFacade } from '@/lib/storeFacades'
-import {
-  firebaseSignInSocial,
-  isFirebaseEnabled,
-  type SocialAuthProvider,
-} from '@/lib/firebase'
-
-const SOCIAL_LOGIN_ENABLED = import.meta.env.VITE_SOCIAL_LOGIN_ENABLED === 'true'
-
-function providerLabel(provider: SocialAuthProvider): string {
-  return provider === 'google' ? 'Google' : 'Twitter'
-}
 
 function readOnboardingComplete(user: unknown): boolean {
   return Boolean(
@@ -42,18 +40,21 @@ function readOpeningSeen(user: unknown): boolean {
   )
 }
 
+const authProviders = [
+  { label: 'Google', mark: 'G', tone: '#4285f4' },
+  { label: 'Twitter', mark: 'X', tone: '#111111' },
+  { label: 'Kakao', mark: 'K', tone: '#f9d800' },
+  { label: 'LINE', mark: 'L', tone: '#06c755' },
+  { label: 'Naver', mark: 'N', tone: '#03c75a' },
+  { label: 'Apple', mark: 'A', tone: '#1d1d1f' },
+  { label: 'Facebook', mark: 'f', tone: '#1877f2' },
+] as const
+
 export const LoginScreen = () => {
   const navigate = useNavigate()
-  const firebaseUid = accountStoreFacade.useFirebaseUid()
-  const openingSeen = accountStoreFacade.useOpeningSeen()
-  const onboardingComplete = accountStoreFacade.useOnboardingComplete()
+  const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (!firebaseUid) return
-    navigate(onboardingComplete || openingSeen ? '/island' : '/title', { replace: true })
-  }, [firebaseUid, navigate, onboardingComplete, openingSeen])
 
   const handleGuest = async () => {
     setLoading(true)
@@ -79,42 +80,6 @@ export const LoginScreen = () => {
     setLoading(false)
   }
 
-  const handleSocial = (provider: SocialAuthProvider) => async () => {
-    if (!SOCIAL_LOGIN_ENABLED || !isFirebaseEnabled) {
-      setError(`${providerLabel(provider)} 로그인은 준비 중입니다. 지금은 게스트로 시작해 주세요.`)
-      trackEvent('login_attempt_disabled', { provider })
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-    try {
-      const user = await firebaseSignInSocial(provider)
-      if (!user) throw new Error('firebase_disabled')
-      const result = await api.authSession(user.uid, {
-        provider,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-      })
-      accountStoreFacade.mergeAccountState({
-        firebaseUid: result.uid,
-        isGuest: false,
-        openingSeen: readOpeningSeen(result.user),
-        onboardingComplete: readOnboardingComplete(result.user),
-        nickname: user.displayName ?? user.email ?? providerLabel(provider),
-      })
-      trackEvent('login', { method: provider })
-      navigate(readOnboardingComplete(result.user) || readOpeningSeen(result.user) ? '/island' : '/title')
-    } catch (e) {
-      console.warn(`[auth] ${provider} login failed`, e)
-      setError(`${providerLabel(provider)} 로그인 준비 중 문제가 발생했습니다. 게스트로 시작해 주세요.`)
-      trackEvent('login_error', { provider })
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <Box
       sx={{
@@ -123,56 +88,120 @@ export const LoginScreen = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        flexDirection: 'column',
-        gap: 3,
-        bgcolor: 'background.default',
+        px: 2,
+        py: 4,
+        overflow: 'hidden',
+        background:
+          'radial-gradient(circle at 18% 12%, rgba(242,127,117,0.16), transparent 30%), linear-gradient(180deg, #f6fbf7 0%, #edf7f2 48%, #fffefa 100%)',
       }}
     >
-      <ScreenHeader category="인증" title="로그인" subtitle="게스트 또는 소셜 로그인" />
-      <Typography variant="h1">아이동월드</Typography>
-      <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-        00 로그인
-      </Typography>
-      {error && <Alert severity="warning" sx={{ maxWidth: 320 }}>{error}</Alert>}
-      <Stack spacing={1.5} sx={{ minWidth: 280 }}>
-        <Button variant="contained" size="large" onClick={handleGuest} disabled={loading}>
-          {loading ? '...' : '게스트로 시작'}
-        </Button>
+      <ScreenHeader category="계정" title="로그인" subtitle="계정 진입" />
+      <Stack
+        spacing={2.5}
+        sx={{
+          width: '100%',
+          maxWidth: 360,
+          p: 2.5,
+          borderRadius: 2,
+          bgcolor: 'rgba(255,254,250,0.92)',
+          border: '1px solid rgba(62,155,143,0.18)',
+          boxShadow: '0 18px 42px rgba(39,51,51,0.12)',
+        }}
+      >
+        <Stack spacing={1.25} sx={{ alignItems: 'center', textAlign: 'center' }}>
+          <Box
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: '50%',
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: 'primary.light',
+              color: 'primary.dark',
+              boxShadow: 'inset 0 0 0 1px rgba(62,155,143,0.18)',
+            }}
+          >
+            <CircularProgress size={22} thickness={4.5} color="inherit" />
+          </Box>
+          <Typography variant="h1">아이동월드</Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            숙소 불을 켜는 중...
+          </Typography>
+        </Stack>
 
-        <Tooltip title="준비 중입니다. 지금은 게스트로 시작해 주세요." arrow>
-          <span>
+        <ToggleButtonGroup
+          fullWidth
+          exclusive
+          value={mode}
+          onChange={(_, value: 'login' | 'signup' | null) => value && setMode(value)}
+          sx={{
+            '& .MuiToggleButton-root': {
+              py: 0.75,
+              borderColor: 'rgba(62,155,143,0.22)',
+              fontWeight: 800,
+            },
+            '& .Mui-selected': {
+              bgcolor: 'primary.light',
+              color: 'primary.dark',
+            },
+          }}
+        >
+          <ToggleButton value="login">로그인</ToggleButton>
+          <ToggleButton value="signup">회원가입</ToggleButton>
+        </ToggleButtonGroup>
+
+        {error && <Alert severity="warning">{error}</Alert>}
+
+        <Stack spacing={1}>
+          {authProviders.map((provider) => (
             <Button
+              key={provider.label}
               variant="outlined"
               fullWidth
-              onClick={handleSocial('google')}
-              disabled={loading}
-              sx={{ justifyContent: 'flex-start', py: 1 }}
+              disabled
+              sx={{
+                height: 42,
+                justifyContent: 'flex-start',
+                px: 1.25,
+                bgcolor: 'rgba(255,255,255,0.74)',
+                '&.Mui-disabled': {
+                  color: 'text.primary',
+                  borderColor: 'rgba(39,51,51,0.1)',
+                  opacity: 0.72,
+                },
+              }}
             >
-              <span style={{ marginRight: 8, fontWeight: 700 }}>G</span> Google 로그인
-              <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.6 }}>준비중</span>
+              <Box
+                component="span"
+                sx={{
+                  width: 24,
+                  height: 24,
+                  mr: 1.25,
+                  borderRadius: '50%',
+                  display: 'inline-grid',
+                  placeItems: 'center',
+                  bgcolor: provider.tone,
+                  color: provider.label === 'Kakao' ? '#2f2410' : '#fff',
+                  fontSize: 13,
+                  fontWeight: 900,
+                }}
+              >
+                {provider.mark}
+              </Box>
+              {provider.label}로 {mode === 'login' ? '로그인' : '회원가입'}
+              <Box component="span" sx={{ ml: 'auto', fontSize: 11, color: 'text.secondary' }}>
+                준비중
+              </Box>
             </Button>
-          </span>
-        </Tooltip>
-        <Tooltip title="준비 중입니다. 지금은 게스트로 시작해 주세요." arrow>
-          <span>
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={handleSocial('twitter')}
-              disabled={loading}
-              sx={{ justifyContent: 'flex-start', py: 1 }}
-            >
-              <span style={{ marginRight: 8, fontWeight: 700 }}>X</span> Twitter 로그인
-              <span style={{ marginLeft: 'auto', fontSize: 11, opacity: 0.6 }}>준비중</span>
-            </Button>
-          </span>
-        </Tooltip>
+          ))}
+        </Stack>
+
+        <Divider>또는</Divider>
+
+        <Button variant="contained" size="large" onClick={handleGuest} disabled={loading} fullWidth>
+          {loading ? '게스트 숙소 준비 중...' : '게스트 로그인'}
+        </Button>
       </Stack>
-      <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1, maxWidth: 320, textAlign: 'center', lineHeight: 1.6 }}>
-        현재 기본 진입은 게스트 모드입니다.
-        <br />
-        Google/Twitter 로그인은 설정 완료 후 활성화됩니다.
-      </Typography>
     </Box>
   )
 }

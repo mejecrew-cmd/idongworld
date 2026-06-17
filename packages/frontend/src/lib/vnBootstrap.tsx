@@ -23,6 +23,7 @@ import * as codex from '@idongworld/codex'
 import { incrementRetryCount } from '@idongworld/gacha'
 import { AidongSprite } from '@/components/AidongSprite'
 import type { AidongCharacterId, ExpressionId } from '@/components/AidongSprite'
+import { play as playAudio } from '@/data/audio'
 
 // useUserStore 의존 정착 완료 — 모든 trigger 가 host·myAidong·codex·gacha actions 위임
 
@@ -86,8 +87,8 @@ export function bootstrapVNRunner(): void {
         host.consumeMaterial(matId as host.MaterialId, 1)
       },
     },
-    onPlaySfx: () => {
-      // TODO: Howler.js 연동 (Phase 1.5)
+    onPlaySfx: (sfx) => {
+      playAudio(sfx)
     },
   })
 }

@@ -37,6 +37,7 @@ import { registerModules } from './lib/moduleRegistry'
 import { bootstrapAnalytics } from './lib/analytics'
 import { bootstrapBusBridge } from './lib/busBridge'
 import { bootstrapModuleListeners } from './lib/moduleListeners'
+import { bootstrapAudioManager } from './lib/audioManager'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { MobilePreview } from './components/MobilePreview'
 
@@ -48,6 +49,9 @@ bootstrapBusBridge()
 
 // 0c. 모듈 간 자동 연결 (aidong:recruited → codex 자동 등재 등)
 bootstrapModuleListeners()
+
+// 0d. 사운드 설정 변경을 활성 오디오 인스턴스에 반영한다.
+bootstrapAudioManager()
 
 // 1. 모듈 manifest 등록·의존성 검증 (실패 시 throw → ErrorBoundary)
 registerModules()

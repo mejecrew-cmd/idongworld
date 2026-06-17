@@ -33,6 +33,12 @@ import { persist } from 'zustand/middleware'
 import { INITIAL_NEEDS, NEED_KEYS, type NeedKey } from '@/data/needs'
 import { CARE_ACTIONS } from '@/data/careActions'
 import { getCurrentZone } from '@/data/schedZone'
+import {
+  DEFAULT_SOUND_SETTINGS,
+  clampVolume,
+  type SoundChannel,
+  type SoundSettings,
+} from '@/data/settings'
 
 export type AidongCharacterId = '황금멍' | '춤냥' | '양털곰' | '단풍볼' | '날카여우'
 
@@ -145,7 +151,9 @@ export interface UserState {
   // 옷 (Phase 1: 색상 토글)
   equippedOutfit: Record<string, string>   // [char] = outfitId
   equippedItems: Record<string, string[]>  // [char] = host inventory itemIds currently equipped
+  soundSettings: SoundSettings
   setOutfit: (char: AidongCharacterId, outfitId: string) => void
+  setSoundVolume: (channel: SoundChannel, volume: number) => void
 }
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -176,6 +184,7 @@ const initialUser = {
   harborAssignedChars: [] as AidongCharacterId[],
   equippedOutfit: {} as Record<string, string>,
   equippedItems: {} as Record<string, string[]>,
+  soundSettings: DEFAULT_SOUND_SETTINGS,
 }
 
 export const useUserStore = create<UserState>()(
@@ -339,6 +348,15 @@ export const useUserStore = create<UserState>()(
       setOutfit: (char, outfitId) =>
         set((s) => ({
           equippedOutfit: { ...s.equippedOutfit, [char]: outfitId },
+        })),
+
+      setSoundVolume: (channel, volume) =>
+        set((s) => ({
+          soundSettings: {
+            ...DEFAULT_SOUND_SETTINGS,
+            ...s.soundSettings,
+            [channel === 'bgm' ? 'bgmVolume' : 'sfxVolume']: clampVolume(volume),
+          },
         })),
 
       chargeDiceFromHarbor: () => {

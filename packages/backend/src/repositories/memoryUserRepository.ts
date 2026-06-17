@@ -7,6 +7,7 @@
  */
 import {
   createGuestUser,
+  DEFAULT_SOUND_SETTINGS,
   getUser,
   listUsers,
   putUser,
@@ -43,6 +44,7 @@ function createAuthDoc(input: AuthUserInput): UserDoc {
     gems: 0,
     openingSeen: false,
     onboardingComplete: false,
+    soundSettings: DEFAULT_SOUND_SETTINGS,
     recruitedAidongs: [],
     firstGachaAttempts: 0,
     affinities: {},

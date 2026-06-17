@@ -572,10 +572,10 @@ export const NavigationBoardScene = () => {
   }
 
   return (
-    <Box sx={{ pb: 4 }}>
+    <Box sx={{ p: 0, pb: 12 }}>
       <ScreenHeader category="항해" title="이웃섬 보드" subtitle={route.name} />
       {/* 헤더 */}
-      <GameStage sx={{ mb: 2 }} stageSx={{ px: 2, pt: 1 }}>
+      <GameStage sx={{ mb: 2 }} stageSx={{ px: 3, py: 3 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Button
             size="small"

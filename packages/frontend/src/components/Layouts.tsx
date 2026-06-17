@@ -33,7 +33,7 @@ const appShellSx = {
   },
 } as const
 
-export const MyIslandLayout = () => (
+const MainTabLayout = () => (
   <Box sx={{ ...appShellSx, pt: '72px', pb: '88px' }}>
     <HUD />
     <Outlet />
@@ -41,12 +41,9 @@ export const MyIslandLayout = () => (
   </Box>
 )
 
-export const VoyageLayout = () => (
-  <Box sx={{ ...appShellSx, pt: '72px', pb: 3 }}>
-    <HUD />
-    <Outlet />
-  </Box>
-)
+export const MyIslandLayout = MainTabLayout
+
+export const VoyageLayout = MainTabLayout
 
 export const FullScreenLayout = () => (
   <Box sx={appShellSx}>

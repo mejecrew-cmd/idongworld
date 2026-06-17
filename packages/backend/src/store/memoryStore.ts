@@ -16,6 +16,16 @@
 // backend 분리 이후에는 각 모듈/데이터 카탈로그의 id를 그대로 받아들이도록 string으로 둔다.
 export type AidongCharacterId = string
 
+export interface SoundSettings {
+  bgmVolume: number
+  sfxVolume: number
+}
+
+export const DEFAULT_SOUND_SETTINGS: SoundSettings = {
+  bgmVolume: 100,
+  sfxVolume: 100,
+}
+
 // UserDoc:
 // guest user와 account 초기값을 담는 memory 문서 형태다.
 // gameplay module 상태는 전용 repository document에 저장하는 것이 원칙이다.
@@ -33,6 +43,7 @@ export interface UserDoc {
   gems: number
   openingSeen: boolean
   onboardingComplete: boolean
+  soundSettings: SoundSettings
   recruitedAidongs: AidongCharacterId[]
   firstGachaCandidate?: AidongCharacterId
   firstGachaAttempts: number
@@ -67,6 +78,7 @@ export function createGuestUser(): UserDoc {
     gems: 0,
     openingSeen: false,
     onboardingComplete: false,
+    soundSettings: DEFAULT_SOUND_SETTINGS,
     recruitedAidongs: [],
     firstGachaAttempts: 0,
     affinities: {},

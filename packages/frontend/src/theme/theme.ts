@@ -32,6 +32,8 @@ export const theme = createTheme({
         body: {
           backgroundColor: '#f6fbf7',
           color: '#273333',
+          overflowY: 'scroll',
+          scrollbarGutter: 'stable',
         },
         '*': {
           boxSizing: 'border-box',

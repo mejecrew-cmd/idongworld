@@ -5,7 +5,7 @@
  * 연결: route/service가 memory와 Mongo 구현 차이를 알지 않도록 같은 인터페이스를 제공한다.
  * 주의: business rule은 service에 두고, repository는 읽기/쓰기와 기본 document 생성에 집중한다.
  */
-import type { UserDoc } from '../store/memoryStore.js'
+import { DEFAULT_SOUND_SETTINGS, type UserDoc } from '../store/memoryStore.js'
 import { UserModel } from '../models/UserModel.js'
 import { mongoHostStateRepository } from './mongoHostStateRepository.js'
 import type { HostStatePatch } from './hostStateRepository.js'
@@ -15,6 +15,7 @@ function toUserDoc(doc: unknown): UserDoc {
   const plain = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>
   delete plain._id
   if (plain.openingSeen === undefined) plain.openingSeen = true
+  if (plain.soundSettings === undefined) plain.soundSettings = DEFAULT_SOUND_SETTINGS
   return plain as unknown as UserDoc
 }
 
@@ -30,6 +31,7 @@ function createGuestDoc(): UserDoc {
     gems: 0,
     openingSeen: false,
     onboardingComplete: false,
+    soundSettings: DEFAULT_SOUND_SETTINGS,
     recruitedAidongs: [],
     firstGachaAttempts: 0,
     affinities: {},
@@ -61,6 +63,7 @@ function createAuthDoc(input: AuthUserInput): UserDoc {
     gems: 0,
     openingSeen: false,
     onboardingComplete: false,
+    soundSettings: DEFAULT_SOUND_SETTINGS,
     recruitedAidongs: [],
     firstGachaAttempts: 0,
     affinities: {},

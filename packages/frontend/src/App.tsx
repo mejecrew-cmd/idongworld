@@ -21,7 +21,6 @@
  */
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { usePageTracking } from './lib/usePageTracking'
-import { accountStoreFacade } from './lib/storeFacades'
 
 import { LoginScreen } from './screens/LoginScreen'
 import { TitleScreen } from './screens/TitleScreen'
@@ -61,13 +60,7 @@ const LegacyDebutRedirect = () => {
  * "/"로 들어왔을 때 사용자 상태에 따라 적절한 화면으로 자동 이동시킨다.
  */
 const EntryGuard = () => {
-  const firebaseUid = accountStoreFacade.useFirebaseUid()
-  const openingSeen = accountStoreFacade.useOpeningSeen()
-  const onboardingComplete = accountStoreFacade.useOnboardingComplete()
-  if (!firebaseUid) return <Navigate to="/login" replace />          // 미로그인 → 로그인
-  if (onboardingComplete || openingSeen) return <Navigate to="/island" replace />
-  if (!onboardingComplete) return <Navigate to="/title" replace />   // 미온보딩 → 타이틀
-  return <Navigate to="/island" replace />                           // 정상 → 마이섬
+  return <Navigate to="/login" replace />
 }
 
 export const App = () => {

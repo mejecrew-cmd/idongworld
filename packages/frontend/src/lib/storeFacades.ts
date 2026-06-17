@@ -113,6 +113,13 @@ export const hostStoreFacade = {
   rewardItem: (itemId: string, qty?: number) => getUserState().rewardItem(itemId, qty),
 }
 
+export const settingsStoreFacade = {
+  useSoundSettings: () => useUserStore((state) => state.soundSettings),
+  getSoundSettings: () => getUserState().soundSettings,
+  setBgmVolume: (volume: number) => getUserState().setSoundVolume('bgm', volume),
+  setSfxVolume: (volume: number) => getUserState().setSoundVolume('sfx', volume),
+}
+
 export const myAidongStoreFacade = {
   useRecruitedAidongs: () => useUserStore((state) => state.recruitedAidongs),
   useFirstGachaCandidate: () => useUserStore((state) => state.firstGachaCandidate),

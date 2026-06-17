@@ -88,7 +88,9 @@ export const MobilePreview = ({ children }: Props) => {
           bgcolor: 'background.default',
           border: '4px solid #333',
           borderRadius: 4,
-          overflow: 'auto',
+          overflowY: 'scroll',
+          overflowX: 'hidden',
+          scrollbarGutter: 'stable',
           position: 'relative',
         }}
       >
