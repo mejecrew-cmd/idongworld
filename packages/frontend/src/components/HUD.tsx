@@ -1,4 +1,5 @@
-import { Box, Chip, Typography } from '@mui/material'
+import { Box, Chip, IconButton, Tooltip, Typography } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 import { getCurrentZone } from '@/data/schedZone'
 import { hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
 import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
@@ -7,6 +8,7 @@ const ZONE_LABEL = ['휴식', '아침', '정오', '저녁', '밤']
 const ZONE_TONE = ['#9d8150', '#67bda4', '#e0a742', '#f27f75', '#5c7890']
 
 export const HUD = () => {
+  const navigate = useNavigate()
   const coins = hostStoreFacade.useCoins()
   const diamonds = hostStoreFacade.useDiamonds()
   const gems = hostStoreFacade.useGems()
@@ -93,6 +95,29 @@ export const HUD = () => {
       <HudItem label="다이아" value={diamonds} tone="#f27f75" />
       <HudItem label="주사위" value={diceCount} tone="#5c7890" compact />
       <HudItem label="아이동" value={recruitedAidongs.length} tone="#6daa62" compact />
+      <Tooltip title="설정">
+        <IconButton
+          aria-label="설정"
+          size="small"
+          onClick={() => navigate('/setting')}
+          sx={{
+            width: 32,
+            height: 32,
+            flex: '0 0 32px',
+            borderRadius: 1.5,
+            color: 'primary.main',
+            bgcolor: 'rgba(62,155,143,0.08)',
+            border: '1px solid rgba(62,155,143,0.16)',
+            fontSize: 18,
+            fontWeight: 900,
+            '&:hover': {
+              bgcolor: 'rgba(62,155,143,0.15)',
+            },
+          }}
+        >
+          ⚙
+        </IconButton>
+      </Tooltip>
     </Box>
   )
 }

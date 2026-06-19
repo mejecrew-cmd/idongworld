@@ -10,6 +10,7 @@ import { Alert, Box, Button, Chip, LinearProgress, Stack, Tab, Tabs, Typography 
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AidongSprite } from '@/components/AidongSprite'
 import { GameStage } from '@/components/GameStage'
+import { MyIslandToggle } from '@/components/MyIslandToggle'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { api } from '@/lib/api'
 import { accountStoreFacade, codexStoreFacade, hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
@@ -207,7 +208,8 @@ export const MyRoomScreen = () => {
 
   return (
     <Box sx={{ p: 0, pb: 12 }}>
-      <ScreenHeader category="숙소" title="마이룸" subtitle="정보·Aidong·도감·콜렉션·장부" />
+      <ScreenHeader category="마이섬" title="마이룸" subtitle="정보·Aidong·도감·콜렉션·장부" />
+      <MyIslandToggle />
       <GameStage stageSx={{ px: 3, py: 3 }}>
         <Typography variant="h1" sx={{ mb: 1 }}>마이룸</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>

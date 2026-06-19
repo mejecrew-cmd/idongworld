@@ -17,7 +17,9 @@ import { useState, useMemo } from 'react'
 import { Box, Typography, Modal, Button, Chip, Stack, LinearProgress, Divider } from '@mui/material'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ZONES, PHASE_LABEL, PHASE_COLOR, getZoneKindLabel, type Zone } from '@/data/zones'
+import { GameStage } from '@/components/GameStage'
 import { MiniGameModal, type MiniGameId } from '@/components/MiniGameModal'
+import { MyIslandToggle } from '@/components/MyIslandToggle'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { api } from '@/lib/api'
 import { accountStoreFacade, myAidongStoreFacade, myIslandStoreFacade } from '@/lib/storeFacades'
@@ -163,13 +165,15 @@ export const IslandFullMapScreen = () => {
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto', pb: 12 }}>
+    <Box sx={{ p: 0, pb: 12 }}>
       <ScreenHeader
         category={isOpeningTour ? '회색섬→하트섬' : '마이섬'}
         title={isOpeningTour ? '둘러보기 (14구역)' : '풀맵 (15구역)'}
         subtitle={isOpeningTour ? `${tourVisited.size} / ${tourTargets.length}` : undefined}
       />
-      <Typography variant="h1" sx={{ mb: 1, mt: 2 }}>
+      {!isOpeningTour && <MyIslandToggle />}
+      <GameStage stageSx={{ px: { xs: 1.5, sm: 2 }, py: isOpeningTour ? 3 : 1 }}>
+      <Typography variant="h1" sx={{ mb: 1, mt: 0 }}>
         {isOpeningTour ? '청소가 끝나는 동안, 섬을 둘러봐요' : '마이섬 전체 지도'}
       </Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -524,6 +528,7 @@ export const IslandFullMapScreen = () => {
       </Modal>
 
       <MiniGameModal game={activeMiniGame} onClose={() => setActiveMiniGame(null)} />
+      </GameStage>
     </Box>
   )
 }

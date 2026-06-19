@@ -33,6 +33,7 @@ import { AidongSprite, OUTFIT_OPTIONS } from '@/components/AidongSprite'
 import { CareModal } from '@/components/CareModal'
 import { CustomsTransferDialog } from '@/components/CustomsTransferDialog'
 import { GameStage } from '@/components/GameStage'
+import { MyIslandToggle } from '@/components/MyIslandToggle'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { PHASE_COLOR, PHASE_LABEL, getZoneById, getZoneKindLabel } from '@/data/zones'
 import { INITIAL_NEEDS, calcMoodScore, moodFromScore, moodToExpression } from '@/data/needs'
@@ -393,6 +394,7 @@ export const LodgeScene = () => {
         title="숙소"
         subtitle={LODGE_ZONE ? `${LODGE_ZONE.areaNo} · ${getZoneKindLabel(LODGE_ZONE)}` : '방을 꾸미고 쉬는 Aidong을 돌봐요.'}
       />
+      <MyIslandToggle />
 
       <GameStage>
         <Box

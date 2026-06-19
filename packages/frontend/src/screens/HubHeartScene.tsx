@@ -22,6 +22,7 @@ import { AidongSprite } from '@/components/AidongSprite'
 import { CareModal } from '@/components/CareModal'
 import { DiaryModal } from '@/components/DiaryModal'
 import { GameStage } from '@/components/GameStage'
+import { MyIslandToggle } from '@/components/MyIslandToggle'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { calcMoodScore, moodFromScore, moodToExpression, INITIAL_NEEDS } from '@/data/needs'
 import { getCurrentZone } from '@/data/schedZone'
@@ -83,9 +84,10 @@ export const HubHeartScene = () => {
   return (
     <Box sx={{ p: 0, pb: 12 }}>
       <ScreenHeader category="마이섬" title="허브" subtitle={hostName ? `${hostName}의 SOOKSO` : undefined} />
+      <MyIslandToggle />
 
       {/* 마이섬 풀샷 (배경 + 캐릭터들) */}
-      <GameStage sx={{ mb: 2 }} stageSx={{ px: 3, py: 3 }}>
+      <GameStage sx={{ mb: 2 }}>
         <Box
           sx={{
             position: 'relative',
@@ -211,22 +213,6 @@ export const HubHeartScene = () => {
               />
             )
           })}
-        </Stack>
-
-        {/* 메인 액션 */}
-        <Stack direction="row" spacing={1.5} sx={{ mb: 3, flexWrap: 'wrap', gap: 1 }}>
-          <Button variant="contained" onClick={() => navigate('/island')}>
-            🏝️ 마이섬 허브
-          </Button>
-          <Button variant="outlined" onClick={() => navigate('/island/harbor')}>
-            ⛵ 항구로 가기
-          </Button>
-          <Button variant="outlined" onClick={() => navigate('/island/full-map')}>
-            🗺️ 마이섬 전체 지도 (15구역)
-          </Button>
-          <Button variant="outlined" onClick={() => navigate('/island/lodge')}>
-            🏠 숙소
-          </Button>
         </Stack>
 
         {/* 영입된 캐릭터 일기 */}

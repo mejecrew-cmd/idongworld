@@ -29,6 +29,7 @@ import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { CustomsTransferDialog } from '@/components/CustomsTransferDialog'
 import { api, type DecorItemConfig, type ShipTypeConfig } from '@/lib/api'
+import { MyIslandToggle } from '@/components/MyIslandToggle'
 import type { AidongCharacterId } from '@/stores/userStore'
 import { applyActionApiResponse } from '@/lib/actionApiSync'
 import {
@@ -410,6 +411,7 @@ export const HarborScene = () => {
         title="항구"
         subtitle={HARBOR_ZONE ? `${HARBOR_ZONE.areaNo} · ${getZoneKindLabel(HARBOR_ZONE)}` : '배 관리 · 아이동 배치 · 출항'}
       />
+      <MyIslandToggle />
 
       <GameStage>
         <Box
