@@ -26,6 +26,7 @@ import {
   Stack,
   Modal,
   Chip,
+  Tooltip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -222,6 +223,17 @@ function landingMatchesSlot(route: ReturnType<typeof buildNeighborRoute>, landin
   return !!landingSlot && landingSlot.index === slot.index && landing.slotType === slot.type
 }
 
+function InfoChip({
+  label,
+  color,
+}: {
+  label: string
+  title?: string
+  color?: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'
+}) {
+  return <Chip label={label} size="small" color={color} />
+}
+
 const BOARD_COLUMNS = 9
 const BOARD_ROWS = 8
 
@@ -251,6 +263,32 @@ function getPhaseLabel(phase: Phase): string {
   if (phase === 'moving') return '이동 중'
   if (phase === 'arrived') return '도착'
   return '대기'
+}
+
+function getSlotTypeLabel(slot: BoardSlot): string {
+  if (slot.index === 0 || slot.type === 'home') return '항구'
+  if (slot.type === 'character') return '이웃 아이동'
+  if (slot.type === 'treasure') return '보물'
+  if (slot.type === 'storm') return '폭풍'
+  if (slot.type === 'resource') return '자원'
+  return '빈 바다'
+}
+
+function getSlotEffect(slot: BoardSlot): string {
+  if (slot.index === 0 || slot.type === 'home') return '도착하면 항구로 복귀합니다.'
+  if (slot.type === 'character') {
+    return slot.characterId
+      ? `${slot.characterId}을 만날 수 있는 섬으로 이동합니다.`
+      : '만날 아이동이 없으면 빈 바다처럼 지나갑니다.'
+  }
+  if (slot.type === 'treasure') return '도착하면 코인 보상을 받을 수 있습니다.'
+  if (slot.type === 'storm') return '도착하면 항해 페널티가 발생할 수 있습니다.'
+  if (slot.type === 'resource') return '도착하면 항해 중 발견한 자원을 얻을 수 있습니다.'
+  return '도착하면 소량의 안전 보상을 받을 수 있습니다.'
+}
+
+function getSlotTooltip(slot: BoardSlot): string {
+  return `${slot.index}번 칸 · ${getSlotTypeLabel(slot)}: ${getSlotEffect(slot)}`
 }
 
 export const NavigationBoardScene = () => {
@@ -289,6 +327,7 @@ export const NavigationBoardScene = () => {
   const [shipInventoryOpen, setShipInventoryOpen] = useState(false)
   const [shipCustomsOpen, setShipCustomsOpen] = useState(false)
   const [careTarget, setCareTarget] = useState<AidongCharacterId | null>(null)
+  const [inspectedSlot, setInspectedSlot] = useState<BoardSlot | null>(null)
 
   const currentShipType = useMemo(
     () => shipTypes.find((shipType) => shipType.shipTypeId === shipState.shipTypeId)
@@ -587,8 +626,15 @@ export const NavigationBoardScene = () => {
             <Typography variant="h2" sx={{ fontSize: 18 }}>{route.name}</Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>{route.subtitle}</Typography>
           </Box>
-          <Chip label={`🎲 ${diceCount}`} size="small" />
-          <Chip label={`📍 ${boardPosition}/${route.slotsCount - 1}`} size="small" color="primary" />
+          <InfoChip
+            label={`🎲 ${diceCount}`}
+            title="주사위: 항해 보드에서 이동할 때 1개씩 사용하는 항해 전용 재화입니다."
+          />
+          <InfoChip
+            label={`📍 ${boardPosition}/${route.slotsCount - 1}`}
+            title="현재 위치: 항해 보드의 현재 칸 번호입니다."
+            color="primary"
+          />
         </Stack>
       </GameStage>
 
@@ -660,9 +706,11 @@ export const NavigationBoardScene = () => {
           }}
         >
           <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap', gap: 1 }}>
-            <Chip label={getPhaseLabel(phase)} color={phase === 'idle' ? 'default' : 'primary'} size="small" />
-            <Chip label={`위치 ${boardPosition}/${route.slotsCount - 1}`} size="small" />
-            <Chip label={`주사위 ${diceCount}`} size="small" />
+            <InfoChip
+              label={getPhaseLabel(phase)}
+              title="항해 상태: 대기, 주사위 굴림, 이동, 도착 상태를 표시합니다."
+              color={phase === 'idle' ? 'default' : 'primary'}
+            />
             {HARBOR_ZONE && (
               <Chip
                 label={`${HARBOR_ZONE.areaNo} 출발 anchor`}
@@ -752,8 +800,17 @@ export const NavigationBoardScene = () => {
           const isCurrent = slot.index === boardPosition
           const cell = getPerimeterCell(slot.index)
           return (
+            <Tooltip key={slot.index} title={getSlotTooltip(slot)}>
             <Box
-              key={slot.index}
+              role="button"
+              tabIndex={0}
+              onClick={() => setInspectedSlot(slot)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  setInspectedSlot(slot)
+                }
+              }}
               sx={{
                 gridColumn: cell.gridColumn,
                 gridRow: cell.gridRow,
@@ -773,6 +830,12 @@ export const NavigationBoardScene = () => {
                 transform: isCurrent ? 'translateY(-2px)' : 'none',
                 transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease',
                 boxShadow: isCurrent ? '0 10px 18px rgba(36,107,111,0.24)' : '0 2px 5px rgba(66,86,80,0.08)',
+                cursor: 'help',
+                outline: 'none',
+                '&:hover, &:focus-visible': {
+                  borderColor: '#246b6f',
+                  boxShadow: '0 10px 18px rgba(36,107,111,0.2)',
+                },
               }}
             >
               {slot.type === 'character' && slot.characterId ? (
@@ -836,9 +899,38 @@ export const NavigationBoardScene = () => {
                 </Box>
               )}
             </Box>
+            </Tooltip>
           )
         })}
       </GameStage>
+
+      <Dialog open={!!inspectedSlot} onClose={() => setInspectedSlot(null)} maxWidth="xs" fullWidth>
+        <DialogTitle>
+          {inspectedSlot ? `${inspectedSlot.index}번 칸 · ${getSlotTypeLabel(inspectedSlot)}` : '칸 정보'}
+        </DialogTitle>
+        <DialogContent dividers>
+          {inspectedSlot && (
+            <Stack spacing={1.25}>
+              <Typography variant="h2" sx={{ fontSize: 18 }}>
+                {getSlotCaption(inspectedSlot)}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {getSlotEffect(inspectedSlot)}
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                <Chip label={`타입 ${getSlotTypeLabel(inspectedSlot)}`} size="small" />
+                <Chip label={`위치 ${inspectedSlot.index}/${route.slotsCount - 1}`} size="small" />
+                {inspectedSlot.characterId && (
+                  <Chip label={`아이동 ${inspectedSlot.characterId}`} size="small" color="primary" />
+                )}
+              </Stack>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInspectedSlot(null)}>닫기</Button>
+        </DialogActions>
+      </Dialog>
 
       <GameStage sx={{ mb: 3 }} stageSx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1, p: 2 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2} sx={{ mb: 2 }}>

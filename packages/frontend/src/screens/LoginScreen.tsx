@@ -43,11 +43,6 @@ function readOpeningSeen(user: unknown): boolean {
 const authProviders = [
   { label: 'Google', mark: 'G', tone: '#4285f4' },
   { label: 'Twitter', mark: 'X', tone: '#111111' },
-  { label: 'Kakao', mark: 'K', tone: '#f9d800' },
-  { label: 'LINE', mark: 'L', tone: '#06c755' },
-  { label: 'Naver', mark: 'N', tone: '#03c75a' },
-  { label: 'Apple', mark: 'A', tone: '#1d1d1f' },
-  { label: 'Facebook', mark: 'f', tone: '#1877f2' },
 ] as const
 
 export const LoginScreen = () => {
@@ -66,6 +61,7 @@ export const LoginScreen = () => {
       accountStoreFacade.mergeAccountState({
         firebaseUid: r.uid,
         isGuest: true,
+        gameStartedAt: accountStoreFacade.getAccountState().gameStartedAt ?? Date.now(),
         openingSeen: readOpeningSeen(r.user),
         onboardingComplete: readOnboardingComplete(r.user),
         nickname: '게스트',
@@ -181,7 +177,7 @@ export const LoginScreen = () => {
                   display: 'inline-grid',
                   placeItems: 'center',
                   bgcolor: provider.tone,
-                  color: provider.label === 'Kakao' ? '#2f2410' : '#fff',
+                  color: '#fff',
                   fontSize: 13,
                   fontWeight: 900,
                 }}

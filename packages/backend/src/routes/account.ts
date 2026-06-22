@@ -12,7 +12,13 @@ import { DEFAULT_SOUND_SETTINGS } from '../store/memoryStore.js'
 
 export const accountRouter = Router()
 
-const ACCOUNT_FIELDS = ['isGuest', 'nickname', 'openingSeen', 'onboardingComplete', 'hostName', 'soundSettings'] as const
+const ACCOUNT_FIELDS = ['isGuest', 'nickname', 'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName', 'soundSettings'] as const
+
+function normalizeTimestamp(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.floor(value)
+    : undefined
+}
 
 function clampVolume(value: unknown) {
   const numberValue = typeof value === 'number' && Number.isFinite(value) ? value : 0
@@ -38,6 +44,11 @@ function pickAccountPatch(source: Record<string, unknown>) {
   if ('soundSettings' in patch) {
     patch.soundSettings = normalizeSoundSettings(patch.soundSettings)
   }
+  if ('gameStartedAt' in patch) {
+    const gameStartedAt = normalizeTimestamp(patch.gameStartedAt)
+    if (gameStartedAt === undefined) delete patch.gameStartedAt
+    else patch.gameStartedAt = gameStartedAt
+  }
   return patch
 }
 
@@ -53,6 +64,7 @@ accountRouter.get('/state', async (req, res) => {
       uid: user.uid,
       isGuest: user.isGuest,
       nickname: user.nickname,
+      gameStartedAt: user.gameStartedAt,
       openingSeen: user.openingSeen,
       onboardingComplete: user.onboardingComplete,
       hostName: user.hostName,
@@ -78,6 +90,7 @@ accountRouter.patch('/state', async (req, res) => {
       uid: updated.uid,
       isGuest: updated.isGuest,
       nickname: updated.nickname,
+      gameStartedAt: updated.gameStartedAt,
       openingSeen: updated.openingSeen,
       onboardingComplete: updated.onboardingComplete,
       hostName: updated.hostName,

@@ -80,6 +80,7 @@ export interface UserState {
   firebaseUid?: string
   nickname?: string
   isGuest: boolean
+  gameStartedAt?: number
 
   // 게임 자원
   coins: number
@@ -160,6 +161,7 @@ const today = () => new Date().toISOString().slice(0, 10)
 
 const initialUser = {
   isGuest: false,
+  gameStartedAt: undefined as number | undefined,
   coins: 100,  // 시작 시 100 코인 (케어 액션 검증)
   diamonds: 0,
   gems: 0,
@@ -194,7 +196,13 @@ export const useUserStore = create<UserState>()(
 
       // 게스트 로그인 (backend 미동작 시 fallback) — 타임스탬프 기반 임시 uid
       loginGuest: () =>
-        set({ isGuest: true, nickname: '게스트', openingSeen: false, firebaseUid: 'guest-' + Date.now() }),
+        set((s) => ({
+          isGuest: true,
+          nickname: '게스트',
+          openingSeen: false,
+          firebaseUid: 'guest-' + Date.now(),
+          gameStartedAt: s.gameStartedAt ?? Date.now(),
+        })),
 
       // 전체 상태 초기화 (디버그 리셋 또는 Phase 1.5 진짜 logout)
       logout: () => set(initialUser),

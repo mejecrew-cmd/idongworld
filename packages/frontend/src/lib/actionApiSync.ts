@@ -123,6 +123,7 @@ export function applyAccountActionState(account: unknown, options: ApplyOptions 
   accountStoreFacade.mergeAccountState({
     isGuest: state.isGuest as UserState['isGuest'],
     nickname: state.nickname as UserState['nickname'],
+    gameStartedAt: state.gameStartedAt as UserState['gameStartedAt'],
     openingSeen: state.openingSeen as UserState['openingSeen'],
     onboardingComplete: state.onboardingComplete as UserState['onboardingComplete'],
     hostName: state.hostName as UserState['hostName'],

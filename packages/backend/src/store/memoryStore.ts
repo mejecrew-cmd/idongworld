@@ -37,6 +37,7 @@ export interface UserDoc {
   displayName?: string
   photoURL?: string
   nickname?: string
+  gameStartedAt?: number
   hostName?: string
   coins: number
   diamonds: number
@@ -73,6 +74,7 @@ export function createGuestUser(): UserDoc {
     uid,
     isGuest: true,
     nickname: 'guest',
+    gameStartedAt: now,
     coins: 100,
     diamonds: 0,
     gems: 0,

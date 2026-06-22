@@ -900,9 +900,21 @@ export const LodgeScene = () => {
         ))}
       </GameStage>
 
-      <Dialog open={inventoryOpen} onClose={() => setInventoryOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={inventoryOpen}
+        onClose={() => setInventoryOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        disableScrollLock
+        PaperProps={{
+          sx: {
+            width: 'min(560px, calc(100vw - 32px))',
+            m: 2,
+          },
+        }}
+      >
         <DialogTitle>숙소 인벤토리</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ maxHeight: 'min(62vh, 520px)', overflowY: 'auto' }}>
           <Typography variant="subtitle2" sx={{ mb: 1 }}>보관 중인 자원</Typography>
           <Box sx={{ mb: 2 }}>{renderInventoryList(lodgeInventory)}</Box>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>

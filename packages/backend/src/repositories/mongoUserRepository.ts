@@ -16,6 +16,7 @@ function toUserDoc(doc: unknown): UserDoc {
   delete plain._id
   if (plain.openingSeen === undefined) plain.openingSeen = true
   if (plain.soundSettings === undefined) plain.soundSettings = DEFAULT_SOUND_SETTINGS
+  if (plain.gameStartedAt === undefined) plain.gameStartedAt = plain.createdAt
   return plain as unknown as UserDoc
 }
 
@@ -26,6 +27,7 @@ function createGuestDoc(): UserDoc {
     uid,
     isGuest: true,
     nickname: 'guest',
+    gameStartedAt: now,
     coins: 100,
     diamonds: 0,
     gems: 0,
@@ -58,6 +60,7 @@ function createAuthDoc(input: AuthUserInput): UserDoc {
     displayName: input.displayName,
     photoURL: input.photoURL,
     nickname: input.displayName ?? input.email ?? input.provider,
+    gameStartedAt: now,
     coins: 100,
     diamonds: 0,
     gems: 0,

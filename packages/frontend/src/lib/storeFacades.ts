@@ -25,7 +25,7 @@ type HostStatePatch = Partial<
 >
 
 type AccountStatePatch = Partial<
-  Pick<UserState, 'firebaseUid' | 'isGuest' | 'nickname' | 'openingSeen' | 'onboardingComplete' | 'hostName'>
+  Pick<UserState, 'firebaseUid' | 'isGuest' | 'nickname' | 'gameStartedAt' | 'openingSeen' | 'onboardingComplete' | 'hostName'>
 >
 
 const getUserState = () => useUserStore.getState()
@@ -42,6 +42,7 @@ export const accountStoreFacade = {
   useFirebaseUid: () => useUserStore((state) => state.firebaseUid),
   useNickname: () => useUserStore((state) => state.nickname),
   useIsGuest: () => useUserStore((state) => state.isGuest),
+  useGameStartedAt: () => useUserStore((state) => state.gameStartedAt),
   useOnboardingComplete: () => useUserStore((state) => state.onboardingComplete),
   useOpeningSeen: () => useUserStore((state) => state.openingSeen),
   useHostName: () => useUserStore((state) => state.hostName),
@@ -52,6 +53,7 @@ export const accountStoreFacade = {
       firebaseUid: state.firebaseUid,
       isGuest: state.isGuest,
       nickname: state.nickname,
+      gameStartedAt: state.gameStartedAt,
       openingSeen: state.openingSeen,
       onboardingComplete: state.onboardingComplete,
       hostName: state.hostName,

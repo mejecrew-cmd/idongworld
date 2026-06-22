@@ -522,6 +522,8 @@ describe('backend persistence contracts', () => {
       displayName: 'Google User',
       nickname: 'Google User',
     })
+    expect(typeof google.gameStartedAt).toBe('number')
+    const gameStartedAt = google.gameStartedAt
 
     const updated = await getUserRepository().createOrUpdateAuthUser({
       uid: 'firebase-google-user',
@@ -535,6 +537,7 @@ describe('backend persistence contracts', () => {
       displayName: 'Twitter User',
       nickname: 'Google User',
     })
+    expect(updated.gameStartedAt).toBe(gameStartedAt)
 
     const aidongState = await getDedicatedModuleRepositories()['my-aidong'].getOrCreate('firebase-google-user')
     expect((aidongState as { recruitedAidongs?: string[] }).recruitedAidongs).toEqual([])

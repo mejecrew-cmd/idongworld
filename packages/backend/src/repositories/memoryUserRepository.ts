@@ -39,6 +39,7 @@ function createAuthDoc(input: AuthUserInput): UserDoc {
     displayName: input.displayName,
     photoURL: input.photoURL,
     nickname: input.displayName ?? input.email ?? input.provider,
+    gameStartedAt: now,
     coins: 100,
     diamonds: 0,
     gems: 0,
