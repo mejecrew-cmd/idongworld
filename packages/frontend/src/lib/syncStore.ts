@@ -101,7 +101,7 @@ function normalizeHostState(state: Record<string, unknown>) {
   }
 }
 
-async function hydrateSplitState(uid: string) {
+export async function hydrateSplitState(uid: string) {
   const [
     account,
     host,

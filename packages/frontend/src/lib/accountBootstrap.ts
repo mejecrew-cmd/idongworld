@@ -1,14 +1,9 @@
 /**
- * 📁 lib/accountBootstrap.ts — account 광역 모듈 DI + Firebase 통합
- * ───────────────────────────────────────────────
- * 📌 역할: account 모듈에 useUserStore + Firebase Auth 백업 훅 주입.
- *           Firebase 활성 (env 완비) 시 signInAnonymously·signInWithPopup,
- *           비활성 시 기존 게스트 흐름 유지.
- *
- * 🔗 연결:
- *   - main.tsx → bootstrapAccount() 1회
- *   - lib/firebase.ts (isFirebaseEnabled·firebaseSignInGuest·firebaseSignOut)
- *   - Auth_정책_초안 §3 Step 2
+ * packages/frontend/src/lib/accountBootstrap.ts
+ * ------------------------------------------------------------
+ * 역할: account 모듈에 로그인/로그아웃 구현을 주입하고 Firebase Auth 상태를 local store와 backend state에 연결한다.
+ * 연결: Firebase Auth -> /api/auth/session -> split state hydrate 순서로 계정별 진행상황을 복구한다.
+ * 주의: Firebase observer에서 uid만 저장하면 빈 local state로 화면이 먼저 열릴 수 있으므로, 로그인 복구 시 hydrate를 반드시 시도한다.
  */
 import { configure } from '@idongworld/account'
 import {
@@ -17,39 +12,45 @@ import {
   firebaseSignOut,
   onFirebaseAuthChanged,
 } from './firebase'
+import { api } from './api'
 import { accountStoreFacade } from './storeFacades'
+import { hydrateSplitState } from './syncStore'
+
+function readSessionProvider(providerId?: string): 'google' | 'twitter' | 'firebase' {
+  if (providerId === 'google.com') return 'google'
+  if (providerId === 'twitter.com') return 'twitter'
+  return 'firebase'
+}
 
 export function bootstrapAccount(): void {
   configure({
     getState: () => {
-      const s = accountStoreFacade.getAccountState()
+      const state = accountStoreFacade.getAccountState()
       return {
-        firebaseUid: s.firebaseUid,
-        isGuest: s.isGuest,
-        nickname: s.nickname,
-        hostName: s.hostName,
+        firebaseUid: state.firebaseUid,
+        isGuest: state.isGuest,
+        nickname: state.nickname,
+        hostName: state.hostName,
       }
     },
 
     doLoginGuest: () => {
       if (isFirebaseEnabled) {
-        // Firebase 익명 로그인 — uid 는 onFirebaseAuthChanged 가 store 에 동기
-        void firebaseSignInGuest().catch((err) => {
-          // eslint-disable-next-line no-console
-          console.warn('[account] Firebase signInGuest 실패 → 게스트 fallback', err)
+        void firebaseSignInGuest().catch((error) => {
+          console.warn('[account] Firebase signInGuest failed; using local guest fallback', error)
           accountStoreFacade.loginGuest()
         })
-      } else {
-        // Firebase 비활성 — 기존 로컬 게스트
-        accountStoreFacade.loginGuest()
+        return
       }
+
+      accountStoreFacade.loginGuest()
     },
 
     doLogout: () => {
       accountStoreFacade.logout()
       if (isFirebaseEnabled) {
         void firebaseSignOut().catch(() => {
-          // 실패해도 로컬 logout 강행
+          // Local logout already happened.
         })
       }
     },
@@ -57,21 +58,30 @@ export function bootstrapAccount(): void {
     doSetNickname: (nickname) => accountStoreFacade.setNickname(nickname),
   })
 
-  // Firebase 인증 상태 → store 동기 (활성 시만)
-  if (isFirebaseEnabled) {
-    onFirebaseAuthChanged((user) => {
-      if (!user) {
-        accountStoreFacade.logout()
-        return
-      }
+  if (!isFirebaseEnabled) return
 
-      if (user) {
-        accountStoreFacade.mergeAccountState({
-          firebaseUid: user.uid,
-          isGuest: user.isAnonymous,
-          nickname: user.displayName ?? '게스트',
-        })
-      }
+  onFirebaseAuthChanged((user) => {
+    if (!user) {
+      accountStoreFacade.logout()
+      return
+    }
+
+    const providerId = user.providerData?.[0]?.providerId
+    accountStoreFacade.mergeAccountState({
+      firebaseUid: user.uid,
+      isGuest: user.isAnonymous,
+      nickname: user.displayName ?? 'guest',
     })
-  }
+
+    void api.authSession(user.uid, {
+      provider: readSessionProvider(providerId),
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+    })
+      .then(() => hydrateSplitState(user.uid))
+      .catch((error) => {
+        console.warn('[account] failed to hydrate Firebase account session', error)
+      })
+  })
 }
