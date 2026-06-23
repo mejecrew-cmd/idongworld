@@ -11,7 +11,6 @@ import {
   Divider,
   Slider,
   Stack,
-  Switch,
   Typography,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
@@ -35,7 +34,6 @@ const miscSettings = [
 
 export const SettingsScreen = () => {
   const navigate = useNavigate()
-  const [pushEnabled, setPushEnabled] = useState(false)
   const [activeDialog, setActiveDialog] = useState<(typeof miscSettings)[number] | null>(null)
   const soundSettings = settingsStoreFacade.useSoundSettings()
 
@@ -67,28 +65,6 @@ export const SettingsScreen = () => {
               value={soundSettings.sfxVolume}
               onChange={settingsStoreFacade.setSfxVolume}
             />
-          </SettingsSection>
-
-          <SettingsSection title="알림 설정" flush>
-            <SettingRowShell>
-              <Typography
-                sx={{
-                  minWidth: 0,
-                  flex: 1,
-                  fontWeight: 800,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                푸시알림
-              </Typography>
-              <Switch
-                checked={pushEnabled}
-                onChange={(event) => setPushEnabled(event.target.checked)}
-                sx={{ flex: '0 0 auto', mr: -1 }}
-              />
-            </SettingRowShell>
           </SettingsSection>
 
           <SettingsSection title="기타 설정" flush>
@@ -204,20 +180,6 @@ const SettingsSection = ({
     >
       {children}
     </Box>
-  </Box>
-)
-
-const SettingRowShell = ({ children }: { children: ReactNode }) => (
-  <Box
-    sx={{
-      minHeight: 52,
-      px: 2.25,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 1,
-    }}
-  >
-    {children}
   </Box>
 )
 

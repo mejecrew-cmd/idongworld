@@ -122,7 +122,7 @@ export function createRouteNeighborDefault(
   const now = Date.now()
   return {
     uid,
-    localResources: seed.localResources ?? {},
+    localResources: { 'voyage-shell': 0, ...(seed.localResources ?? {}) },
     landings: seed.landings ?? {},
     progress: seed.progress ?? {},
     createdAt: now,

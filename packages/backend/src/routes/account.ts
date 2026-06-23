@@ -8,11 +8,10 @@
 import { Router } from 'express'
 import { getRequestUid } from '../middleware/auth.js'
 import { getUserRepository } from '../repositories/index.js'
-import { DEFAULT_SOUND_SETTINGS } from '../store/memoryStore.js'
 
 export const accountRouter = Router()
 
-const ACCOUNT_FIELDS = ['isGuest', 'nickname', 'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName', 'soundSettings'] as const
+const ACCOUNT_FIELDS = ['isGuest', 'nickname', 'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName'] as const
 
 function normalizeTimestamp(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0
@@ -20,29 +19,10 @@ function normalizeTimestamp(value: unknown) {
     : undefined
 }
 
-function clampVolume(value: unknown) {
-  const numberValue = typeof value === 'number' && Number.isFinite(value) ? value : 0
-  return Math.max(0, Math.min(100, Math.round(numberValue)))
-}
-
-function normalizeSoundSettings(value: unknown) {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    return DEFAULT_SOUND_SETTINGS
-  }
-  const source = value as Record<string, unknown>
-  return {
-    bgmVolume: clampVolume(source.bgmVolume),
-    sfxVolume: clampVolume(source.sfxVolume),
-  }
-}
-
 function pickAccountPatch(source: Record<string, unknown>) {
   const patch: Record<string, unknown> = {}
   for (const field of ACCOUNT_FIELDS) {
     if (field in source) patch[field] = source[field]
-  }
-  if ('soundSettings' in patch) {
-    patch.soundSettings = normalizeSoundSettings(patch.soundSettings)
   }
   if ('gameStartedAt' in patch) {
     const gameStartedAt = normalizeTimestamp(patch.gameStartedAt)
@@ -68,7 +48,6 @@ accountRouter.get('/state', async (req, res) => {
       openingSeen: user.openingSeen,
       onboardingComplete: user.onboardingComplete,
       hostName: user.hostName,
-      soundSettings: user.soundSettings ?? DEFAULT_SOUND_SETTINGS,
     },
   })
 })
@@ -94,7 +73,6 @@ accountRouter.patch('/state', async (req, res) => {
       openingSeen: updated.openingSeen,
       onboardingComplete: updated.onboardingComplete,
       hostName: updated.hostName,
-      soundSettings: updated.soundSettings ?? DEFAULT_SOUND_SETTINGS,
     },
   })
 })
