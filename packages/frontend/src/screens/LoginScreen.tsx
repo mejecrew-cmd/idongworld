@@ -22,6 +22,7 @@ import { trackEvent } from '@/lib/analytics'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { accountStoreFacade } from '@/lib/storeFacades'
 import { isFirebaseUiEnabled, startFirebaseUi } from '@/lib/firebaseUi'
+import { hydrateSplitState } from '@/lib/syncStore'
 
 function readOnboardingComplete(user: unknown): boolean {
   return Boolean(
@@ -86,16 +87,16 @@ export const LoginScreen = () => {
             displayName: user.displayName,
             photoURL: user.photoURL,
           })
+          await hydrateSplitState(r.uid)
+          const latestAccount = accountStoreFacade.getAccountState()
           accountStoreFacade.mergeAccountState({
             firebaseUid: r.uid,
             isGuest: false,
-            gameStartedAt: accountStoreFacade.getAccountState().gameStartedAt ?? Date.now(),
-            openingSeen: readOpeningSeen(r.user),
-            onboardingComplete: readOnboardingComplete(r.user),
+            gameStartedAt: latestAccount.gameStartedAt ?? Date.now(),
             nickname: user.displayName ?? user.email ?? '사용자',
           })
           trackEvent('login', { method: providerId ?? 'firebaseui' })
-          navigate(readOpeningSeen(r.user) ? '/island' : readOnboardingComplete(r.user) ? '/island' : '/title')
+          navigate(latestAccount.openingSeen || latestAccount.onboardingComplete ? '/island' : '/title')
         } catch (e) {
           console.warn('[auth] FirebaseUI login failed:', e)
           setError('Firebase 로그인 처리 중 문제가 발생했습니다. 서버 연결과 Firebase 설정을 확인해 주세요.')

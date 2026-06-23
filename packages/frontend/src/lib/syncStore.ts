@@ -15,7 +15,7 @@ let isSyncing = false
 
 const SYNCED_KEYS = [
   'coins', 'diamonds', 'gems',
-  'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName',
+  'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName', 'soundSettings',
   'recruitedAidongs', 'firstGachaCandidate', 'firstGachaAttempts',
   'affinities', 'needs',
   'unlockedZones', 'zoneSlots', 'dynamicAidongZones',
@@ -39,7 +39,7 @@ const MY_ISLAND_KEYS = ['unlockedZones', 'zoneSlots', 'dynamicAidongZones'] as c
 const CODEX_KEYS = ['unlockedDiaries', 'unlockedCodexEntries', 'codexFullyRegistered'] as const
 const ROUTE_NEIGHBOR_KEYS = [] as const
 const SHIP_KEYS = ['harborAssignedChars', 'harborLastChargedAt'] as const
-const ACCOUNT_KEYS = ['isGuest', 'nickname', 'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName'] as const
+const ACCOUNT_KEYS = ['isGuest', 'nickname', 'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName', 'soundSettings'] as const
 
 function pickKeys(keys: readonly string[]) {
   const state = userStoreRuntimeFacade.getRecord()
@@ -101,18 +101,7 @@ function normalizeHostState(state: Record<string, unknown>) {
   }
 }
 
-function normalizeAccountState(state: Record<string, unknown>) {
-  return {
-    isGuest: state.isGuest,
-    nickname: state.nickname,
-    gameStartedAt: state.gameStartedAt,
-    openingSeen: state.openingSeen,
-    onboardingComplete: state.onboardingComplete,
-    hostName: state.hostName,
-  }
-}
-
-async function hydrateSplitState(uid: string) {
+export async function hydrateSplitState(uid: string) {
   const [
     account,
     host,
@@ -130,7 +119,7 @@ async function hydrateSplitState(uid: string) {
   ])
 
   userStoreRuntimeFacade.setState({
-    ...normalizeAccountState(mergeRecord(account.state)),
+    ...mergeRecord(account.state),
     ...normalizeHostState(mergeRecord(host.state)),
     ...mergeRecord(myAidong.state),
     ...mergeRecord(myIsland.state),

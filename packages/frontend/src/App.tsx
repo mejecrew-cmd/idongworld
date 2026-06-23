@@ -48,6 +48,7 @@ import { MyIslandLayout, VoyageLayout, FullScreenLayout } from './components/Lay
 import { DebugPanel } from './components/DebugPanel'
 import { CustomsConfirmModal } from './components/CustomsConfirmModal'
 import { renderModuleRoutes } from './lib/moduleRoutes'
+import { accountStoreFacade } from './lib/storeFacades'
 
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
 const LegacyDebutRedirect = () => {
@@ -60,7 +61,15 @@ const LegacyDebutRedirect = () => {
  * "/"로 들어왔을 때 사용자 상태에 따라 적절한 화면으로 자동 이동시킨다.
  */
 const EntryGuard = () => {
+  const firebaseUid = accountStoreFacade.useFirebaseUid()
+  if (firebaseUid) return <Navigate to="/island" replace />
   return <Navigate to="/login" replace />
+}
+
+const LoginGuard = () => {
+  const firebaseUid = accountStoreFacade.useFirebaseUid()
+  if (firebaseUid) return <Navigate to="/island" replace />
+  return <LoginScreen />
 }
 
 export const App = () => {
@@ -72,7 +81,7 @@ export const App = () => {
     <Route path="/" element={<EntryGuard />} />
 
     {/* 인증 화면 — 레이아웃 없음 */}
-    <Route path="/login" element={<LoginScreen />} />
+    <Route path="/login" element={<LoginGuard />} />
 
     {/* 모듈이 제공하는 독립 라우트. 예: /voyage/island/shell */}
     {renderModuleRoutes()}
