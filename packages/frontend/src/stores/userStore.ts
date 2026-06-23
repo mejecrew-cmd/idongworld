@@ -189,6 +189,16 @@ const initialUser = {
   soundSettings: DEFAULT_SOUND_SETTINGS,
 }
 
+const loggedOutUserPatch = {
+  ...initialUser,
+  firebaseUid: undefined,
+  nickname: undefined,
+  hostName: undefined,
+  firstGachaCandidate: undefined,
+  currentRoute: undefined,
+  harborLastChargedAt: undefined,
+}
+
 export const useUserStore = create<UserState>()(
   persist(
     (set, get) => ({
@@ -205,7 +215,7 @@ export const useUserStore = create<UserState>()(
         })),
 
       // 전체 상태 초기화 (디버그 리셋 또는 Phase 1.5 진짜 logout)
-      logout: () => set(initialUser),
+      logout: () => set(loggedOutUserPatch),
 
       // 캐릭터 영입 — 자동 부수 효과:
       //   1) recruitedAidongs에 추가

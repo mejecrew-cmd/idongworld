@@ -37,12 +37,17 @@ const config = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-/** 환경변수 모두 채워진 경우만 활성. DUMMY 값 (`AIza_DUMMY...`) 도 `false` 처리. */
+function isRealFirebaseValue(value: unknown): boolean {
+  if (!value) return false
+  return !/DUMMY|REPLACE_ME|000000000000/.test(String(value))
+}
+
+/** 환경변수 모두 채워진 경우만 활성. DUMMY/REPLACE_ME 값은 `false` 처리. */
 export const isFirebaseEnabled =
-  Boolean(config.apiKey) &&
-  !String(config.apiKey).includes('DUMMY') &&
-  Boolean(config.projectId) &&
-  !String(config.projectId).includes('dev')
+  isRealFirebaseValue(config.apiKey) &&
+  isRealFirebaseValue(config.authDomain) &&
+  isRealFirebaseValue(config.projectId) &&
+  isRealFirebaseValue(config.appId)
 
 let _app: FirebaseApp | null = null
 let _auth: Auth | null = null

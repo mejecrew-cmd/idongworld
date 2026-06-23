@@ -166,9 +166,16 @@
 대상 파일:
 
 - `packages/frontend/src/lib/firebase.ts`
+- `packages/frontend/src/lib/firebaseUi.ts`
+- `packages/frontend/src/screens/LoginScreen.tsx`
 
 작업:
 
+- [x] FirebaseUI npm 모듈을 frontend workspace에 설치한다.
+- [x] FirebaseUI가 요구하는 v9+ compat namespace API 전용 helper를 만든다.
+- [x] 로그인 화면에 FirebaseUI mount container를 연결한다.
+- [x] 1차 실제 로그인 provider를 Google, Twitter(X)로 제한해 FirebaseUI `signInOptions`에 연결한다.
+- [x] FirebaseUI `uiShown` 콜백으로 로그인 위젯 로딩 표시를 제어한다.
 - [ ] `SocialAuthProvider`를 실제 Firebase popup 가능 provider 중심으로 정리한다.
   - `google`
   - `apple`
@@ -373,3 +380,5 @@ Frontend test 또는 typecheck:
 ## 7. 변경 기록
 
 - 2026-06-15: 테스트 provider 전체 오픈 이후, 실제 Firebase 소셜 로그인 전환을 위한 next work 작성.
+- 2026-06-23: FirebaseUI npm 모듈을 설치하고, v9+ compat namespace API 기반 `firebaseUi.ts` helper와 로그인 화면 mount 지점을 추가했다.
+- 2026-06-23: Firebase Console에서 Google/Twitter provider 활성화가 완료된 전제로, FirebaseUI `signInOptions`를 Google/Twitter(X) 우선으로 제한하고 로그인 화면 성공 콜백을 backend `authSession`에 연결했다.

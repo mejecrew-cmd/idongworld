@@ -46,12 +46,12 @@ export function bootstrapAccount(): void {
     },
 
     doLogout: () => {
+      accountStoreFacade.logout()
       if (isFirebaseEnabled) {
         void firebaseSignOut().catch(() => {
           // 실패해도 로컬 logout 강행
         })
       }
-      accountStoreFacade.logout()
     },
 
     doSetNickname: (nickname) => accountStoreFacade.setNickname(nickname),
@@ -60,6 +60,11 @@ export function bootstrapAccount(): void {
   // Firebase 인증 상태 → store 동기 (활성 시만)
   if (isFirebaseEnabled) {
     onFirebaseAuthChanged((user) => {
+      if (!user) {
+        accountStoreFacade.logout()
+        return
+      }
+
       if (user) {
         accountStoreFacade.mergeAccountState({
           firebaseUid: user.uid,

@@ -11,6 +11,8 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
     "@idongworld/account": "workspace:*",
     "@idongworld/aidong-island": "workspace:*",
     "@idongworld/codex": "workspace:*",
@@ -30,11 +32,10 @@
     "@idongworld/zone-memory": "workspace:*",
     "@idongworld/zone-mine": "workspace:*",
     "@idongworld/zone-oasis": "workspace:*",
-    "@emotion/react": "^11.13.3",
-    "@emotion/styled": "^11.13.0",
     "@mui/material": "^5.16.7",
     "dayjs": "^1.11.13",
     "firebase": "^10.13.0",
+    "firebaseui": "^6.1.0",
     "howler": "^2.2.4",
     "i18next": "^23.15.1",
     "i18next-http-backend": "^4.0.0",

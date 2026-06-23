@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
+import { logout as accountLogout } from '@idongworld/account'
 import {
   Box,
   Button,
@@ -13,6 +14,7 @@ import {
   Switch,
   Typography,
 } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import {
@@ -20,7 +22,7 @@ import {
   SOUND_VOLUME_MIN,
   SOUND_VOLUME_STEP,
 } from '@/data/settings'
-import { settingsStoreFacade } from '@/lib/storeFacades'
+import { settingsStoreFacade, voyageSessionFacade } from '@/lib/storeFacades'
 
 const miscSettings = [
   '언어',
@@ -32,9 +34,18 @@ const miscSettings = [
 ] as const
 
 export const SettingsScreen = () => {
+  const navigate = useNavigate()
   const [pushEnabled, setPushEnabled] = useState(false)
   const [activeDialog, setActiveDialog] = useState<(typeof miscSettings)[number] | null>(null)
   const soundSettings = settingsStoreFacade.useSoundSettings()
+
+  const handleLogout = () => {
+    if (!confirm('로그아웃하고 로그인 화면으로 돌아갈까요?')) return
+
+    voyageSessionFacade.endSession()
+    accountLogout()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <Box sx={{ p: 0, pb: 14 }}>
@@ -86,7 +97,13 @@ export const SettingsScreen = () => {
                 <Button
                   key={label}
                   fullWidth
-                  onClick={() => setActiveDialog(label)}
+                  onClick={() => {
+                    if (label === '로그아웃') {
+                      handleLogout()
+                      return
+                    }
+                    setActiveDialog(label)
+                  }}
                   sx={{
                     minHeight: 52,
                     px: 2.25,
