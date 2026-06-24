@@ -47,6 +47,10 @@ export function ensureFirebaseAdmin(): boolean {
 export async function verifyIdToken(idToken: string | undefined): Promise<{
   uid: string
   email?: string
+  emailVerified?: boolean
+  displayName?: string
+  photoURL?: string
+  signInProvider?: string
   isAnonymous: boolean
 } | null> {
   if (!idToken) return null
@@ -56,6 +60,10 @@ export async function verifyIdToken(idToken: string | undefined): Promise<{
     return {
       uid: decoded.uid,
       email: decoded.email,
+      emailVerified: decoded.email_verified,
+      displayName: decoded.name,
+      photoURL: decoded.picture,
+      signInProvider: decoded.firebase?.sign_in_provider,
       isAnonymous: decoded.firebase?.sign_in_provider === 'anonymous',
     }
   } catch {
