@@ -13,3 +13,6 @@ packages:
 allowBuilds:
   esbuild: true
   protobufjs: true
+
+minimumReleaseAgeExclude:
+  - pnpm@11.9.0
