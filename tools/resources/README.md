@@ -37,3 +37,13 @@ Current Aidong PNG rules:
 | `debut_bg.png` | protected | unchecked |
 
 `packages/frontend/public/assets/` is generated output. Do not edit it by hand.
+
+GitHub Actions workflow template:
+
+```text
+tools/resources/resources.workflow.yml.template
+```
+
+Copy it to `.github/workflows/resources.yml` from a GitHub account/token that
+has the `workflow` scope. Without that scope, GitHub rejects pushes that create
+or update workflow files.
