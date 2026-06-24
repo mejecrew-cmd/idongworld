@@ -140,6 +140,12 @@ function toShipStateView(value: unknown): ShipStateView {
   }
 }
 
+function getApiErrorCode(error: unknown): string | undefined {
+  if (!(error instanceof Error)) return undefined
+  const match = /"error"\s*:\s*"([^"]+)"/.exec(error.message)
+  return match?.[1]
+}
+
 
 function resourceLabel(resource: string): string {
   const labels: Record<string, string> = {
@@ -248,6 +254,29 @@ export const HarborScene = () => {
     }
   }
 
+  const ensureBackendRecruitment = async (characterId: string): Promise<boolean> => {
+    if (!uid) return false
+    if (!recruitedAidongs.includes(characterId as AidongCharacterId)) return false
+    try {
+      const response = await api.recruitAidong(uid, characterId)
+      applyActionApiResponse(response)
+      return true
+    } catch (error) {
+      console.warn('[ship] recruit-before-assign failed', error)
+      return false
+    }
+  }
+
+  const requestShipSlotAssign = async (
+    kind: 'cabin' | 'deck',
+    slotId: string,
+    characterId?: string,
+  ) => (
+    kind === 'cabin'
+      ? api.assignShipCabin(uid!, slotId, characterId)
+      : api.assignShipDeck(uid!, slotId, characterId)
+  )
+
   useEffect(() => {
     const charge = shipStoreFacade.chargeDiceFromHarbor()
     if (MODULE_ACTION_API_SYNC) {
@@ -286,15 +315,30 @@ export const HarborScene = () => {
     setShipLoading(true)
     setShipError(null)
     try {
-      const response = kind === 'cabin'
-        ? await api.assignShipCabin(uid, slotId, characterId)
-        : await api.assignShipDeck(uid, slotId, characterId)
+      let response
+      try {
+        response = await requestShipSlotAssign(kind, slotId, characterId)
+      } catch (error) {
+        if (characterId && getApiErrorCode(error) === 'aidong_not_recruited') {
+          const synced = await ensureBackendRecruitment(characterId)
+          if (synced) {
+            response = await requestShipSlotAssign(kind, slotId, characterId)
+          } else {
+            throw error
+          }
+        } else {
+          throw error
+        }
+      }
       setShipState(toShipStateView(response.state))
       applyActionApiResponse(response)
       if (characterId) setSelectedAidong(null)
     } catch (error) {
       console.warn('[ship] slot assign failed', error)
-      setShipError('배치를 변경하지 못했어요.')
+      const code = getApiErrorCode(error)
+      setShipError(code === 'aidong_not_recruited'
+        ? '영입 상태 동기화가 아직 끝나지 않아 배치하지 못했어요. 잠시 후 다시 시도해 주세요.'
+        : '배치를 변경하지 못했어요.')
     } finally {
       setShipLoading(false)
     }

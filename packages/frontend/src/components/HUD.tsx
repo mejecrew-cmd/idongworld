@@ -31,6 +31,8 @@ const MODULE_CURRENCY_BY_PATH: InventoryCurrencyRule[] = [
   { match: '/island/oasis', itemId: 'rest_token', label: '휴식권', mark: 'R', tone: '#67bda4' },
 ]
 
+const VOYAGE_SHELL_ITEM_ID = 'voyage-shell'
+
 function getDayCount(startedAt?: number): number {
   if (!startedAt) return 1
   const msPerDay = 1000 * 60 * 60 * 24
@@ -49,15 +51,14 @@ function getModuleCurrency(
   pathname: string,
   inventory: Record<string, number>,
   coins: number,
-  diceCount: number,
 ): HudCurrency {
   if (pathname.startsWith('/voyage/board') || pathname.startsWith('/voyage/neighbor')) {
     return {
-      label: '주사위',
-      value: diceCount,
-      mark: '🎲',
-      tone: '#5c7890',
-      description: '항해 보드에서 이동할 때 1개씩 사용합니다.',
+      label: '조개껍질',
+      value: inventory[VOYAGE_SHELL_ITEM_ID] ?? 0,
+      mark: 'S',
+      tone: '#3e9b8f',
+      description: '항해 모듈 전용 재화입니다. 개발 단계에서는 사용처와 수급처가 없습니다.',
     }
   }
 
@@ -93,7 +94,6 @@ export const HUD = () => {
   const onboardingComplete = accountStoreFacade.useOnboardingComplete()
   const coins = hostStoreFacade.useCoins()
   const diamonds = hostStoreFacade.useDiamonds()
-  const diceCount = hostStoreFacade.useDiceCount()
   const inventory = hostStoreFacade.useInventory()
   const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
 
@@ -102,8 +102,8 @@ export const HUD = () => {
   const levelName = getProfileLevelName(recruitedAidongs.length, onboardingComplete)
   const dayCount = getDayCount(gameStartedAt)
   const moduleCurrency = useMemo(
-    () => getModuleCurrency(location.pathname, inventory, coins, diceCount),
-    [location.pathname, inventory, coins, diceCount],
+    () => getModuleCurrency(location.pathname, inventory, coins),
+    [location.pathname, inventory, coins],
   )
 
   return (
