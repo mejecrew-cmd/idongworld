@@ -41,7 +41,11 @@
     "audit:legacy-state": "node tools/audit/checkLegacyStateUsage.mjs",
     "audit:module-items": "node tools/audit/checkModuleItems.mjs",
     "audit:module-decor": "node tools/audit/checkModuleDecor.mjs",
-    "audit:module-catalogs": "pnpm audit:module-items && pnpm audit:module-decor"
+    "audit:module-catalogs": "pnpm audit:module-items && pnpm audit:module-decor",
+    "resources:stage": "node tools/resources/stageResources.mjs",
+    "resources:check": "node tools/resources/ingestResources.mjs --check",
+    "resources:ingest": "node tools/resources/ingestResources.mjs",
+    "resources:commit": "node tools/resources/ingestResources.mjs --commit"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",

@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ../../tools/resources/stageResources.mjs",
     "dev": "vite",
+    "prebuild": "node ../../tools/resources/stageResources.mjs",
     "build": "tsc -b && vite build",
     "check:state-route-runtime": "node scripts/check-state-route-runtime.mjs",
     "preview": "vite preview",
