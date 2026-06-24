@@ -25,3 +25,6 @@ dist/
 .DS_Store
 .idea/
 .vscode/settings.json
+
+# Resource stage output. Source of truth is resources/.
+packages/frontend/public/assets/

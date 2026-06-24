@@ -1,0 +1,54 @@
+name: Resource Pipeline
+
+on:
+  push:
+    branches:
+      - art
+      - main
+    paths:
+      - 'resources/**'
+      - 'tools/resources/**'
+      - 'package.json'
+      - 'packages/frontend/package.json'
+      - '.github/workflows/resources.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'resources/**'
+      - 'tools/resources/**'
+      - 'package.json'
+      - 'packages/frontend/package.json'
+      - '.github/workflows/resources.yml'
+  workflow_dispatch:
+
+jobs:
+  resources:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Stage resources
+        run: node tools/resources/stageResources.mjs
+
+      - name: Verify generated assets are reproducible
+        shell: bash
+        run: |
+          if ! git diff --quiet -- packages/frontend/public/assets; then
+            echo "Generated assets changed after staging. Commit resources/ only; public/assets is generated."
+            git diff --stat -- packages/frontend/public/assets
+            exit 1
+          fi
+
+      - name: Upload staged assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: staged-assets
+          path: packages/frontend/public/assets
+          if-no-files-found: warn
