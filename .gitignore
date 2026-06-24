@@ -26,4 +26,5 @@ dist/
 .idea/
 .vscode/settings.json
 
-idongworld.pem
+# Resource stage output. Source of truth is resources/.
+packages/frontend/public/assets/
