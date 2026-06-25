@@ -1,294 +1,109 @@
-/**
- * 📁 screens/HubHeartScene.tsx — 07 마이섬 허브 (게임 본 화면)
- * ───────────────────────────────────────────────
- * 📌 역할: 영입한 캐릭터들이 floating 애니메이션으로 등장하는 풀샷 화면.
- *           캐릭터 탭 → 케어 메뉴 / 항구·풀맵·숙소·일기·데뷔 진입 허브.
- *
- * 🔗 연결:
- *   - 모든 마이섬 활동의 출발점
- *   - components/CareModal.tsx · DiaryModal.tsx
- *   - 영입 직후 첫 일기 자동 노출 (useEffect로 트리거)
- *
- * 💡 초보자 안내:
- *   - 캐릭터 표정: 욕구 mood_score 기반 자동 (happy/normal/worried/sleepy)
- *   - float 애니메이션: 3종 (-6/-4/-8px) 순환 → 자연스러운 호흡감
- *   - "🛠️ 디버그" 영역: 개발 중 보조 (주사위 +6 / 리셋)
- */
-import { useEffect, useState } from 'react'
-import { Box, Typography, Button, Stack, Chip, useMediaQuery, useTheme } from '@mui/material'
+import { Box, Button, Chip, Stack, Typography } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import type { AidongCharacterId } from '@/stores/userStore'
-import { AidongSprite } from '@/components/AidongSprite'
-import { CareModal } from '@/components/CareModal'
-import { DiaryModal } from '@/components/DiaryModal'
 import { GameStage } from '@/components/GameStage'
-import { MyIslandToggle } from '@/components/MyIslandToggle'
 import { ScreenHeader } from '@/components/ScreenHeader'
-import { calcMoodScore, moodFromScore, moodToExpression, INITIAL_NEEDS } from '@/data/needs'
-import { getCurrentZone } from '@/data/schedZone'
-import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
-import {
-  accountStoreFacade,
-  codexStoreFacade,
-  hostStoreFacade,
-  myAidongStoreFacade,
-} from '@/lib/storeFacades'
+import { accountStoreFacade } from '@/lib/storeFacades'
 
-const ALL_AIDONGS: AidongCharacterId[] = ['황금멍', '춤냥', '양털곰', '단풍볼', '날카여우']
-const CHARACTER_RAIL_PADDING = 64
-
-const CHAR_TO_DIARY_ID: Record<AidongCharacterId, string> = {
-  황금멍: 'hwanggumeong_day1',
-  춤냥: 'chumnyang_day1',
-  양털곰: 'yangteolgom_day1',
-  단풍볼: 'danpungbol_day1',
-  날카여우: 'nalkayeou_day1',
+type IslandArea = {
+  areaNo: string
+  name: string
+  description: string
+  status: 'open' | 'locked'
+  path?: string
 }
+
+const ISLAND_AREAS: IslandArea[] = [
+  { areaNo: 'AREA-02', name: '항구', description: '항해와 이동의 출발점입니다.', status: 'open', path: '/island/harbor' },
+  { areaNo: 'AREA-01', name: '등대', description: '마이섬의 첫 불빛이 켜질 자리입니다.', status: 'locked' },
+  { areaNo: 'AREA-03', name: '기억의 숲', description: '일지와 기억 조각이 쌓이는 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-04', name: '고민 동굴', description: '걱정을 천천히 내려놓는 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-05', name: '자신감 폭포', description: '흔들린 마음을 회복하는 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-06', name: '휴식 오아시스', description: '휴식과 회복 활동이 열릴 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-07', name: '시간의 모래광장', description: '시간 활동이 배치될 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-08', name: '성찰 산책로', description: '돌아보기 활동이 열릴 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-09', name: '목표 산', description: '목표 활동과 도전이 열릴 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-10', name: '우정의 다리', description: '관계 활동이 열릴 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-11', name: '창의의 샘', description: '표현 활동이 열릴 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-12', name: '도전 절벽', description: '도전형 활동이 열릴 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-13', name: '숙소', description: '마이룸과 휴식 기능이 정리될 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-14', name: '성장의 정원', description: '성장 활동이 열릴 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-15', name: '반성의 호수', description: '마무리 활동이 열릴 구역입니다.', status: 'locked' },
+]
 
 export const HubHeartScene = () => {
   const navigate = useNavigate()
-  const theme = useTheme()
-  const compact = useMediaQuery(theme.breakpoints.down('sm'))
-  const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
-  const affinities = myAidongStoreFacade.useAffinities()
   const hostName = accountStoreFacade.useHostName()
-  const unlockedDiaries = codexStoreFacade.useUnlockedDiaries()
-  const needs = myAidongStoreFacade.useNeeds()
-  const equippedOutfit = myAidongStoreFacade.useEquippedOutfit()
-  const curZone = getCurrentZone()
-
-  const [careTarget, setCareTarget] = useState<AidongCharacterId | null>(null)
-  const [diaryTarget, setDiaryTarget] = useState<string | null>(null)
-  const [autoDiaryShown, setAutoDiaryShown] = useState(false)
-  const characterSize =
-    recruitedAidongs.length > 0
-      ? Math.min(compact ? 108 : 160, Math.floor((GAME_STAGE_WIDTH - CHARACTER_RAIL_PADDING) / recruitedAidongs.length))
-      : 120
-
-  // 영입 직후 첫 일기 자동 노출
-  useEffect(() => {
-    if (autoDiaryShown) return
-    if (recruitedAidongs.length > 0 && unlockedDiaries.length > 0) {
-      const first = recruitedAidongs[0]!
-      const diaryId = CHAR_TO_DIARY_ID[first]
-      if (unlockedDiaries.includes(`${first}_day1`)) {
-        const t = setTimeout(() => {
-          setDiaryTarget(diaryId)
-          setAutoDiaryShown(true)
-        }, 1200)
-        return () => clearTimeout(t)
-      }
-    }
-  }, [recruitedAidongs, unlockedDiaries, autoDiaryShown])
+  const nickname = accountStoreFacade.useNickname()
+  const displayName = hostName ?? nickname ?? '마이섬'
 
   return (
     <Box sx={{ p: 0, pb: 12 }}>
-      <ScreenHeader category="마이섬" title="허브" subtitle={hostName ? `${hostName}의 SOOKSO` : undefined} />
-      <MyIslandToggle />
-
-      {/* 마이섬 풀샷 (배경 + 캐릭터들) */}
-      <GameStage sx={{ mb: 2 }}>
-        <Box
-          sx={{
-            position: 'relative',
-            width: '100%',
-            aspectRatio: '16/9',
-            maxHeight: '60vh',
-            backgroundImage: 'url(/assets/배경/myisland_harbor_warm.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          {/* 환영 메시지 */}
-          <Box sx={{ position: 'absolute', top: 16, left: 16, right: 16 }}>
-            <Box
-              sx={{
-                bgcolor: 'rgba(255,255,255,0.85)',
-                p: 1.5,
-                borderRadius: 2,
-                display: 'inline-block',
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {hostName ? `${hostName}의 마이섬` : '마이섬'} · {recruitedAidongs.length}/5
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* 캐릭터 풀샷 — 바닥선 정렬 */}
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: '4%',
-              left: 0,
-              right: 0,
-              display: 'flex',
-              justifyContent: 'space-evenly',
-              alignItems: 'flex-end',
-              px: 2,
-            }}
-          >
-            {recruitedAidongs.length === 0 ? (
-              <Typography
-                sx={{
-                  color: 'white',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.7)',
-                  bgcolor: 'rgba(0,0,0,0.4)',
-                  p: 1.5,
-                  borderRadius: 1,
-                  fontSize: 14,
-                }}
-              >
-                아직 친구가 없어요. 항해를 떠나보세요.
-              </Typography>
-            ) : (
-              recruitedAidongs.map((id, idx) => {
-                const charNeeds = needs[id] ?? INITIAL_NEEDS
-                const score = calcMoodScore(charNeeds)
-                const mood = moodFromScore(score, curZone === 4)
-                const expression = moodToExpression(mood)
-                return (
-                  <Box
-                    key={id}
-                    sx={{
-                      cursor: 'pointer',
-                      animation: `float-${idx % 3} 4s ease-in-out infinite`,
-                      '@keyframes float-0': {
-                        '0%, 100%': { transform: 'translateY(0)' },
-                        '50%': { transform: 'translateY(-6px)' },
-                      },
-                      '@keyframes float-1': {
-                        '0%, 100%': { transform: 'translateY(0)' },
-                        '50%': { transform: 'translateY(-4px)' },
-                      },
-                      '@keyframes float-2': {
-                        '0%, 100%': { transform: 'translateY(0)' },
-                        '50%': { transform: 'translateY(-8px)' },
-                      },
-                      transition: 'transform 0.3s',
-                      '&:hover': { filter: 'brightness(1.1)' },
-                    }}
-                    onClick={() => setCareTarget(id)}
-                  >
-                    <AidongSprite
-                      character={id}
-                      expression={expression}
-                      outfit={equippedOutfit[id]}
-                      size={characterSize}
-                    />
-                    <Typography
-                      sx={{
-                        textAlign: 'center',
-                        color: 'white',
-                        textShadow: '0 1px 3px rgba(0,0,0,0.7)',
-                        fontSize: 13,
-                        fontWeight: 600,
-                        mt: -1,
-                      }}
-                    >
-                      {id}
-                    </Typography>
-                  </Box>
-                )
-              })
-            )}
-          </Box>
-        </Box>
-      </GameStage>
-
-      <GameStage stageSx={{ px: 3, py: 3 }}>
-        {/* 영입 진행도 */}
-        <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 2 }}>
-          {ALL_AIDONGS.map((id) => {
-            const recruited = recruitedAidongs.includes(id)
-            const aff = affinities[id]
-            return (
-              <Chip
-                key={id}
-                label={`${id}${aff ? ` Lv${aff.level}` : ''}`}
-                size="small"
-                color={recruited ? 'primary' : 'default'}
-                variant={recruited ? 'filled' : 'outlined'}
-                onClick={recruited ? () => setCareTarget(id) : undefined}
-              />
-            )
-          })}
+      <ScreenHeader category="마이섬" title="마이섬 허브" subtitle={displayName} />
+      <GameStage stageSx={{ px: { xs: 2.5, sm: 3 }, py: 3 }}>
+        <Stack spacing={0.75} sx={{ mb: 2.5 }}>
+          <Typography variant="h1" sx={{ fontSize: 22 }}>
+            전체 지도
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            현재는 항구만 열려 있습니다. 나머지 구역은 리소스와 본편 진행이 들어오면 순차적으로 열립니다.
+          </Typography>
         </Stack>
 
-        {/* 영입된 캐릭터 일기 */}
-        {recruitedAidongs.length > 0 && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h2" sx={{ fontSize: 16, mb: 1 }}>
-              📔 일기
-            </Typography>
-            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-              {recruitedAidongs.map((id) => (
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', md: 'repeat(3, minmax(0, 1fr))' },
+            gap: 1.5,
+          }}
+        >
+          {ISLAND_AREAS.map((area) => {
+            const open = area.status === 'open'
+            return (
+              <Box
+                key={area.areaNo}
+                sx={{
+                  bgcolor: open ? 'rgba(255,254,250,0.96)' : 'rgba(246,248,247,0.82)',
+                  border: '1px solid',
+                  borderColor: open ? 'primary.main' : 'divider',
+                  borderRadius: 2,
+                  p: 2,
+                  minHeight: 142,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1,
+                  opacity: open ? 1 : 0.72,
+                }}
+              >
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography sx={{ fontWeight: 900, flex: 1 }}>
+                    {area.areaNo}
+                  </Typography>
+                  <Chip
+                    size="small"
+                    label={open ? '열림' : '닫힘'}
+                    color={open ? 'primary' : 'default'}
+                    variant={open ? 'filled' : 'outlined'}
+                  />
+                </Stack>
+                <Typography sx={{ fontWeight: 900, fontSize: 18 }}>
+                  {area.name}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', flex: 1 }}>
+                  {area.description}
+                </Typography>
                 <Button
-                  key={id}
-                  size="small"
-                  variant="outlined"
-                  onClick={() => setDiaryTarget(CHAR_TO_DIARY_ID[id])}
+                  variant={open ? 'contained' : 'outlined'}
+                  disabled={!open}
+                  onClick={() => area.path && navigate(area.path)}
+                  fullWidth
                 >
-                  {id} day 1
+                  {open ? '들어가기' : '잠김'}
                 </Button>
-              ))}
-            </Stack>
-          </Box>
-        )}
-
-        {/* 데뷔 스테이지 */}
-        {recruitedAidongs.length > 0 && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h2" sx={{ fontSize: 16, mb: 1 }}>
-              🎤 데뷔 스테이지
-            </Typography>
-            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-              {recruitedAidongs.map((id) => (
-                <Button
-                  key={id}
-                  size="small"
-                  variant="contained"
-                  color="secondary"
-                  onClick={() => navigate(`/stage/debut/${id}`)}
-                >
-                  ✨ {id} 데뷔
-                </Button>
-              ))}
-            </Stack>
-          </Box>
-        )}
-
-        {/* 디버그 (개발 중 보조) */}
-        <Box sx={{ mt: 4, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1 }}>
-            🛠️ 디버그 (개발 중) — 본진 영입은 항구→이웃섬 항로 보드에서.
-          </Typography>
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-            <Button size="small" variant="outlined" onClick={() => hostStoreFacade.mutateDiceCount(6)}>
-              🎲 +6 주사위
-            </Button>
-            <Button size="small" variant="outlined" onClick={() => navigate('/dev/catalog')}>
-              📚 에셋 카탈로그
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              color="warning"
-              onClick={() => {
-                if (confirm('진행 상태 초기화 (게스트 + 영입 캐릭터 모두 리셋)?')) {
-                  accountStoreFacade.logout()
-                  navigate('/login')
-                }
-              }}
-            >
-              ↺ 리셋
-            </Button>
-          </Stack>
+              </Box>
+            )
+          })}
         </Box>
       </GameStage>
-
-      <CareModal character={careTarget} onClose={() => setCareTarget(null)} />
-      <DiaryModal diaryId={diaryTarget} onClose={() => setDiaryTarget(null)} />
     </Box>
   )
 }

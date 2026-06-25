@@ -13,7 +13,8 @@
  *   - subtitle (선택): 부가 정보 (예: 진행 단계 1/4)
  *   - 톤: 잔잔·낮은 채도. 게임 흐름 방해 최소.
  */
-import { Box, Typography, Chip } from '@mui/material'
+import { Box, Typography, Chip, IconButton } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
 interface ScreenHeaderProps {
@@ -22,13 +23,27 @@ interface ScreenHeaderProps {
   subtitle?: string
   /** 풀스크린 시네마틱 위에 띄울 때 true — 반투명 흰 텍스트 */
   overlay?: boolean
+  showBack?: boolean
+  backTo?: string
 }
 
-export const ScreenHeader = ({ category, title, subtitle, overlay = false }: ScreenHeaderProps) => {
+export const ScreenHeader = ({
+  category,
+  title,
+  subtitle,
+  overlay = false,
+  showBack = false,
+  backTo = '/island',
+}: ScreenHeaderProps) => {
+  const navigate = useNavigate()
   const bg = overlay ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.85)'
   const color = overlay ? 'rgba(255,255,255,0.95)' : 'text.primary'
   const chipBg = overlay ? 'rgba(255,255,255,0.18)' : 'primary.main'
   const chipColor = overlay ? 'white' : 'primary.contrastText'
+  const goBack = () => {
+    if (window.history.length > 1) navigate(-1)
+    else navigate(backTo)
+  }
 
   return (
     <Box
@@ -51,6 +66,28 @@ export const ScreenHeader = ({ category, title, subtitle, overlay = false }: Scr
         pointerEvents: 'none', // 클릭 통과 (오프닝 시퀀스 등)
       }}
     >
+      {showBack && (
+        <IconButton
+          aria-label="뒤로가기"
+          size="small"
+          onClick={goBack}
+          sx={{
+            width: 32,
+            height: 32,
+            flex: '0 0 auto',
+            color,
+            bgcolor: overlay ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.72)',
+            border: '1px solid',
+            borderColor: overlay ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.08)',
+            pointerEvents: 'auto',
+            '&:hover': {
+              bgcolor: overlay ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.95)',
+            },
+          }}
+        >
+          ‹
+        </IconButton>
+      )}
       <Chip
         size="small"
         label={category}

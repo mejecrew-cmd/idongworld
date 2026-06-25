@@ -34,7 +34,7 @@ export const CodexScreen = () => {
 
   return (
     <Box sx={{ p: 0, pb: 12 }}>
-      <ScreenHeader category="도감" title="친구·자재·트로피" />
+      <ScreenHeader category="도감" title="친구·자재·트로피" showBack />
       <GameStage stageSx={{ px: 3, py: 3 }}>
         <Typography variant="h1" sx={{ fontSize: 22, mb: 2 }}>📖 도감</Typography>
 

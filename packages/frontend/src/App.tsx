@@ -31,11 +31,11 @@ import { HeartIslandFirstScreen } from './screens/HeartIslandFirstScreen'
 import { CleaningLoopScreen } from './screens/CleaningLoopScreen'
 import { NamingToHeartScreen } from './screens/NamingToHeartScreen'
 import { HubHeartScene } from './screens/HubHeartScene'
+import { JournalScreen } from './screens/JournalScreen'
 import { HarborScene } from './screens/HarborScene'
 import { NavigationBoardScene } from './screens/NavigationBoardScene'
 import { LodgeScene } from './screens/LodgeScene'
 import { MyRoomScreen } from './screens/MyRoomScreen'
-import { IslandFullMapScreen } from './screens/IslandFullMapScreen'
 import { IslandAreaPlaceholderScene } from './screens/IslandAreaPlaceholderScene'
 import { DebutStageScene } from './screens/DebutStageScene'
 import { StageScreen } from './screens/StageScreen'
@@ -100,7 +100,7 @@ export const App = () => {
     {/* 마이섬 본 게임 — HUD + 하단 네비 */}
     <Route path="/island" element={<MyIslandLayout />}>
       <Route index element={<HubHeartScene />} />              {/* /island */}
-      <Route path="full-map" element={<IslandFullMapScreen />} />  {/* /island/full-map */}
+      <Route path="full-map" element={<Navigate to="/island" replace />} />
       <Route path="area/02" element={<Navigate to="/island/harbor" replace />} />
       <Route path="area/03" element={<Navigate to="/island/memory" replace />} />
       <Route path="area/06" element={<Navigate to="/island/oasis" replace />} />
@@ -122,6 +122,10 @@ export const App = () => {
     {/* 도감 — HUD + 하단 네비 (마이섬 레이아웃 재사용) */}
     <Route path="/codex" element={<MyIslandLayout />}>
       <Route index element={<CodexScreen />} />
+    </Route>
+
+    <Route path="/journal" element={<MyIslandLayout />}>
+      <Route index element={<JournalScreen />} />
     </Route>
 
     {/* 상점/설정 — 기능 연결 전 placeholder */}

@@ -4,26 +4,29 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
 const TABS = [
+  { id: 'myroom', label: '마이룸', path: '/island/lodge/myroom/info', mark: '룸' },
+  { id: 'journal', label: '일지', path: '/journal', mark: '일' },
   { id: 'island', label: '마이섬', path: '/island', mark: '섬' },
-  { id: 'myroom', label: '마이룸', path: '/island/lodge', mark: '룸' },
-  { id: 'aidongIsland', label: '아이동섬', path: null, mark: '동' },
-  { id: 'daily', label: '일상', path: null, mark: '일' },
-  { id: 'shop', label: '상점', path: '/shop', mark: '상' },
+  { id: 'aidong', label: '아이동', path: null, mark: '아' },
+  { id: 'shop', label: '상점', path: null, mark: '상' },
 ] as const
 
-function isTabActive(tabId: string, pathname: string, tabPath: string | null): boolean {
-  if (tabId === 'aidongIsland' || tabId === 'daily' || !tabPath) return false
-  if (tabId === 'myroom') return pathname.startsWith('/island/lodge')
-  if (tabId === 'island') return pathname.startsWith('/island') && !pathname.startsWith('/island/lodge')
-
-  const rootPath = tabPath.split('/')[1]
-  return pathname.startsWith(rootPath ? `/${rootPath}` : tabPath)
+function isTabActive(tabId: string, pathname: string): boolean {
+  if (tabId === 'myroom') return pathname.startsWith('/island/lodge/myroom')
+  if (tabId === 'journal') return pathname.startsWith('/journal')
+  if (tabId === 'island') {
+    return pathname === '/island' || (
+      pathname.startsWith('/island') &&
+      !pathname.startsWith('/island/lodge/myroom')
+    )
+  }
+  return false
 }
 
 export const BottomNav = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const [comingSoonOpen, setComingSoonOpen] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
 
   return (
     <>
@@ -50,14 +53,14 @@ export const BottomNav = () => {
         }}
       >
         {TABS.map((tab) => {
-          const active = isTabActive(tab.id, location.pathname, tab.path)
+          const active = isTabActive(tab.id, location.pathname)
           return (
             <Box
               key={tab.id}
               data-testid={`bottom-nav-${tab.id}`}
               onClick={() => {
                 if (!tab.path) {
-                  setComingSoonOpen(true)
+                  setMessage(tab.id === 'shop' ? '상점은 제작중입니다.' : '아이동 화면은 준비중입니다.')
                   return
                 }
                 navigate(tab.path)
@@ -111,14 +114,14 @@ export const BottomNav = () => {
         })}
       </Box>
       <Snackbar
-        open={comingSoonOpen}
+        open={Boolean(message)}
         autoHideDuration={1800}
-        onClose={() => setComingSoonOpen(false)}
+        onClose={() => setMessage(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         sx={{ mb: { xs: 9, sm: 10 } }}
       >
         <Alert severity="info" variant="filled" sx={{ borderRadius: 1.5 }}>
-          준비중입니다
+          {message}
         </Alert>
       </Snackbar>
     </>

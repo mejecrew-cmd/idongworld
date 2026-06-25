@@ -393,6 +393,7 @@ export const LodgeScene = () => {
         category="마이섬"
         title="숙소"
         subtitle={LODGE_ZONE ? `${LODGE_ZONE.areaNo} · ${getZoneKindLabel(LODGE_ZONE)}` : '방을 꾸미고 쉬는 Aidong을 돌봐요.'}
+        showBack
       />
       <MyIslandToggle />
 

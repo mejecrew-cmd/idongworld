@@ -612,16 +612,10 @@ export const NavigationBoardScene = () => {
 
   return (
     <Box sx={{ p: 0, pb: 12 }}>
-      <ScreenHeader category="항해" title="이웃섬 보드" subtitle={route.name} />
+      <ScreenHeader category="항해" title="이웃섬 보드" subtitle={route.name} showBack backTo="/island/harbor" />
       {/* 헤더 */}
       <GameStage sx={{ mb: 2 }} stageSx={{ px: 3, py: 3 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
-          <Button
-            size="small"
-            onClick={() => navigate('/island/harbor')}
-          >
-            ← 항구
-          </Button>
           <Box sx={{ flex: 1 }}>
             <Typography variant="h2" sx={{ fontSize: 18 }}>{route.name}</Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>{route.subtitle}</Typography>

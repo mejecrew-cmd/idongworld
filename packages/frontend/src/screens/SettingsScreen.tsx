@@ -67,7 +67,7 @@ export const SettingsScreen = () => {
 
   return (
     <Box sx={{ p: 0, pb: 14 }}>
-      <ScreenHeader category="설정" title="환경 설정" subtitle="계정과 옵션" />
+      <ScreenHeader category="설정" title="환경 설정" subtitle="계정과 옵션" showBack />
       <GameStage stageSx={{ px: { xs: 2.5, sm: 3 }, pt: 3, pb: 5 }}>
         <Typography variant="h1" sx={{ fontSize: 22, mb: 3.5 }}>
           설정
