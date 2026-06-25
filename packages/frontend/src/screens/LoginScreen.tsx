@@ -159,7 +159,7 @@ export const LoginScreen = () => {
           })
           await hydrateSplitState(r.uid)
           const latestAccount = accountStoreFacade.getAccountState()
-          const completedIntro = hasCompletedIntro(latestAccount, r.user)
+          const shouldEnterIsland = r.isNew === false || hasCompletedIntro(latestAccount, r.user)
           accountStoreFacade.mergeAccountState({
             firebaseUid: r.uid,
             isGuest: false,
@@ -169,7 +169,7 @@ export const LoginScreen = () => {
             nickname: user.displayName ?? user.email ?? '사용자',
           })
           trackEvent('login', { method: providerId ?? 'firebaseui' })
-          navigate(completedIntro ? '/island' : '/title')
+          navigate(shouldEnterIsland ? '/island' : '/title')
         } catch (e) {
           console.warn('[auth] FirebaseUI login failed:', e)
           setError('Firebase 로그인 처리 중 문제가 발생했습니다. 서버 연결과 Firebase 설정을 확인해 주세요.')

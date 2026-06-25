@@ -181,7 +181,7 @@ export const api = {
     }),
 
   authSession: (uid: string, request: AuthSessionRequest) =>
-    apiFetch<{ uid: string; user: unknown }>('/api/auth/session', {
+    apiFetch<{ uid: string; isNew?: boolean; user: unknown }>('/api/auth/session', {
       method: 'POST',
       uid,
       body: JSON.stringify(request),

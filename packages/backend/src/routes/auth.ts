@@ -74,7 +74,9 @@ authRouter.post('/session', async (req, res) => {
   if (!provider) return res.status(400).json({ error: 'invalid_provider' })
 
   const requestUser = getRequestUser(req)
-  const user = await getUserRepository().createOrUpdateAuthUser({
+  const repo = getUserRepository()
+  const existing = await repo.getUser(uid)
+  const user = await repo.createOrUpdateAuthUser({
     uid,
     provider,
     email: readString(body.email) ?? requestUser?.email,
@@ -82,7 +84,7 @@ authRouter.post('/session', async (req, res) => {
     photoURL: readString(body.photoURL),
   })
 
-  res.json({ uid: user.uid, user })
+  res.json({ uid: user.uid, isNew: !existing, user })
 })
 
 authRouter.post('/social/entry', async (req, res) => {
