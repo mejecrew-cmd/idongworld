@@ -10,7 +10,9 @@ import type { UserDoc } from '../store/memoryStore.js'
 export interface AuthUserInput {
   uid: string
   provider: 'google' | 'twitter' | 'firebase'
+  providerUid?: string
   email?: string
+  emailNormalized?: string
   displayName?: string
   photoURL?: string
 }

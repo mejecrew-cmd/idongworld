@@ -36,10 +36,13 @@ function createAuthDoc(input: AuthUserInput): UserDoc {
     uid: input.uid,
     isGuest: false,
     authProvider: input.provider,
+    providerUid: input.providerUid ?? input.uid,
     email: input.email,
+    emailNormalized: input.emailNormalized,
     displayName: input.displayName,
     photoURL: input.photoURL,
     nickname: input.displayName ?? input.email ?? input.provider,
+    signupProfileCompleted: false,
     gameStartedAt: now,
     coins: 100,
     diamonds: 0,
@@ -133,10 +136,13 @@ export const memoryUserRepository: UserRepository = {
     const patch: Partial<UserDoc> = {
       isGuest: false,
       authProvider: input.provider,
+      providerUid: input.providerUid ?? input.uid,
       email: input.email,
+      emailNormalized: input.emailNormalized,
       displayName: input.displayName,
       photoURL: input.photoURL,
       nickname: existing?.nickname ?? input.displayName ?? input.email ?? input.provider,
+      signupProfileCompleted: existing?.signupProfileCompleted ?? false,
     }
     if (existing) {
       return updateUser(input.uid, patch) ?? existing

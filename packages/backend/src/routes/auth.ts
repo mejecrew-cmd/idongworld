@@ -9,6 +9,13 @@ import { Router } from 'express'
 import { getUserRepository } from '../repositories/index.js'
 import { getRequestUid, getRequestUser } from '../middleware/auth.js'
 import { hashPassword, issuePasswordSessionToken, verifyPassword } from '../auth/passwordAuth.js'
+import { buildAccountResponse } from '../account/accountProgress.js'
+import {
+  SocialProviderVerificationError,
+  verifySocialIdentity,
+  type SocialEntryInput,
+} from '../auth/socialProviderAdapters.js'
+import { readSocialProvider } from '../auth/socialProviders.js'
 
 export const authRouter = Router()
 
@@ -24,6 +31,15 @@ function readString(value: unknown): string | undefined {
 function readProvider(value: unknown): SocialProvider | undefined {
   if (value === 'google' || value === 'twitter' || value === 'firebase') return value
   return undefined
+}
+
+function normalizeEmail(value: string | undefined): string | undefined {
+  return value?.trim().toLocaleLowerCase('ko-KR')
+}
+
+function mapSocialProviderToAuthProvider(provider: string): SocialProvider | undefined {
+  if (provider === 'x') return 'twitter'
+  return readProvider(provider)
 }
 
 function normalizeLoginId(value: unknown): string {
@@ -67,6 +83,50 @@ authRouter.post('/session', async (req, res) => {
   })
 
   res.json({ uid: user.uid, user })
+})
+
+authRouter.post('/social/entry', async (req, res) => {
+  const body = req.body && typeof req.body === 'object'
+    ? req.body as Record<string, unknown>
+    : {}
+  const provider = readSocialProvider(body.provider)
+  if (!provider) return res.status(400).json({ error: 'unsupported_provider' })
+
+  try {
+    const identity = await verifySocialIdentity({
+      ...body,
+      provider,
+    } as SocialEntryInput)
+    const authProvider = mapSocialProviderToAuthProvider(identity.provider)
+    if (!authProvider) return res.status(400).json({ error: 'unsupported_provider' })
+
+    const repo = getUserRepository()
+    const existing = await repo.getUser(identity.providerUid)
+    const user = await repo.createOrUpdateAuthUser({
+      uid: identity.providerUid,
+      provider: authProvider,
+      providerUid: identity.providerUid,
+      email: identity.email,
+      emailNormalized: normalizeEmail(identity.email),
+      displayName: identity.displayName,
+      photoURL: identity.photoURL,
+    })
+    const accountResponse = buildAccountResponse(user)
+
+    res.json({
+      ok: true,
+      uid: user.uid,
+      isNew: !existing,
+      ...accountResponse,
+      user,
+    })
+  } catch (error) {
+    if (error instanceof SocialProviderVerificationError) {
+      return res.status(error.status).json({ error: error.code })
+    }
+    console.warn('[auth] social entry failed:', error)
+    return res.status(500).json({ error: 'social_entry_failed' })
+  }
 })
 
 authRouter.post('/password/signup', async (req, res) => {

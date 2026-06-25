@@ -68,10 +68,13 @@ function createAuthDoc(input: AuthUserInput): UserDoc {
     uid: input.uid,
     isGuest: false,
     authProvider: input.provider,
+    providerUid: input.providerUid ?? input.uid,
     email: input.email,
+    emailNormalized: input.emailNormalized,
     displayName: input.displayName,
     photoURL: input.photoURL,
     nickname: input.displayName ?? input.email ?? input.provider,
+    signupProfileCompleted: false,
     gameStartedAt: now,
     coins: 100,
     diamonds: 0,
@@ -159,13 +162,16 @@ export const mongoUserRepository: UserRepository = {
     const patch: Partial<UserDoc> = {
       isGuest: false,
       authProvider: input.provider,
+      providerUid: input.providerUid ?? input.uid,
       email: input.email,
+      emailNormalized: input.emailNormalized,
       displayName: input.displayName,
       photoURL: input.photoURL,
       nickname: (existing as { nickname?: string } | null)?.nickname
         ?? input.displayName
         ?? input.email
         ?? input.provider,
+      signupProfileCompleted: (existing as { signupProfileCompleted?: boolean } | null)?.signupProfileCompleted ?? false,
       updatedAt: Date.now(),
     }
 
