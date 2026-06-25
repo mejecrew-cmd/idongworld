@@ -26,6 +26,16 @@ export const DEFAULT_SOUND_SETTINGS: SoundSettings = {
   sfxVolume: 100,
 }
 
+export interface TermsAgreementState {
+  serviceTermsVersion?: string
+  privacyPolicyVersion?: string
+  marketingTermsVersion?: string
+  marketingAccepted: boolean
+  ageConfirmed?: boolean
+  ageGateVersion?: string
+  agreedAt?: number
+}
+
 // UserDoc:
 // guest user와 account 초기값을 담는 memory 문서 형태다.
 // gameplay module 상태는 전용 repository document에 저장하는 것이 원칙이다.
@@ -33,10 +43,22 @@ export interface UserDoc {
   uid: string
   isGuest: boolean
   authProvider?: 'guest' | 'google' | 'twitter' | 'firebase'
+  providerUid?: string
   email?: string
+  emailNormalized?: string
+  emailVerified?: boolean
   displayName?: string
   photoURL?: string
   nickname?: string
+  nicknameNormalized?: string
+  signupProfileCompleted?: boolean
+  timeZone?: string
+  detectedTimeZone?: string
+  utcOffsetMinutes?: number
+  timezoneCompleted?: boolean
+  termsCompleted?: boolean
+  termsAgreements?: TermsAgreementState
+  profileImageSource?: 'first-aidong' | 'firebase' | 'default' | string
   gameStartedAt?: number
   hostName?: string
   coins: number
