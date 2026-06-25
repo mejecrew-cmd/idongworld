@@ -21,6 +21,7 @@ import {
   SOUND_VOLUME_MIN,
   SOUND_VOLUME_STEP,
 } from '@/data/settings'
+import { api } from '@/lib/api'
 import { settingsStoreFacade, voyageSessionFacade } from '@/lib/storeFacades'
 
 const miscSettings = [
@@ -35,19 +36,38 @@ const miscSettings = [
 export const SettingsScreen = () => {
   const navigate = useNavigate()
   const [activeDialog, setActiveDialog] = useState<(typeof miscSettings)[number] | null>(null)
+  const [deletingAccount, setDeletingAccount] = useState(false)
   const soundSettings = settingsStoreFacade.useSoundSettings()
 
-  const handleLogout = () => {
-    if (!confirm('로그아웃하고 로그인 화면으로 돌아갈까요?')) return
-
+  const logoutToLogin = () => {
     voyageSessionFacade.endSession()
     accountLogout()
     navigate('/login', { replace: true })
   }
 
+  const handleLogout = () => {
+    if (!confirm('로그아웃하고 로그인 화면으로 돌아갈까요?')) return
+    logoutToLogin()
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('계정을 삭제하면 현재 계정으로 다시 로그인할 수 없습니다. 정말 삭제할까요?')) return
+
+    setDeletingAccount(true)
+    try {
+      await api.deleteAccount()
+      logoutToLogin()
+    } catch (error) {
+      console.warn('[settings] delete account failed:', error)
+      alert('계정 삭제에 실패했습니다. 잠시 후 다시 시도해 주세요.')
+    } finally {
+      setDeletingAccount(false)
+    }
+  }
+
   return (
     <Box sx={{ p: 0, pb: 14 }}>
-      <ScreenHeader category="설정" title="환경 설정" subtitle="준비 중" />
+      <ScreenHeader category="설정" title="환경 설정" subtitle="계정과 옵션" />
       <GameStage stageSx={{ px: { xs: 2.5, sm: 3 }, pt: 3, pb: 5 }}>
         <Typography variant="h1" sx={{ fontSize: 22, mb: 3.5 }}>
           설정
@@ -133,9 +153,26 @@ export const SettingsScreen = () => {
           {activeDialog}
         </DialogTitle>
         <DialogContent>
-          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            해당 기능은 준비 중입니다.
-          </Typography>
+          {activeDialog === '계정 관리' ? (
+            <Stack spacing={2}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                계정 삭제는 서버에 저장된 로그인 계정을 삭제한 뒤 로그아웃합니다.
+              </Typography>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleDeleteAccount}
+                disabled={deletingAccount}
+                fullWidth
+              >
+                {deletingAccount ? '삭제 중...' : '계정 삭제'}
+              </Button>
+            </Stack>
+          ) : (
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              해당 기능은 준비 중입니다.
+            </Typography>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setActiveDialog(null)}>닫기</Button>
@@ -207,7 +244,7 @@ const VolumeControl = ({
       max={SOUND_VOLUME_MAX}
       step={SOUND_VOLUME_STEP}
       onChange={(_, nextValue) => onChange(Array.isArray(nextValue) ? nextValue[0] : nextValue)}
-      aria-label={`${label} 음량`}
+      aria-label={`${label} 볼륨`}
       sx={{ width: 'calc(100% - 12px)', mx: 0.75, py: 0.5 }}
     />
   </Box>

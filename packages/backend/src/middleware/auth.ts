@@ -7,12 +7,13 @@
  */
 import type { NextFunction, Request, Response } from 'express'
 import { isFirebaseAdminEnabled, verifyIdToken } from '../lib/firebaseAdmin.js'
+import { verifyPasswordSessionToken } from '../auth/passwordAuth.js'
 
 export interface RequestUser {
   uid: string
   email?: string
   isAnonymous: boolean
-  source: 'firebase' | 'legacy'
+  source: 'firebase' | 'password' | 'legacy'
 }
 
 export interface AuthedRequest extends Request {
@@ -90,6 +91,18 @@ export async function authMiddleware(
       })
       return next()
     }
+  }
+
+  const auth = req.headers.authorization
+  const bearerToken = auth?.startsWith('Bearer ') ? auth.slice(7) : undefined
+  const passwordSession = verifyPasswordSessionToken(bearerToken)
+  if (passwordSession) {
+    attachUser(req, {
+      uid: passwordSession.uid,
+      isAnonymous: false,
+      source: 'password',
+    })
+    return next()
   }
 
   const legacyUid = isLegacyAuthFallbackEnabled() ? readLegacyUid(req) : undefined

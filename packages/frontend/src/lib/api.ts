@@ -1,6 +1,7 @@
 import { getCurrentIdToken } from './firebase'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
+const PASSWORD_SESSION_TOKEN_KEY = 'idongworld-password-session-token'
 
 interface FetchOpts extends RequestInit {
   uid?: string
@@ -118,11 +119,42 @@ export interface AuthSessionRequest {
   photoURL?: string | null
 }
 
+export interface PasswordAuthResponse {
+  uid: string
+  token: string
+  user: unknown
+}
+
+function getPasswordSessionToken(): string | null {
+  try {
+    return window.localStorage.getItem(PASSWORD_SESSION_TOKEN_KEY)
+  } catch {
+    return null
+  }
+}
+
+export function setPasswordSessionToken(token: string): void {
+  try {
+    window.localStorage.setItem(PASSWORD_SESSION_TOKEN_KEY, token)
+  } catch {
+    // Login can still continue with in-memory state; persistence is best effort.
+  }
+}
+
+export function clearPasswordSessionToken(): void {
+  try {
+    window.localStorage.removeItem(PASSWORD_SESSION_TOKEN_KEY)
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
 async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T> {
   const idToken = await getCurrentIdToken()
+  const passwordToken = idToken ? null : getPasswordSessionToken()
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+    ...(idToken || passwordToken ? { Authorization: `Bearer ${idToken ?? passwordToken}` } : {}),
     ...(opts.uid ? { 'X-Uid': opts.uid } : {}),
     ...opts.headers,
   }
@@ -153,6 +185,23 @@ export const api = {
       method: 'POST',
       uid,
       body: JSON.stringify(request),
+    }),
+
+  authPasswordSignup: (request: { loginId: string; password: string; passwordConfirm: string }) =>
+    apiFetch<PasswordAuthResponse>('/api/auth/password/signup', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  authPasswordLogin: (request: { loginId: string; password: string }) =>
+    apiFetch<PasswordAuthResponse>('/api/auth/password/login', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  deleteAccount: () =>
+    apiFetch<{ ok: boolean }>('/api/auth/account', {
+      method: 'DELETE',
     }),
 
   getAccountState: <TState = Record<string, unknown>>(uid: string) =>

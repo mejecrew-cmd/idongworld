@@ -22,6 +22,7 @@ import { backendModuleRouter } from './modules/index.js'
 import { connectMongo, disconnectMongo, getMongoStatus } from './db/mongo.js'
 import { getRepositoryStatus, initializeRepositories } from './repositories/index.js'
 import { assertAuthRuntimeReady, authMiddleware, getAuthRuntimeStatus } from './middleware/auth.js'
+import { assertPasswordAuthRuntimeReady } from './auth/passwordAuth.js'
 
 dotenv.config({ path: '.env.local' })
 dotenv.config()
@@ -33,6 +34,10 @@ const app = express()
 const PORT = Number(process.env.PORT ?? 4000)
 const DEV_ORIGIN_PATTERN = /^https?:\/\/(?:localhost|127\.0\.0\.1):\d+$/
 const WORKSPACE_ROOT = path.resolve(__dirname, '../../..')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
 
 function resolveStaticRoot(envName: 'ASSET_ROOT' | 'SCENARIO_ROOT', fallback: string) {
   const configured = process.env[envName]
@@ -45,7 +50,7 @@ function resolveStaticRoot(envName: 'ASSET_ROOT' | 'SCENARIO_ROOT', fallback: st
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || DEV_ORIGIN_PATTERN.test(origin)) {
+    if (!origin || DEV_ORIGIN_PATTERN.test(origin) || ALLOWED_ORIGINS.includes(origin)) {
       callback(null, true)
       return
     }
@@ -96,6 +101,7 @@ app.use((req, res) => {
 
 async function main() {
   assertAuthRuntimeReady()
+  assertPasswordAuthRuntimeReady()
   await connectMongo()
   initializeRepositories()
 

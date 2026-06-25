@@ -42,8 +42,11 @@ export interface TermsAgreementState {
 export interface UserDoc {
   uid: string
   isGuest: boolean
-  authProvider?: 'guest' | 'google' | 'twitter' | 'firebase'
+  authProvider?: 'guest' | 'google' | 'twitter' | 'firebase' | 'password'
   providerUid?: string
+  loginId?: string
+  loginIdNormalized?: string
+  passwordHash?: string
   email?: string
   emailNormalized?: string
   emailVerified?: boolean
@@ -137,6 +140,10 @@ export function updateUser(uid: string, patch: Partial<UserDoc>): UserDoc | unde
   const updated = { ...cur, ...patch, uid, updatedAt: Date.now() }
   users.set(uid, updated)
   return updated
+}
+
+export function deleteUser(uid: string): boolean {
+  return users.delete(uid)
 }
 
 // 사용자 upsert:

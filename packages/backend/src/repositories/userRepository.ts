@@ -15,11 +15,21 @@ export interface AuthUserInput {
   photoURL?: string
 }
 
+export interface PasswordUserInput {
+  uid: string
+  loginId: string
+  loginIdNormalized: string
+  passwordHash: string
+}
+
 export interface UserRepository {
   createGuestUser(): Promise<UserDoc>
   createOrUpdateAuthUser(input: AuthUserInput): Promise<UserDoc>
+  createPasswordUser(input: PasswordUserInput): Promise<UserDoc>
+  findByLoginId(loginIdNormalized: string): Promise<UserDoc | undefined>
   getUser(uid: string): Promise<UserDoc | undefined>
   updateUser(uid: string, patch: Partial<UserDoc>): Promise<UserDoc | undefined>
+  deleteUser(uid: string): Promise<boolean>
   listUsers(): Promise<UserDoc[]>
 }
 

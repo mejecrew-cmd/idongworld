@@ -7,6 +7,7 @@
  */
 import {
   createGuestUser,
+  deleteUser,
   DEFAULT_SOUND_SETTINGS,
   getUser,
   listUsers,
@@ -16,7 +17,7 @@ import {
 } from '../store/memoryStore.js'
 import { memoryHostStateRepository } from './memoryHostStateRepository.js'
 import type { HostStatePatch } from './hostStateRepository.js'
-import type { AuthUserInput, UserRepository } from './userRepository.js'
+import type { AuthUserInput, PasswordUserInput, UserRepository } from './userRepository.js'
 
 function pickDefinedHostPatch(patch: Partial<UserDoc>): HostStatePatch {
   const hostPatch: HostStatePatch = {}
@@ -39,6 +40,39 @@ function createAuthDoc(input: AuthUserInput): UserDoc {
     displayName: input.displayName,
     photoURL: input.photoURL,
     nickname: input.displayName ?? input.email ?? input.provider,
+    gameStartedAt: now,
+    coins: 100,
+    diamonds: 0,
+    gems: 0,
+    openingSeen: false,
+    onboardingComplete: false,
+    soundSettings: DEFAULT_SOUND_SETTINGS,
+    recruitedAidongs: [],
+    firstGachaAttempts: 0,
+    affinities: {},
+    needs: {},
+    unlockedDiaries: [],
+    unlockedCodexEntries: [],
+    codexFullyRegistered: [],
+    inventory: {},
+    diceCount: 6,
+    boardPosition: 0,
+    harborAssignedChars: [],
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+function createPasswordDoc(input: PasswordUserInput): UserDoc {
+  const now = Date.now()
+  return {
+    uid: input.uid,
+    isGuest: false,
+    authProvider: 'password',
+    loginId: input.loginId,
+    loginIdNormalized: input.loginIdNormalized,
+    passwordHash: input.passwordHash,
+    nickname: input.loginId,
     gameStartedAt: now,
     coins: 100,
     diamonds: 0,
@@ -90,6 +124,10 @@ export const memoryUserRepository: UserRepository = {
     return user
   },
 
+  async deleteUser(uid) {
+    return deleteUser(uid)
+  },
+
   async createOrUpdateAuthUser(input) {
     const existing = getUser(input.uid)
     const patch: Partial<UserDoc> = {
@@ -114,6 +152,24 @@ export const memoryUserRepository: UserRepository = {
       inventory: user.inventory,
     })
     return user
+  },
+
+  async createPasswordUser(input) {
+    const user = createPasswordDoc(input)
+    putUser(user)
+    await memoryHostStateRepository.getOrCreate(user.uid, {
+      hostName: user.hostName,
+      coins: user.coins,
+      gems: user.gems,
+      diamonds: user.diamonds,
+      diceCount: user.diceCount,
+      inventory: user.inventory,
+    })
+    return user
+  },
+
+  async findByLoginId(loginIdNormalized) {
+    return listUsers().find((user) => user.loginIdNormalized === loginIdNormalized)
   },
 
   async listUsers() {
