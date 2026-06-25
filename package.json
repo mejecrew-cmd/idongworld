@@ -13,6 +13,7 @@
     "start:backend": "pnpm --filter backend start",
     "pm2:start:backend": "pm2 start packages/backend/dist/index.js --name idongworld-backend",
     "pm2:restart:backend": "pm2 restart idongworld-backend",
+    "pm2:delete:backend": "pm2 delete idongworld-backend",
     "pm2:logs:backend": "pm2 logs idongworld-backend",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
