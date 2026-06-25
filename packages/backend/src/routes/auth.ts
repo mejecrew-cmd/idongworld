@@ -158,7 +158,7 @@ authRouter.post('/password/signup', async (req, res) => {
     passwordHash: hashPassword(password),
   })
   const token = issuePasswordSessionToken(user.uid)
-  res.json({ uid: user.uid, token, user })
+  res.json({ uid: user.uid, token, isNew: true, user })
 })
 
 authRouter.post('/password/login', async (req, res) => {
@@ -174,7 +174,7 @@ authRouter.post('/password/login', async (req, res) => {
   }
 
   const token = issuePasswordSessionToken(user.uid)
-  res.json({ uid: user.uid, token, user })
+  res.json({ uid: user.uid, token, isNew: false, user })
 })
 
 authRouter.delete('/account', async (req, res) => {

@@ -20,7 +20,7 @@ import {
   Typography,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { api, setPasswordSessionToken } from '@/lib/api'
+import { api, setPasswordSessionToken, type PasswordAuthResponse } from '@/lib/api'
 import { trackEvent } from '@/lib/analytics'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { accountStoreFacade } from '@/lib/storeFacades'
@@ -187,7 +187,7 @@ export const LoginScreen = () => {
 
   const completePasswordSession = async (
     id: string,
-    response: { uid: string; token: string; user: unknown },
+    response: PasswordAuthResponse,
     eventName: 'login' | 'sign_up',
   ) => {
     setLoading(true)
@@ -197,7 +197,7 @@ export const LoginScreen = () => {
       console.warn('[auth] failed to hydrate password account session:', e)
     })
     const latestAccount = accountStoreFacade.getAccountState()
-    const completedIntro = hasCompletedIntro(latestAccount, response.user)
+    const shouldEnterIsland = response.isNew === false || hasCompletedIntro(latestAccount, response.user)
     accountStoreFacade.mergeAccountState({
       firebaseUid: response.uid,
       isGuest: false,
@@ -207,7 +207,7 @@ export const LoginScreen = () => {
       nickname: id,
     })
     trackEvent(eventName, { method: 'test_credentials' })
-    navigate(completedIntro ? '/island' : '/title')
+    navigate(shouldEnterIsland ? '/island' : '/title')
     setLoading(false)
   }
 

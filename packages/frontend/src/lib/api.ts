@@ -122,6 +122,7 @@ export interface AuthSessionRequest {
 export interface PasswordAuthResponse {
   uid: string
   token: string
+  isNew?: boolean
   user: unknown
 }
 
