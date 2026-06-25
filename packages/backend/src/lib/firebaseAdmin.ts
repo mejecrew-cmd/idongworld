@@ -7,34 +7,52 @@
  */
 import admin from 'firebase-admin'
 
-const projectId = process.env.FIREBASE_PROJECT_ID
-const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
-const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY
+interface FirebaseAdminEnv {
+  projectId: string
+  clientEmail: string
+  privateKey: string
+}
 
-// Firebase private key는 .env에서 escaped newline 형태로 들어올 수 있어 실제 개행으로 복원한다.
-const privateKey = privateKeyRaw?.replace(/\\n/g, '\n')
+function readFirebaseAdminEnv(): FirebaseAdminEnv | null {
+  const projectId = process.env.FIREBASE_PROJECT_ID
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL
+  const privateKeyRaw = process.env.FIREBASE_PRIVATE_KEY
 
-// 필수 Firebase env가 모두 있고 dummy 값이 아닐 때만 Admin SDK 검증을 활성화한다.
-export const isFirebaseAdminEnabled =
-  Boolean(projectId) &&
-  Boolean(clientEmail) &&
-  Boolean(privateKey) &&
-  !String(clientEmail).includes('dummy') &&
-  !String(privateKey).includes('DUMMY')
+  // Firebase private key는 .env에서 escaped newline 형태로 들어올 수 있어 실제 개행으로 복원한다.
+  const privateKey = privateKeyRaw?.replace(/\\n/g, '\n')
+
+  // 필수 Firebase env가 모두 있고 dummy 값이 아닐 때만 Admin SDK 검증을 활성화한다.
+  if (
+    !projectId ||
+    !clientEmail ||
+    !privateKey ||
+    clientEmail.includes('dummy') ||
+    privateKey.includes('DUMMY')
+  ) {
+    return null
+  }
+
+  return { projectId, clientEmail, privateKey }
+}
+
+export function isFirebaseAdminEnabled(): boolean {
+  return Boolean(readFirebaseAdminEnv())
+}
 
 let _initialized = false
 
 // Firebase Admin lazy init:
 // 설정이 없으면 false를 반환하고, 이미 초기화되어 있으면 재초기화하지 않는다.
 export function ensureFirebaseAdmin(): boolean {
-  if (!isFirebaseAdminEnabled) return false
+  const firebaseEnv = readFirebaseAdminEnv()
+  if (!firebaseEnv) return false
   if (_initialized) return true
   if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
+        projectId: firebaseEnv.projectId,
+        clientEmail: firebaseEnv.clientEmail,
+        privateKey: firebaseEnv.privateKey,
       }),
     })
   }
