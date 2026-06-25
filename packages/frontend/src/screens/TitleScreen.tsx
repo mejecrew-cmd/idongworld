@@ -2,11 +2,12 @@
  * packages/frontend/src/screens/TitleScreen.tsx
  * ------------------------------------------------------------
  * 역할: 로그인 후 매번 보여주는 타이틀 화면이다.
- * 연결: 입장 버튼을 누를 때만 신규/기존 계정 여부를 판단해 opening 또는 island로 이동한다.
- * 주의: 타이틀 화면 진입 자체는 더 이상 오프닝 완료 여부로 자동 스킵하지 않는다.
+ * 연결: 입장 버튼을 누를 때 신규 계정은 opening, 기존 계정은 island로 이동한다.
+ * 주의: 타이틀 진입 자체는 자동 스킵하지 않는다. 재방문 계정에는 로그아웃 버튼만 추가로 보여준다.
  */
 import { Box, Typography, Button, Stack } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import { logout as accountLogout } from '@idongworld/account'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { accountStoreFacade } from '@/lib/storeFacades'
 import { api } from '@/lib/api'
@@ -19,18 +20,27 @@ function readAuthEntryIsNew(): boolean | undefined {
     if (value === 'true') return true
     if (value === 'false') return false
   } catch {
-    // Fall back to account state.
+    // sessionStorage를 사용할 수 없으면 account state를 기준으로 판단한다.
   }
   return undefined
+}
+
+function clearAuthEntryIsNew(): void {
+  try {
+    window.sessionStorage.removeItem(AUTH_ENTRY_IS_NEW_KEY)
+  } catch {
+    // 로그아웃은 계속 진행한다.
+  }
 }
 
 export const TitleScreen = () => {
   const navigate = useNavigate()
   const onboardingComplete = accountStoreFacade.useOnboardingComplete()
   const openingSeen = accountStoreFacade.useOpeningSeen()
+  const entryIsNew = readAuthEntryIsNew()
+  const showLogout = entryIsNew === false || onboardingComplete || openingSeen
 
   const handleStart = async () => {
-    const entryIsNew = readAuthEntryIsNew()
     if (entryIsNew === false) {
       navigate('/island')
       return
@@ -64,6 +74,12 @@ export const TitleScreen = () => {
     navigate('/opening')
   }
 
+  const handleLogout = () => {
+    clearAuthEntryIsNew()
+    accountLogout()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <Box
       sx={{
@@ -91,15 +107,15 @@ export const TitleScreen = () => {
       </Typography>
       <Stack spacing={1.5} sx={{ minWidth: 240 }}>
         <Button variant="contained" onClick={handleStart} size="large">
-          입장
+          입장하기
         </Button>
-        {(onboardingComplete || openingSeen) && (
+        {showLogout && (
           <Button
             variant="outlined"
-            onClick={() => navigate('/island')}
+            onClick={handleLogout}
             sx={{ bgcolor: 'rgba(255,255,255,0.9)' }}
           >
-            바로 마이섬으로
+            로그아웃
           </Button>
         )}
       </Stack>
