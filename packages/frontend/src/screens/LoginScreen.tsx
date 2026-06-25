@@ -42,6 +42,7 @@ const authProviders = [
   { label: 'Google', mark: 'G', tone: '#4285f4' },
   { label: 'Twitter', mark: 'X', tone: '#111111' },
 ] as const
+const AUTH_ENTRY_IS_NEW_KEY = 'idongworld-auth-entry-is-new'
 
 function readOnboardingComplete(user: unknown): boolean {
   return Boolean(
@@ -67,16 +68,13 @@ function readFirebaseSessionProvider(providerId?: string): 'google' | 'twitter' 
   return 'firebase'
 }
 
-function hasCompletedIntro(
-  account: { openingSeen?: boolean; onboardingComplete?: boolean },
-  user?: unknown,
-): boolean {
-  return Boolean(
-    account.openingSeen ||
-      account.onboardingComplete ||
-      readOpeningSeen(user) ||
-      readOnboardingComplete(user),
-  )
+function rememberAuthEntryIsNew(isNew: boolean | undefined): void {
+  try {
+    if (isNew === undefined) window.sessionStorage.removeItem(AUTH_ENTRY_IS_NEW_KEY)
+    else window.sessionStorage.setItem(AUTH_ENTRY_IS_NEW_KEY, isNew ? 'true' : 'false')
+  } catch {
+    // If sessionStorage is unavailable, TitleScreen will fall back to account state.
+  }
 }
 
 function normalizeId(value: string): string {
@@ -159,7 +157,7 @@ export const LoginScreen = () => {
           })
           await hydrateSplitState(r.uid)
           const latestAccount = accountStoreFacade.getAccountState()
-          const shouldEnterIsland = r.isNew === false || hasCompletedIntro(latestAccount, r.user)
+          rememberAuthEntryIsNew(r.isNew)
           accountStoreFacade.mergeAccountState({
             firebaseUid: r.uid,
             isGuest: false,
@@ -169,7 +167,7 @@ export const LoginScreen = () => {
             nickname: user.displayName ?? user.email ?? '사용자',
           })
           trackEvent('login', { method: providerId ?? 'firebaseui' })
-          navigate(shouldEnterIsland ? '/island' : '/title')
+          navigate('/title')
         } catch (e) {
           console.warn('[auth] FirebaseUI login failed:', e)
           setError('Firebase 로그인 처리 중 문제가 발생했습니다. 서버 연결과 Firebase 설정을 확인해 주세요.')
@@ -197,7 +195,7 @@ export const LoginScreen = () => {
       console.warn('[auth] failed to hydrate password account session:', e)
     })
     const latestAccount = accountStoreFacade.getAccountState()
-    const shouldEnterIsland = response.isNew === false || hasCompletedIntro(latestAccount, response.user)
+    rememberAuthEntryIsNew(response.isNew)
     accountStoreFacade.mergeAccountState({
       firebaseUid: response.uid,
       isGuest: false,
@@ -207,7 +205,7 @@ export const LoginScreen = () => {
       nickname: id,
     })
     trackEvent(eventName, { method: 'test_credentials' })
-    navigate(shouldEnterIsland ? '/island' : '/title')
+    navigate('/title')
     setLoading(false)
   }
 

@@ -19,6 +19,7 @@
  *     ③ 로그인+온보딩완료 → /island (마이섬 본 게임)
  *   - "*" Route: 위에서 어디에도 매칭 안 되면 "/"로 되돌림 (404 방지).
  */
+import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { usePageTracking } from './lib/usePageTracking'
 
@@ -49,6 +50,7 @@ import { DebugPanel } from './components/DebugPanel'
 import { CustomsConfirmModal } from './components/CustomsConfirmModal'
 import { renderModuleRoutes } from './lib/moduleRoutes'
 import { accountStoreFacade } from './lib/storeFacades'
+import { isFirebaseEnabled, onFirebaseAuthChanged } from './lib/firebase'
 
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
 const LegacyDebutRedirect = () => {
@@ -62,13 +64,44 @@ const LegacyDebutRedirect = () => {
  */
 const EntryGuard = () => {
   const firebaseUid = accountStoreFacade.useFirebaseUid()
-  if (firebaseUid) return <Navigate to="/island" replace />
-  return <Navigate to="/login" replace />
+  const [target, setTarget] = useState<'login' | 'title' | null>(() => (firebaseUid ? 'title' : null))
+
+  useEffect(() => {
+    if (firebaseUid) {
+      setTarget('title')
+      return undefined
+    }
+    if (!isFirebaseEnabled) {
+      setTarget('login')
+      return undefined
+    }
+
+    return onFirebaseAuthChanged((user) => {
+      setTarget(user ? 'title' : 'login')
+    })
+  }, [firebaseUid])
+
+  if (target === 'title') return <Navigate to="/title" replace />
+  if (target === 'login') return <Navigate to="/login" replace />
+  return (
+    <div
+      style={{
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        background: '#f6fbf7',
+        color: '#273333',
+        fontWeight: 800,
+      }}
+    >
+      로그인 세션 확인 중...
+    </div>
+  )
 }
 
 const LoginGuard = () => {
   const firebaseUid = accountStoreFacade.useFirebaseUid()
-  if (firebaseUid) return <Navigate to="/island" replace />
+  if (firebaseUid) return <Navigate to="/title" replace />
   return <LoginScreen />
 }
 

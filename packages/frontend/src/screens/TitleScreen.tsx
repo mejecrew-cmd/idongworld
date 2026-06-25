@@ -1,61 +1,47 @@
 /**
- * 📁 screens/TitleScreen.tsx — 01 타이틀
- * ───────────────────────────────────────────────
- * 📌 역할: 게임 시작 버튼. 신규 유저는 오프닝, 기존은 마이섬 직행 옵션.
- *
- * 🔗 연결:
- *   - 다음: /opening (신규) / /island (기존)
- *
- * 💡 초보자 안내:
- *   - onboardingComplete가 true면 "마이섬으로" 버튼 추가 표시.
- *   - 배경 PNG (ocean_dawn_warm) — 따뜻한 아침 바다.
+ * packages/frontend/src/screens/TitleScreen.tsx
+ * ------------------------------------------------------------
+ * 역할: 로그인 후 매번 보여주는 타이틀 화면이다.
+ * 연결: 입장 버튼을 누를 때만 신규/기존 계정 여부를 판단해 opening 또는 island로 이동한다.
+ * 주의: 타이틀 화면 진입 자체는 더 이상 오프닝 완료 여부로 자동 스킵하지 않는다.
  */
-import { useEffect, useState } from 'react'
 import { Box, Typography, Button, Stack } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { accountStoreFacade } from '@/lib/storeFacades'
 import { api } from '@/lib/api'
 
+const AUTH_ENTRY_IS_NEW_KEY = 'idongworld-auth-entry-is-new'
+
+function readAuthEntryIsNew(): boolean | undefined {
+  try {
+    const value = window.sessionStorage.getItem(AUTH_ENTRY_IS_NEW_KEY)
+    if (value === 'true') return true
+    if (value === 'false') return false
+  } catch {
+    // Fall back to account state.
+  }
+  return undefined
+}
+
 export const TitleScreen = () => {
   const navigate = useNavigate()
   const onboardingComplete = accountStoreFacade.useOnboardingComplete()
   const openingSeen = accountStoreFacade.useOpeningSeen()
-  const firebaseUid = accountStoreFacade.useFirebaseUid()
-  const [checkingAccount, setCheckingAccount] = useState(false)
-
-  useEffect(() => {
-    if (onboardingComplete || openingSeen) {
-      navigate('/island', { replace: true })
-      return
-    }
-    if (!firebaseUid) return
-
-    let cancelled = false
-    setCheckingAccount(true)
-    void api.getAccountState(firebaseUid)
-      .then((response) => {
-        if (cancelled) return
-        accountStoreFacade.mergeAccountState(response.state)
-        const latest = response.state as { openingSeen?: unknown; onboardingComplete?: unknown }
-        if (latest.onboardingComplete === true || latest.openingSeen === true) {
-          navigate('/island', { replace: true })
-        }
-      })
-      .catch((error) => {
-        console.warn('[title] failed to refresh account state on entry', error)
-      })
-      .finally(() => {
-        if (!cancelled) setCheckingAccount(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [firebaseUid, navigate, onboardingComplete, openingSeen])
 
   const handleStart = async () => {
+    const entryIsNew = readAuthEntryIsNew()
+    if (entryIsNew === false) {
+      navigate('/island')
+      return
+    }
+
     const account = accountStoreFacade.getAccountState()
+    if (entryIsNew === true) {
+      navigate(account.onboardingComplete || account.openingSeen ? '/island' : '/opening')
+      return
+    }
+
     if (account.onboardingComplete || account.openingSeen) {
       navigate('/island')
       return
@@ -78,25 +64,6 @@ export const TitleScreen = () => {
     navigate('/opening')
   }
 
-  if (checkingAccount) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'grid',
-          placeItems: 'center',
-          backgroundImage: 'url(/assets/諛곌꼍/ocean_dawn_warm.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <Typography sx={{ color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-          계정 상태 확인 중...
-        </Typography>
-      </Box>
-    )
-  }
-
   return (
     <Box
       sx={{
@@ -107,7 +74,7 @@ export const TitleScreen = () => {
         justifyContent: 'center',
         flexDirection: 'column',
         gap: 3,
-        backgroundImage: 'url(/assets/배경/ocean_dawn_warm.png)',
+        backgroundImage: 'url(/assets/諛곌꼍/ocean_dawn_warm.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
@@ -120,11 +87,11 @@ export const TitleScreen = () => {
         아이동월드
       </Typography>
       <Typography sx={{ color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-        01 타이틀
+        오늘도 섬으로 들어가기
       </Typography>
       <Stack spacing={1.5} sx={{ minWidth: 240 }}>
         <Button variant="contained" onClick={handleStart} size="large">
-          {onboardingComplete || openingSeen ? '계속하기' : '게임 시작'}
+          입장
         </Button>
         {(onboardingComplete || openingSeen) && (
           <Button
@@ -132,7 +99,7 @@ export const TitleScreen = () => {
             onClick={() => navigate('/island')}
             sx={{ bgcolor: 'rgba(255,255,255,0.9)' }}
           >
-            마이섬으로
+            바로 마이섬으로
           </Button>
         )}
       </Stack>
