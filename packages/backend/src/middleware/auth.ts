@@ -52,7 +52,7 @@ export function isFirebaseAuthRequired(): boolean {
 export function getAuthRuntimeStatus() {
   return {
     nodeEnv: process.env.NODE_ENV ?? 'development',
-    firebaseAdminEnabled: isFirebaseAdminEnabled,
+    firebaseAdminEnabled: isFirebaseAdminEnabled(),
     firebaseAuthRequired: isFirebaseAuthRequired(),
     legacyUidFallbackEnabled: isLegacyAuthFallbackEnabled(),
   }
@@ -78,7 +78,7 @@ export async function authMiddleware(
   _res: Response,
   next: NextFunction,
 ): Promise<void> {
-  if (isFirebaseAdminEnabled) {
+  if (isFirebaseAdminEnabled()) {
     const auth = req.headers.authorization
     const token = auth?.startsWith('Bearer ') ? auth.slice(7) : undefined
     const decoded = await verifyIdToken(token)
