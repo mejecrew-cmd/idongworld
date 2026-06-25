@@ -28,3 +28,5 @@ dist/
 
 # Resource stage output. Source of truth is resources/.
 packages/frontend/public/assets/
+
+idongworld.pem
