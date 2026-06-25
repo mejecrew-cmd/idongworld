@@ -32,6 +32,12 @@ const __dirname = path.dirname(__filename)
 const app = express()
 const PORT = Number(process.env.PORT ?? 4000)
 const DEV_ORIGIN_PATTERN = /^https?:\/\/(?:localhost|127\.0\.0\.1):\d+$/
+const ALLOWED_ORIGINS = new Set(
+  (process.env.ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+)
 const WORKSPACE_ROOT = path.resolve(__dirname, '../../..')
 
 function resolveStaticRoot(envName: 'ASSET_ROOT' | 'SCENARIO_ROOT', fallback: string) {
@@ -45,7 +51,7 @@ function resolveStaticRoot(envName: 'ASSET_ROOT' | 'SCENARIO_ROOT', fallback: st
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || DEV_ORIGIN_PATTERN.test(origin)) {
+    if (!origin || DEV_ORIGIN_PATTERN.test(origin) || ALLOWED_ORIGINS.has(origin)) {
       callback(null, true)
       return
     }
