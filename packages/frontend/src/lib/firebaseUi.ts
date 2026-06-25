@@ -55,8 +55,8 @@ export function startFirebaseUi(options: StartFirebaseUiOptions): firebaseui.aut
     signInOptions: (options.providers ?? ['google', 'x']).map((provider) => ({
       provider: PROVIDER_BY_ID[provider],
     })),
-    tosUrl: '/setting',
-    privacyPolicyUrl: '/setting',
+    tosUrl: 'https://meje.kr/terms',
+    privacyPolicyUrl: 'https://meje.kr/privacy',
     callbacks: {
       signInSuccessWithAuthResult: options.onSignInSuccess,
       uiShown: options.onUiShown,
