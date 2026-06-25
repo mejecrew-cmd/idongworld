@@ -67,6 +67,18 @@ function readFirebaseSessionProvider(providerId?: string): 'google' | 'twitter' 
   return 'firebase'
 }
 
+function hasCompletedIntro(
+  account: { openingSeen?: boolean; onboardingComplete?: boolean },
+  user?: unknown,
+): boolean {
+  return Boolean(
+    account.openingSeen ||
+      account.onboardingComplete ||
+      readOpeningSeen(user) ||
+      readOnboardingComplete(user),
+  )
+}
+
 function normalizeId(value: string): string {
   return value.trim()
 }
@@ -147,14 +159,17 @@ export const LoginScreen = () => {
           })
           await hydrateSplitState(r.uid)
           const latestAccount = accountStoreFacade.getAccountState()
+          const completedIntro = hasCompletedIntro(latestAccount, r.user)
           accountStoreFacade.mergeAccountState({
             firebaseUid: r.uid,
             isGuest: false,
             gameStartedAt: latestAccount.gameStartedAt ?? Date.now(),
+            openingSeen: latestAccount.openingSeen || readOpeningSeen(r.user),
+            onboardingComplete: latestAccount.onboardingComplete || readOnboardingComplete(r.user),
             nickname: user.displayName ?? user.email ?? '사용자',
           })
           trackEvent('login', { method: providerId ?? 'firebaseui' })
-          navigate(latestAccount.openingSeen || latestAccount.onboardingComplete ? '/island' : '/title')
+          navigate(completedIntro ? '/island' : '/title')
         } catch (e) {
           console.warn('[auth] FirebaseUI login failed:', e)
           setError('Firebase 로그인 처리 중 문제가 발생했습니다. 서버 연결과 Firebase 설정을 확인해 주세요.')
@@ -182,16 +197,17 @@ export const LoginScreen = () => {
       console.warn('[auth] failed to hydrate password account session:', e)
     })
     const latestAccount = accountStoreFacade.getAccountState()
+    const completedIntro = hasCompletedIntro(latestAccount, response.user)
     accountStoreFacade.mergeAccountState({
       firebaseUid: response.uid,
       isGuest: false,
       gameStartedAt: latestAccount.gameStartedAt ?? Date.now(),
-      openingSeen: readOpeningSeen(response.user),
-      onboardingComplete: readOnboardingComplete(response.user),
+      openingSeen: latestAccount.openingSeen || readOpeningSeen(response.user),
+      onboardingComplete: latestAccount.onboardingComplete || readOnboardingComplete(response.user),
       nickname: id,
     })
     trackEvent(eventName, { method: 'test_credentials' })
-    navigate(readOpeningSeen(response.user) || readOnboardingComplete(response.user) ? '/island' : '/title')
+    navigate(completedIntro ? '/island' : '/title')
     setLoading(false)
   }
 

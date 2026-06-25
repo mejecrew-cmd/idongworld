@@ -10,6 +10,7 @@
  *   - onboardingComplete가 true면 "마이섬으로" 버튼 추가 표시.
  *   - 배경 PNG (ocean_dawn_warm) — 따뜻한 아침 바다.
  */
+import { useEffect, useState } from 'react'
 import { Box, Typography, Button, Stack } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { ScreenHeader } from '@/components/ScreenHeader'
@@ -20,6 +21,38 @@ export const TitleScreen = () => {
   const navigate = useNavigate()
   const onboardingComplete = accountStoreFacade.useOnboardingComplete()
   const openingSeen = accountStoreFacade.useOpeningSeen()
+  const firebaseUid = accountStoreFacade.useFirebaseUid()
+  const [checkingAccount, setCheckingAccount] = useState(false)
+
+  useEffect(() => {
+    if (onboardingComplete || openingSeen) {
+      navigate('/island', { replace: true })
+      return
+    }
+    if (!firebaseUid) return
+
+    let cancelled = false
+    setCheckingAccount(true)
+    void api.getAccountState(firebaseUid)
+      .then((response) => {
+        if (cancelled) return
+        accountStoreFacade.mergeAccountState(response.state)
+        const latest = response.state as { openingSeen?: unknown; onboardingComplete?: unknown }
+        if (latest.onboardingComplete === true || latest.openingSeen === true) {
+          navigate('/island', { replace: true })
+        }
+      })
+      .catch((error) => {
+        console.warn('[title] failed to refresh account state on entry', error)
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingAccount(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [firebaseUid, navigate, onboardingComplete, openingSeen])
 
   const handleStart = async () => {
     const account = accountStoreFacade.getAccountState()
@@ -43,6 +76,25 @@ export const TitleScreen = () => {
     }
 
     navigate('/opening')
+  }
+
+  if (checkingAccount) {
+    return (
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'grid',
+          placeItems: 'center',
+          backgroundImage: 'url(/assets/諛곌꼍/ocean_dawn_warm.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <Typography sx={{ color: 'white', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+          계정 상태 확인 중...
+        </Typography>
+      </Box>
+    )
   }
 
   return (
