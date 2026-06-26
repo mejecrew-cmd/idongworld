@@ -52,6 +52,7 @@ import { CustomsConfirmModal } from './components/CustomsConfirmModal'
 import { renderModuleRoutes } from './lib/moduleRoutes'
 import { accountStoreFacade } from './lib/storeFacades'
 import { isFirebaseEnabled, onFirebaseAuthChanged } from './lib/firebase'
+import { hydrateSplitState } from './lib/syncStore'
 
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
 const LegacyDebutRedirect = () => {
@@ -106,6 +107,55 @@ const LoginGuard = () => {
   return <LoginScreen />
 }
 
+const IslandHydrationGate = () => {
+  const firebaseUid = accountStoreFacade.useFirebaseUid()
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    if (!firebaseUid) {
+      setReady(true)
+      return () => {
+        cancelled = true
+      }
+    }
+
+    setReady(false)
+    void hydrateSplitState(firebaseUid)
+      .catch((error) => {
+        console.warn('[island] failed to hydrate account state before route render', error)
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [firebaseUid])
+
+  if (!firebaseUid) return <Navigate to="/login" replace />
+  if (!ready) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'grid',
+          placeItems: 'center',
+          background: '#f6fbf7',
+          color: '#273333',
+          fontWeight: 800,
+        }}
+      >
+        마이섬 상태 불러오는 중...
+      </div>
+    )
+  }
+
+  return <MyIslandLayout />
+}
+
 const HarborGate = () => {
   const sooksoClean = accountStoreFacade.useSooksoClean()
   if (!sooksoClean) return <Navigate to="/island" replace />
@@ -144,7 +194,7 @@ export const App = () => {
     </Route>
 
     {/* 마이섬 본 게임 — HUD + 하단 네비 */}
-    <Route path="/island" element={<MyIslandLayout />}>
+    <Route path="/island" element={<IslandHydrationGate />}>
       <Route index element={<HubHeartScene />} />              {/* /island */}
       <Route path="full-map" element={<Navigate to="/island" replace />} />
       <Route path="area/02" element={<HarborAreaRedirect />} />
@@ -166,19 +216,19 @@ export const App = () => {
     </Route>
 
     {/* 도감 — HUD + 하단 네비 (마이섬 레이아웃 재사용) */}
-    <Route path="/codex" element={<MyIslandLayout />}>
+    <Route path="/codex" element={<IslandHydrationGate />}>
       <Route index element={<CodexScreen />} />
     </Route>
 
-    <Route path="/journal" element={<MyIslandLayout />}>
+    <Route path="/journal" element={<IslandHydrationGate />}>
       <Route index element={<JournalScreen />} />
     </Route>
 
     {/* 상점/설정 — 기능 연결 전 placeholder */}
-    <Route path="/shop" element={<MyIslandLayout />}>
+    <Route path="/shop" element={<IslandHydrationGate />}>
       <Route index element={<ShopScreen />} />
     </Route>
-    <Route path="/setting" element={<MyIslandLayout />}>
+    <Route path="/setting" element={<IslandHydrationGate />}>
       <Route index element={<SettingsScreen />} />
     </Route>
 
@@ -188,7 +238,7 @@ export const App = () => {
     </Route>
 
     {/* 대표 무대 — 마이섬 레이아웃을 쓰는 stage 허브 */}
-    <Route path="/stage" element={<MyIslandLayout />}>
+    <Route path="/stage" element={<IslandHydrationGate />}>
       <Route index element={<StageScreen />} />
     </Route>
 
