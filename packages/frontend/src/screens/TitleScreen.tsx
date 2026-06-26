@@ -2,7 +2,7 @@
  * packages/frontend/src/screens/TitleScreen.tsx
  * ------------------------------------------------------------
  * 역할: 로그인 후 매번 보여주는 타이틀 화면이다.
- * 연결: 입장 버튼을 누를 때 신규 계정은 opening, 기존 계정은 island로 이동한다.
+ * 연결: 가입 직후에는 opening 완료 뒤에 도착하고, 입장 버튼을 누르면 island로 이동한다.
  * 주의: 타이틀 진입 자체는 자동 스킵하지 않는다. 재방문 계정에는 로그아웃 버튼만 추가로 보여준다.
  */
 import { Box, Typography, Button, Stack } from '@mui/material'
@@ -38,7 +38,7 @@ export const TitleScreen = () => {
   const onboardingComplete = accountStoreFacade.useOnboardingComplete()
   const openingSeen = accountStoreFacade.useOpeningSeen()
   const entryIsNew = readAuthEntryIsNew()
-  const showLogout = entryIsNew === false || onboardingComplete || openingSeen
+  const showLogout = entryIsNew === false || (entryIsNew !== true && (onboardingComplete || openingSeen))
 
   const handleStart = async () => {
     if (entryIsNew === false) {
@@ -48,7 +48,7 @@ export const TitleScreen = () => {
 
     const account = accountStoreFacade.getAccountState()
     if (entryIsNew === true) {
-      navigate(account.onboardingComplete || account.openingSeen ? '/island' : '/opening')
+      navigate('/island')
       return
     }
 
