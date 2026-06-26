@@ -29,17 +29,14 @@ import {
   type AdminUserSummary,
 } from '@/lib/api'
 
-const ADMIN_PERMISSIONS = [
-  'users.read',
-  'users.detail.read',
-  'users.account.patch',
-  'users.resources.grant',
-  'users.reset',
-  'adminUsers.write',
-] as const
-
 const ADMIN_ROLES: AdminRole[] = ['owner', 'admin', 'operator', 'viewer']
 const HOST_RESOURCES: AdminHostResource[] = ['coins', 'diamonds', 'diceCount']
+const ROLE_PERMISSION_DESCRIPTIONS: Record<AdminRole, string> = {
+  viewer: '유저 정보와 DB 관리 정보를 열람할 수 있습니다.',
+  operator: '유저 정보와 DB 관리 정보를 열람/수정할 수 있지만 관리자 권한은 부여할 수 없습니다.',
+  admin: 'owner와 동일하게 모든 정보를 열람/수정하고 관리자 권한을 부여할 수 있습니다.',
+  owner: '모든 정보를 열람/수정하고 관리자 권한을 부여할 수 있습니다.',
+}
 
 function formatDate(value?: number) {
   if (!value) return '-'
@@ -58,6 +55,7 @@ export const AdminScreen = () => {
   const [error, setError] = useState<string | null>(null)
   const [adminUser, setAdminUser] = useState<AdminUserContext | null>(null)
   const [users, setUsers] = useState<AdminUserSummary[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
   const [selectedUid, setSelectedUid] = useState('')
   const [detail, setDetail] = useState<{ user: AdminUserDetail; host: AdminHostSummary } | null>(null)
   const [grantResource, setGrantResource] = useState<AdminHostResource>('coins')
@@ -68,21 +66,31 @@ export const AdminScreen = () => {
     sooksoName: '',
   })
   const [targetRole, setTargetRole] = useState<AdminRole>('viewer')
-  const [targetPermissions, setTargetPermissions] = useState('users.read,users.detail.read')
   const [targetEnabled, setTargetEnabled] = useState(true)
 
-  const isOwner = adminUser?.role === 'owner'
+  const canManageAdmins = adminUser?.role === 'owner' || adminUser?.permissions.includes('adminUsers.write')
 
   const permissionText = useMemo(() => {
     if (!adminUser) return ''
-    if (adminUser.role === 'owner') return 'owner는 모든 관리자 기능을 사용할 수 있습니다.'
+    if (adminUser.role === 'owner') return ROLE_PERMISSION_DESCRIPTIONS.owner
+    if (adminUser.role === 'admin') return ROLE_PERMISSION_DESCRIPTIONS.admin
     return adminUser.permissions.length ? adminUser.permissions.join(', ') : '별도 permission 없음'
   }, [adminUser])
 
-  const loadUsers = async () => {
-    const response = await api.adminListUsers(100)
+  const loadUsers = async (query = searchQuery) => {
+    const trimmed = query.trim()
+    if (!trimmed) {
+      setUsers([])
+      setSelectedUid('')
+      setDetail(null)
+      return
+    }
+    const response = await api.adminListUsers(100, trimmed)
     setUsers(response.users)
-    if (!selectedUid && response.users[0]) setSelectedUid(response.users[0].uid)
+    if (!response.users.some((user) => user.uid === selectedUid)) {
+      setSelectedUid(response.users[0]?.uid ?? '')
+      if (!response.users[0]) setDetail(null)
+    }
   }
 
   const loadDetail = async (uid: string) => {
@@ -105,7 +113,6 @@ export const AdminScreen = () => {
       .then(async (response) => {
         if (!mounted) return
         setAdminUser(response.adminUser)
-        await loadUsers()
       })
       .catch((caught: unknown) => {
         if (!mounted) return
@@ -177,15 +184,10 @@ export const AdminScreen = () => {
 
   const handleGrantAdmin = () => {
     if (!selectedUid) return
-    const permissions = targetPermissions
-      .split(',')
-      .map((permission) => permission.trim())
-      .filter(Boolean)
     if (!confirm(`${selectedUid}에게 ${targetRole} 관리자 권한을 부여/수정할까요?`)) return
     void runAction(async () => {
       await api.adminUpsertAdminUser(selectedUid, {
         role: targetRole,
-        permissions,
         enabled: targetEnabled,
       })
     })
@@ -219,7 +221,7 @@ export const AdminScreen = () => {
 
             <Paper sx={{ p: 2.5, borderRadius: 2 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
-                <Chip label={adminUser.role} color={isOwner ? 'primary' : 'default'} sx={{ alignSelf: 'flex-start' }} />
+                <Chip label={adminUser.role} color={canManageAdmins ? 'primary' : 'default'} sx={{ alignSelf: 'flex-start' }} />
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="h1" sx={{ fontSize: 22 }}>
                     {adminUser.uid}
@@ -228,7 +230,7 @@ export const AdminScreen = () => {
                     {permissionText}
                   </Typography>
                 </Box>
-                <Button variant="outlined" onClick={() => void runAction(loadUsers)} disabled={busy}>
+                <Button variant="outlined" onClick={() => void runAction(() => loadUsers())} disabled={busy}>
                   새로고침
                 </Button>
               </Stack>
@@ -237,8 +239,23 @@ export const AdminScreen = () => {
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '1.1fr 0.9fr' }, gap: 2.5 }}>
               <Paper sx={{ p: 2, borderRadius: 2, overflow: 'hidden' }}>
                 <Typography variant="h2" sx={{ fontSize: 18, mb: 1.5 }}>
-                  유저 조회
+                  유저 검색
                 </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 1.5 }}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="UID, 메일 주소, 닉네임, ID 검색"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') void runAction(() => loadUsers(searchQuery))
+                    }}
+                  />
+                  <Button variant="contained" onClick={() => void runAction(() => loadUsers(searchQuery))} disabled={busy}>
+                    검색
+                  </Button>
+                </Stack>
                 <Box sx={{ overflowX: 'auto' }}>
                   <Table size="small">
                     <TableHead>
@@ -271,6 +288,16 @@ export const AdminScreen = () => {
                     </TableBody>
                   </Table>
                 </Box>
+                {searchQuery.trim() && users.length === 0 && (
+                  <Typography variant="body2" sx={{ mt: 1.5, color: 'text.secondary' }}>
+                    검색 결과가 없습니다.
+                  </Typography>
+                )}
+                {!searchQuery.trim() && (
+                  <Typography variant="body2" sx={{ mt: 1.5, color: 'text.secondary' }}>
+                    UID, 메일 주소, 닉네임, ID 중 하나를 입력해 검색하세요.
+                  </Typography>
+                )}
               </Paper>
 
               <Paper sx={{ p: 2, borderRadius: 2 }}>
@@ -339,7 +366,16 @@ export const AdminScreen = () => {
               </Paper>
             )}
 
-            {detail && isOwner && (
+            <Paper sx={{ p: 2.5, borderRadius: 2 }}>
+              <Typography variant="h2" sx={{ fontSize: 18, mb: 1 }}>
+                DB 관리
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                DB 관리 메뉴 자리입니다. 실제 조회/수정 기능은 별도 API 경계가 정해진 뒤 연결합니다.
+              </Typography>
+            </Paper>
+
+            {detail && canManageAdmins && (
               <Paper sx={{ p: 2.5, borderRadius: 2 }}>
                 <Typography variant="h2" sx={{ fontSize: 18, mb: 2 }}>
                   관리자 권한 부여
@@ -350,14 +386,7 @@ export const AdminScreen = () => {
                       <MenuItem key={role} value={role}>{role}</MenuItem>
                     ))}
                   </TextField>
-                  <TextField
-                    label="Permissions"
-                    helperText={`쉼표로 구분합니다. 예: ${ADMIN_PERMISSIONS.slice(0, 3).join(',')}`}
-                    value={targetPermissions}
-                    onChange={(event) => setTargetPermissions(event.target.value)}
-                    multiline
-                    minRows={2}
-                  />
+                  <Alert severity="info">{ROLE_PERMISSION_DESCRIPTIONS[targetRole]}</Alert>
                   <TextField select size="small" label="Enabled" value={targetEnabled ? 'true' : 'false'} onChange={(event) => setTargetEnabled(event.target.value === 'true')}>
                     <MenuItem value="true">true</MenuItem>
                     <MenuItem value="false">false</MenuItem>

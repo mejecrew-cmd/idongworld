@@ -35,6 +35,42 @@ const DEFAULT_LIMIT = 50
 const MAX_LIMIT = 200
 const HOST_RESOURCES: HostResource[] = ['coins', 'diamonds', 'diceCount']
 const ADMIN_ROLES: AdminRole[] = ['owner', 'admin', 'operator', 'viewer']
+const ROLE_PERMISSION_PRESETS: Record<AdminRole, string[]> = {
+  viewer: [
+    'users.read',
+    'users.detail.read',
+    'db.read',
+  ],
+  operator: [
+    'users.read',
+    'users.detail.read',
+    'users.account.patch',
+    'users.resources.grant',
+    'users.reset',
+    'db.read',
+    'db.write',
+  ],
+  admin: [
+    'users.read',
+    'users.detail.read',
+    'users.account.patch',
+    'users.resources.grant',
+    'users.reset',
+    'db.read',
+    'db.write',
+    'adminUsers.write',
+  ],
+  owner: [
+    'users.read',
+    'users.detail.read',
+    'users.account.patch',
+    'users.resources.grant',
+    'users.reset',
+    'db.read',
+    'db.write',
+    'adminUsers.write',
+  ],
+}
 const ZONE_MODULE_IDS = ['zone-garden', 'zone-oasis', 'zone-memory', 'zone-mine']
 const DESTINATION_ISLAND_MODULE_IDS = ['destination-shell-island']
 const ACCOUNT_PATCH_FIELDS = [
@@ -53,6 +89,10 @@ function readLimit(value: unknown): number {
   return Math.max(1, Math.min(MAX_LIMIT, Math.floor(parsed)))
 }
 
+function normalizeSearchQuery(value: unknown): string {
+  return typeof value === 'string' ? value.trim().toLowerCase() : ''
+}
+
 function readUidParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value
 }
@@ -67,15 +107,6 @@ function readAdminRole(value: unknown): AdminRole | undefined {
   return typeof value === 'string' && ADMIN_ROLES.includes(value as AdminRole)
     ? value as AdminRole
     : undefined
-}
-
-function readPermissionList(value: unknown): string[] | undefined {
-  if (value === undefined) return undefined
-  if (!Array.isArray(value)) return undefined
-  const permissions = value
-    .map((permission) => typeof permission === 'string' ? permission.trim() : '')
-    .filter(Boolean)
-  return Array.from(new Set(permissions))
 }
 
 function readOptionalBoolean(value: unknown): boolean | undefined {
@@ -182,6 +213,21 @@ function toUserSummary(user: UserDoc) {
   }
 }
 
+function userMatchesSearch(user: UserDoc, query: string): boolean {
+  if (!query) return false
+  const fields = [
+    user.uid,
+    user.email,
+    user.emailNormalized,
+    user.nickname,
+    user.nicknameNormalized,
+    user.loginId,
+    user.loginIdNormalized,
+    user.displayName,
+  ]
+  return fields.some((field) => typeof field === 'string' && field.toLowerCase().includes(query))
+}
+
 function toUserDetail(user: UserDoc) {
   return {
     ...toUserSummary(user),
@@ -225,6 +271,10 @@ function toAdminUserResponse(adminUser: AdminUserDoc) {
   }
 }
 
+function permissionsForRole(role: AdminRole): string[] {
+  return [...ROLE_PERMISSION_PRESETS[role]]
+}
+
 adminRouter.get('/me', adminMiddleware, (req, res) => {
   const adminUser = getRequestAdminUser(req)
   if (!adminUser) {
@@ -240,8 +290,20 @@ adminRouter.get('/me', adminMiddleware, (req, res) => {
 
 adminRouter.get('/users', requireAdminRole('viewer'), async (req, res) => {
   const limit = readLimit(req.query.limit)
+  const query = normalizeSearchQuery(req.query.q)
+  if (!query) {
+    res.json({
+      users: [],
+      limit,
+      hasMore: false,
+      query,
+    })
+    return
+  }
+
   const users = await getUserRepository().listUsers()
-  const sorted = users
+  const matched = users.filter((user) => userMatchesSearch(user, query))
+  const sorted = matched
     .sort((left, right) => right.updatedAt - left.updatedAt)
     .slice(0, limit)
     .map(toUserSummary)
@@ -249,7 +311,8 @@ adminRouter.get('/users', requireAdminRole('viewer'), async (req, res) => {
   res.json({
     users: sorted,
     limit,
-    hasMore: users.length > limit,
+    hasMore: matched.length > limit,
+    query,
   })
 })
 
@@ -406,7 +469,7 @@ adminRouter.patch('/users/:uid/account', requireAdminPermission('users.account.p
   })
 })
 
-adminRouter.patch('/admin-users/:uid', requireAdminRole('owner'), async (req, res) => {
+adminRouter.patch('/admin-users/:uid', requireAdminPermission('adminUsers.write'), async (req, res) => {
   const uid = readUidParam(req.params.uid)
   if (!uid) {
     res.status(400).json({ error: 'uid_required' })
@@ -420,12 +483,13 @@ adminRouter.patch('/admin-users/:uid', requireAdminRole('owner'), async (req, re
   }
 
   const role = readAdminRole(req.body?.role)
-  const permissions = readPermissionList(req.body?.permissions)
   const enabled = readOptionalBoolean(req.body?.enabled)
   if (!role) {
     res.status(400).json({ error: 'invalid_admin_role' })
     return
   }
+
+  const permissions = permissionsForRole(role)
 
   const adminUser = await getAdminRepository().upsertAdminUser({
     uid,

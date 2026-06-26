@@ -82,8 +82,13 @@
 - [x] `PATCH /api/admin/users/:uid/account`
   - 운영상 필요한 account 필드만 수정
 - [x] `PATCH /api/admin/admin-users/:uid`
-  - owner 전용 관리자 권한 부여/수정
-  - role, permissions, enabled 수정
+  - owner/admin 전용 관리자 권한 부여/수정
+  - 입력은 role, enabled만 받는다.
+  - permissions는 서버의 role preset으로만 계산한다.
+  - viewer: 유저 정보, DB 관리 정보 열람
+  - operator: 유저 정보, DB 관리 정보 열람/수정, 권한 부여 불가
+  - admin: owner와 동일한 권한
+  - owner: 모든 정보 열람/수정 및 권한 부여
 - [x] 모든 변경 API는 audit log를 남긴다.
 
 ## 8. 프론트 관리자 화면 연결
@@ -94,6 +99,7 @@
 - [x] 유저 조회 테이블 연결
 - [x] 유저 상세 패널 연결
 - [x] 지급/리셋 액션은 확인 모달을 거치게 구성
+- [x] DB 관리 메뉴 자리 추가
 
 ## 9. 보안 규칙
 
@@ -112,6 +118,8 @@
 
 ## Change Log
 
+- 2026-06-26: 관리자 권한 부여 방식을 role preset 기반으로 변경. 화면/API에서 permissions 직접 입력을 제거하고, viewer/operator/admin/owner별 고정 permission을 서버가 부여하도록 정리. `/admin`에 DB 관리 빈 메뉴 자리 추가.
+- 2026-06-26: 관리자 화면 보강. 유저 조회를 전체 목록이 아니라 검색 결과 화면으로 변경, `/api/admin/users?q=`에서 uid/email/nickname/loginId/displayName 검색 지원.
 - 2026-06-26: 10번 진행. Express smoke 테스트로 `/api/admin/me`, disabled admin 차단, owner 통과, resources grant 후 hostStates 변경, `adminAuditLogs` 기록 조회를 검증. `pnpm build`와 `pnpm exec vitest run packages/backend/src/backendPersistence.test.ts` 통과.
 - 2026-06-26: 10번 보강. `AdminRepository.listAdminAuditLogs` 추가, 관리자 grant API가 생성한 `users.resources.grant` 감사 로그를 smoke 테스트에서 직접 조회해 확인.
 - 2026-06-26: 9번 진행. production legacy uid fallback 차단과 adminUsers 서버 권한 검사를 회귀 테스트로 고정, 콘솔 owner 생성도 `adminAuditLogs`에 `adminUsers.bootstrapOwner`로 기록하도록 보강.

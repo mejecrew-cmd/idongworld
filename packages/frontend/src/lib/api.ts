@@ -307,9 +307,9 @@ export const api = {
   adminMe: () =>
     apiFetch<{ isAdmin: boolean; adminUser: AdminUserContext }>('/api/admin/me'),
 
-  adminListUsers: (limit = 50) =>
+  adminListUsers: (limit = 50, query = '') =>
     apiFetch<{ users: AdminUserSummary[]; limit: number; hasMore: boolean }>(
-      `/api/admin/users?limit=${encodeURIComponent(String(limit))}`,
+      `/api/admin/users?limit=${encodeURIComponent(String(limit))}&q=${encodeURIComponent(query)}`,
     ),
 
   adminGetUser: (uid: string) =>
@@ -345,7 +345,7 @@ export const api = {
 
   adminUpsertAdminUser: (
     uid: string,
-    request: { role: AdminRole; permissions?: string[]; enabled?: boolean },
+    request: { role: AdminRole; enabled?: boolean },
   ) =>
     apiFetch<{ ok: boolean; adminUser: AdminUserContext }>(
       `/api/admin/admin-users/${encodeURIComponent(uid)}`,
