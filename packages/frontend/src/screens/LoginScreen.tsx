@@ -28,6 +28,9 @@ import { isFirebaseUiEnabled, startFirebaseUi } from '@/lib/firebaseUi'
 import { hydrateSplitState } from '@/lib/syncStore'
 
 const ID_PATTERN = /^[a-zA-Z0-9_]{4,20}$/
+const LOGIN_UI_ASSET = '/assets/ui/login'
+
+const loginUi = (fileName: string) => `${LOGIN_UI_ASSET}/${fileName}`
 
 interface CredentialDraft {
   id: string
@@ -55,6 +58,27 @@ function readOnboardingComplete(user: unknown): boolean {
       (user as { onboardingComplete?: unknown }).onboardingComplete === true,
   )
 }
+
+const loginImageButtonSx = (fileName: string) => ({
+  minHeight: { xs: 46, sm: 54 },
+  color: '#6b3f43',
+  fontWeight: 900,
+  textShadow: '0 1px 0 rgba(255,255,255,0.48)',
+  bgcolor: 'transparent',
+  border: 0,
+  boxShadow: 'none',
+  backgroundImage: `url(${loginUi(fileName)})`,
+  backgroundSize: '100% 100%',
+  backgroundRepeat: 'no-repeat',
+  '&:hover': {
+    bgcolor: 'transparent',
+    boxShadow: 'none',
+    transform: 'translateY(-1px)',
+  },
+  '&.Mui-disabled': {
+    opacity: 0.62,
+  },
+} as const)
 
 function readOpeningSeen(user: unknown): boolean {
   return Boolean(
@@ -316,6 +340,36 @@ export const LoginScreen = () => {
         backgroundPosition: 'center',
       }}
     >
+      <Box
+        component="img"
+        src={loginUi('Deco01.png')}
+        alt=""
+        aria-hidden
+        sx={{
+          position: 'absolute',
+          left: { xs: -42, sm: '7%' },
+          bottom: { xs: 64, sm: 80 },
+          width: { xs: 132, sm: 190 },
+          maxWidth: '28vw',
+          pointerEvents: 'none',
+          filter: 'drop-shadow(0 14px 20px rgba(84,78,63,0.16))',
+        }}
+      />
+      <Box
+        component="img"
+        src={loginUi('Deco02.png')}
+        alt=""
+        aria-hidden
+        sx={{
+          position: 'absolute',
+          right: { xs: -62, sm: '5%' },
+          top: { xs: 86, sm: 74 },
+          width: { xs: 148, sm: 220 },
+          maxWidth: '30vw',
+          pointerEvents: 'none',
+          filter: 'drop-shadow(0 16px 24px rgba(84,78,63,0.16))',
+        }}
+      />
       <ScreenHeader category="계정" title="로그인" subtitle="계정 진입" />
       <Stack
         component="form"
@@ -324,29 +378,34 @@ export const LoginScreen = () => {
         autoComplete="off"
         sx={{
           width: '100%',
-          maxWidth: 380,
-          p: 2.5,
+          maxWidth: { xs: 380, sm: 476 },
+          minHeight: { xs: 'auto', sm: 176 },
+          p: { xs: 2.25, sm: 3.25 },
           borderRadius: 2,
-          bgcolor: 'rgba(255,254,250,0.94)',
-          border: '1px solid rgba(62,155,143,0.18)',
-          boxShadow: '0 18px 42px rgba(39,51,51,0.12)',
+          bgcolor: 'transparent',
+          border: 0,
+          backgroundImage: `url(${loginUi('TextBox.png')})`,
+          backgroundSize: '100% 100%',
+          backgroundRepeat: 'no-repeat',
+          boxShadow: '0 20px 44px rgba(39,51,51,0.12)',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         <Stack spacing={1.25} sx={{ alignItems: 'center', textAlign: 'center' }}>
           <Box
+            component="img"
+            src={loginUi('DecoTitle.png')}
+            alt=""
+            aria-hidden
             sx={{
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              display: 'grid',
-              placeItems: 'center',
-              bgcolor: 'primary.light',
-              color: 'primary.dark',
-              boxShadow: 'inset 0 0 0 1px rgba(62,155,143,0.18)',
+              width: { xs: 152, sm: 190 },
+              height: 'auto',
+              mb: -1,
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 8px 10px rgba(84,78,63,0.12))',
             }}
-          >
-            <CircularProgress size={22} thickness={4.5} color="inherit" />
-          </Box>
+          />
           <Typography variant="h1">아이동월드</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
             ID, 비밀번호 또는 소셜 계정으로 섬에 들어가세요.
@@ -387,7 +446,14 @@ export const LoginScreen = () => {
           />
         </Stack>
 
-        <Button type="submit" variant="contained" size="large" disabled={loading} fullWidth>
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          disabled={loading}
+          fullWidth
+          sx={loginImageButtonSx('Btn01.png')}
+        >
           {loading ? '계정 확인 중...' : '로그인'}
         </Button>
 
@@ -402,6 +468,7 @@ export const LoginScreen = () => {
             setError(null)
           }}
           fullWidth
+          sx={loginImageButtonSx('Btn02.png')}
         >
           회원가입
         </Button>
@@ -440,14 +507,17 @@ export const LoginScreen = () => {
                 fullWidth
                 disabled
                 sx={{
-                  height: 42,
+                  height: 50,
                   justifyContent: 'flex-start',
                   px: 1.25,
-                  bgcolor: 'rgba(255,255,255,0.74)',
+                  bgcolor: 'transparent',
+                  border: 0,
+                  backgroundImage: `url(${loginUi(provider.label === 'Google' ? 'BtnGoogle.png' : 'BtnX.png')})`,
+                  backgroundSize: '100% 100%',
+                  backgroundRepeat: 'no-repeat',
                   '&.Mui-disabled': {
                     color: 'text.primary',
-                    borderColor: 'rgba(39,51,51,0.1)',
-                    opacity: 0.72,
+                    opacity: 0.84,
                   },
                 }}
               >

@@ -2,6 +2,8 @@ import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
+const MAIN_UI_ASSET = '/assets/ui/main'
+
 const MY_ISLAND_SECTIONS = [
   { id: 'hub', label: '허브', path: '/island' },
   { id: 'harbor', label: '항구', path: '/island/harbor' },
@@ -58,17 +60,23 @@ export const MyIslandToggle = () => {
             border: 0,
             borderRadius: 0,
             px: { xs: 0.5, sm: 1 },
-            py: 0.8,
+            py: 0,
+            minHeight: { xs: 44, sm: 52 },
             color: 'text.secondary',
             fontSize: { xs: 11, sm: 13 },
             fontWeight: 800,
             whiteSpace: 'nowrap',
+            backgroundImage: `url(${MAIN_UI_ASSET}/BtnPlaceOff.png)`,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+            bgcolor: 'transparent',
             '&.Mui-selected': {
-              color: 'primary.contrastText',
-              bgcolor: 'primary.main',
+              color: '#6b3f43',
+              backgroundImage: `url(${MAIN_UI_ASSET}/BtnPlaceOn.png)`,
+              bgcolor: 'transparent',
             },
             '&.Mui-selected:hover': {
-              bgcolor: 'primary.dark',
+              bgcolor: 'transparent',
             },
           },
         }}

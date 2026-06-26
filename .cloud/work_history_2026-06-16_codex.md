@@ -164,3 +164,19 @@
 - Routed both pages through `MyIslandLayout` so HUD and bottom navigation remain visible.
 - This prevents the Shop and Settings bottom-nav tabs from falling through to the wildcard route and returning to the entry/title flow.
 - Verification: `pnpm.cmd --filter frontend typecheck` passed.
+
+## Follow-up Change - Main 1920x1080 Frame Rule
+
+- Recorded the screen-frame rule: login and onboarding/fullscreen entry screens stay full viewport, while main app shells use a 1920x1080 reference frame.
+- Updated `MyIslandLayout` and `VoyageLayout` to render inside a centered 16:9 frame on desktop, capped at 1920x1080.
+- Kept small/mobile viewports on the existing full-height behavior so the app does not collapse into a short 16:9 strip.
+- Moved HUD and bottom navigation anchoring from viewport-fixed to frame-absolute so main UI controls stay attached to the centered frame.
+- Verification: `pnpm.cmd --filter frontend typecheck` passed.
+
+## Correction - Main Resource Crop Rule
+
+- Corrected the previous interpretation: the main app canvas must remain full viewport and must not render inside a second centered window.
+- Removed the centered 1920x1080 app frame wrapper from `MyIslandLayout` and `VoyageLayout`.
+- Kept the main background resource layer on a centered 16:9 reference crop so only resources follow the 1920x1080 composition rule.
+- Restored HUD and bottom navigation anchoring to viewport-fixed positioning.
+- Verification: `pnpm.cmd --filter frontend typecheck` passed.

@@ -41,6 +41,13 @@ const QUICK_ROUTES = [
   { path: '/dev/catalog', label: '📚 카탈로그' },
 ]
 
+const MS_PER_DAY = 1000 * 60 * 60 * 24
+
+function getDayCount(startedAt?: number): number {
+  if (!startedAt) return 1
+  return Math.max(1, Math.floor((Date.now() - startedAt) / MS_PER_DAY) + 1)
+}
+
 export const DebugPanel = () => {
   // production 빌드에선 자동 숨김
   if (!import.meta.env.DEV) return null
@@ -49,9 +56,23 @@ export const DebugPanel = () => {
   const [resetting, setResetting] = useState(false)
   const navigate = useNavigate()
   const firebaseUid = accountStoreFacade.useFirebaseUid()
+  const gameStartedAt = accountStoreFacade.useGameStartedAt()
   const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
+  const dayCount = getDayCount(gameStartedAt)
 
   const recruitAll = () => ALL_AIDONGS.forEach((id) => myAidongStoreFacade.recruitAidong(id))
+
+  const advanceDay = async () => {
+    const nextGameStartedAt = (gameStartedAt ?? Date.now()) - MS_PER_DAY
+    accountStoreFacade.mergeAccountState({ gameStartedAt: nextGameStartedAt })
+    if (!firebaseUid) return
+
+    try {
+      await api.patchAccountState(firebaseUid, { gameStartedAt: nextGameStartedAt })
+    } catch (error) {
+      console.warn('[debug] failed to persist advanced day', error)
+    }
+  }
 
   const resetAllProgress = async () => {
     if (resetting) return
@@ -105,6 +126,15 @@ export const DebugPanel = () => {
             <Button size="small" variant="outlined" onClick={() => hostStoreFacade.rewardCoins(50)}>🪙 +50</Button>
             <Button size="small" variant="outlined" onClick={() => hostStoreFacade.mutateGems(50)}>❤️ +50</Button>
             <Button size="small" variant="outlined" onClick={() => hostStoreFacade.mutateDiceCount(6)}>🎲 +6</Button>
+          </Stack>
+
+          <Divider sx={{ my: 1 }} />
+
+          {/* 날짜 조작 */}
+          <Typography variant="caption" sx={{ fontWeight: 600 }}>📅 날짜</Typography>
+          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 2, mt: 0.5 }}>
+            <Chip size="small" label={`Day ${dayCount}`} />
+            <Button size="small" variant="outlined" onClick={() => { void advanceDay() }}>Day +1</Button>
           </Stack>
 
           <Divider sx={{ my: 1 }} />

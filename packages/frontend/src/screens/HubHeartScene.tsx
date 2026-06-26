@@ -25,7 +25,7 @@ const ISLAND_AREAS: IslandArea[] = [
   { areaNo: 'AREA-10', name: '우정의 다리', description: '관계 활동이 열릴 구역입니다.', status: 'locked' },
   { areaNo: 'AREA-11', name: '창의의 샘', description: '표현 활동이 열릴 구역입니다.', status: 'locked' },
   { areaNo: 'AREA-12', name: '도전 절벽', description: '도전형 활동이 열릴 구역입니다.', status: 'locked' },
-  { areaNo: 'AREA-13', name: '숙소', description: '마이룸과 휴식 기능이 정리될 구역입니다.', status: 'locked' },
+  { areaNo: 'AREA-13', name: '숙소', description: '마이룸과 휴식 기능이 정리될 구역입니다.', status: 'open', path: '/island/lodge' },
   { areaNo: 'AREA-14', name: '성장의 정원', description: '성장 활동이 열릴 구역입니다.', status: 'locked' },
   { areaNo: 'AREA-15', name: '반성의 호수', description: '마무리 활동이 열릴 구역입니다.', status: 'locked' },
 ]
@@ -39,16 +39,8 @@ export const HubHeartScene = () => {
   return (
     <Box sx={{ p: 0, pb: 12 }}>
       <ScreenHeader category="마이섬" title="마이섬 허브" subtitle={displayName} />
-      <GameStage
-        stageSx={{
-          px: { xs: 2.5, sm: 3 },
-          py: 3,
-          backgroundImage:
-            'linear-gradient(180deg, rgba(255,254,250,0.84), rgba(255,254,250,0.9)), url(/assets/backgrounds/03_Home_01.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
+
+      <GameStage stageSx={{ px: { xs: 2.5, sm: 3 }, py: 3 }}>
         <Stack spacing={0.75} sx={{ mb: 2.5 }}>
           <Typography variant="h1" sx={{ fontSize: 22 }}>
             전체 지도

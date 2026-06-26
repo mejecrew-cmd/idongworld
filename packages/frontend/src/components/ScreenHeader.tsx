@@ -17,6 +17,8 @@ import { Box, Typography, Chip, IconButton } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
+const COMMON_UI_ASSET = '/assets/ui/common'
+
 interface ScreenHeaderProps {
   category: string
   title: string
@@ -72,16 +74,20 @@ export const ScreenHeader = ({
           size="small"
           onClick={goBack}
           sx={{
-            width: 32,
-            height: 32,
+            width: 44,
+            height: 44,
             flex: '0 0 auto',
-            color,
-            bgcolor: overlay ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.72)',
-            border: '1px solid',
-            borderColor: overlay ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.08)',
+            color: 'transparent',
+            bgcolor: 'transparent',
+            backgroundImage: `url(${COMMON_UI_ASSET}/BtnBack.png)`,
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            border: 0,
             pointerEvents: 'auto',
             '&:hover': {
-              bgcolor: overlay ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.95)',
+              bgcolor: 'transparent',
+              transform: 'translateX(-1px)',
             },
           }}
         >

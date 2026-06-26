@@ -85,6 +85,7 @@ const ROUTE_ALIASES: Record<string, 'neighbor'> = {
   'route-neighbor': 'neighbor',
 }
 const HARBOR_ZONE = getZoneById('harbor')
+const LODGE_ZONE = getZoneById('lodge')
 
 const FALLBACK_CABIN_FURNITURE: DecorItemConfig[] = [
   { itemId: 'hammock', label: '해먹', cost: 0, defaultOwned: 1 },
@@ -253,7 +254,7 @@ function getPerimeterCell(index: number): { gridColumn: number; gridRow: number 
 }
 
 function getSlotCaption(slot: BoardSlot): string {
-  if (slot.index === 0) return '항구'
+  if (slot.index === 0) return '숙소'
   if (slot.type === 'character') return slot.characterId ?? '친구섬'
   return slot.label
 }
@@ -266,7 +267,7 @@ function getPhaseLabel(phase: Phase): string {
 }
 
 function getSlotTypeLabel(slot: BoardSlot): string {
-  if (slot.index === 0 || slot.type === 'home') return '항구'
+  if (slot.index === 0 || slot.type === 'home') return '숙소'
   if (slot.type === 'character') return '이웃 아이동'
   if (slot.type === 'treasure') return '보물'
   if (slot.type === 'storm') return '폭풍'
@@ -275,7 +276,7 @@ function getSlotTypeLabel(slot: BoardSlot): string {
 }
 
 function getSlotEffect(slot: BoardSlot): string {
-  if (slot.index === 0 || slot.type === 'home') return '도착하면 항구로 복귀합니다.'
+  if (slot.index === 0 || slot.type === 'home') return '도착하면 숙소로 돌아갑니다.'
   if (slot.type === 'character') {
     return slot.characterId
       ? `${slot.characterId}을 만날 수 있는 섬으로 이동합니다.`
@@ -423,14 +424,14 @@ export const NavigationBoardScene = () => {
     )
   }
 
-  const returnToHarbor = async () => {
+  const returnToLodge = async () => {
     if (returningToHarbor) return
     setReturningToHarbor(true)
     setArrivedLanding(null)
     setArrivedSlot(null)
     setPhase('idle')
     voyageSessionFacade.endSession()
-    navigate('/island/harbor', { replace: true })
+    navigate('/island/lodge', { replace: true })
     setReturningToHarbor(false)
   }
 
@@ -498,7 +499,7 @@ export const NavigationBoardScene = () => {
       return
     }
     if (arrivedSlot.type === 'home') {
-      void returnToHarbor()
+      void returnToLodge()
       return
     }
 
@@ -741,11 +742,11 @@ export const NavigationBoardScene = () => {
                 <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
                   {route.name} · {route.subtitle}
                 </Typography>
-                {currentBoardSlot.type === 'home' && HARBOR_ZONE && (
+                {currentBoardSlot.type === 'home' && LODGE_ZONE && (
                   <Stack direction="row" spacing={0.5} sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
-                    <Chip label={HARBOR_ZONE.areaNo} size="small" color="primary" sx={{ height: 20, fontSize: 10 }} />
-                    <Chip label={getZoneKindLabel(HARBOR_ZONE)} size="small" color="warning" sx={{ height: 20, fontSize: 10 }} />
-                    <Chip label={PHASE_LABEL[HARBOR_ZONE.phase]} size="small" sx={{ height: 20, fontSize: 10 }} />
+                    <Chip label={LODGE_ZONE.areaNo} size="small" color="primary" sx={{ height: 20, fontSize: 10 }} />
+                    <Chip label={getZoneKindLabel(LODGE_ZONE)} size="small" color="warning" sx={{ height: 20, fontSize: 10 }} />
+                    <Chip label={PHASE_LABEL[LODGE_ZONE.phase]} size="small" sx={{ height: 20, fontSize: 10 }} />
                   </Stack>
                 )}
               </Box>
@@ -775,10 +776,10 @@ export const NavigationBoardScene = () => {
               </Button>
               <Button
                 variant="outlined"
-                onClick={() => { void returnToHarbor() }}
+                onClick={() => { void returnToLodge() }}
                 disabled={returningToHarbor}
               >
-                {returningToHarbor ? '항구로 복귀 중...' : '항구 복귀'}
+                {returningToHarbor ? '숙소로 돌아가는 중...' : '숙소 복귀'}
               </Button>
             </Stack>
           </Box>
@@ -854,9 +855,9 @@ export const NavigationBoardScene = () => {
                   textOverflow: 'ellipsis',
                 }}
               >
-                {slot.index === 0 ? '항구' : slot.type === 'character' ? slot.characterId : slot.index}
+                {slot.index === 0 ? '숙소' : slot.type === 'character' ? slot.characterId : slot.index}
               </Box>
-              {slot.index === 0 && HARBOR_ZONE && (
+              {slot.index === 0 && LODGE_ZONE && (
                 <Box
                   sx={{
                     mt: 0.25,
@@ -869,7 +870,7 @@ export const NavigationBoardScene = () => {
                     lineHeight: 1.25,
                   }}
                 >
-                  {HARBOR_ZONE.areaNo}
+                  {LODGE_ZONE.areaNo}
                 </Box>
               )}
               {isCurrent && (
@@ -1098,7 +1099,7 @@ export const NavigationBoardScene = () => {
                 {arrivedSlot.type === 'storm' && '폭풍을 만났지만 무사히 빠져나왔어요. (🪙 -10)'}
                 {arrivedSlot.type === 'resource' && '자원이 풍부한 섬이에요. (🥐 음식 1·💎 기억조각 1)'}
                 {arrivedSlot.type === 'empty' && '잔잔한 바다. (🪙 +2)'}
-                {arrivedSlot.type === 'home' && '한 바퀴 돌아 항구에 도착했어요!'}
+                {arrivedSlot.type === 'home' && '집 모양 칸에 도착했어요. 숙소로 돌아갑니다.'}
               </Typography>
               <Button variant="contained" size="large" onClick={handleSlotAction} fullWidth>
                 {canEnterAidongIsland ? '도착 섬으로 들어가기' : '계속'}

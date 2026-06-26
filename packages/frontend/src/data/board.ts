@@ -12,7 +12,7 @@
  *
  * 💡 초보자 안내:
  *   - SlotType 6종:
- *     · home: 항구 (시작/도착)
+ *     · home: 숙소 (시작/도착)
  *     · character: 본진 4명 개인섬 (영입 가능)
  *     · treasure: 보물 (코인 +30~60)
  *     · storm: 폭풍 (코인 -10)
@@ -45,7 +45,7 @@ const _ROUTE_ID_CHECK: typeof MODULE_ROUTE_ID = 'route-neighbor'
 void _ROUTE_ID_CHECK
 
 export type SlotType =
-  | 'home'        // 항구 (시작/도착)
+  | 'home'        // 숙소 (시작/도착)
   | 'character'   // 본진 4명 개인섬 (영입 가능)
   | 'treasure'    // 보물 (자재·코인)
   | 'storm'       // 폭풍 (이벤트·페널티 약함)
@@ -74,7 +74,7 @@ export interface Route {
 // 이웃섬 항로 30칸 — 본진 5명 중 픽되지 않은 4명이 4칸에 배치
 // (런타임에서 character 4명 동적 매핑)
 const NEIGHBOR_SLOT_TEMPLATE: Omit<BoardSlot, 'characterId'>[] = [
-  { index: 0, type: 'home', label: '항구', emoji: '⚓' },
+  { index: 0, type: 'home', label: '숙소', emoji: '🏠' },
   { index: 1, type: 'empty', label: '빈 바다', emoji: '🌊' },
   { index: 2, type: 'empty', label: '빈 바다', emoji: '🌊' },
   { index: 3, type: 'storm', label: '폭풍', emoji: '🌀' },

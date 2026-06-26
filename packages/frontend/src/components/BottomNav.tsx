@@ -3,12 +3,14 @@ import { Alert, Box, Snackbar, Typography } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
+const MAIN_UI_ASSET = '/assets/ui/main'
+
 const TABS = [
-  { id: 'myroom', label: '마이룸', path: '/island/lodge/myroom/info', mark: '룸' },
-  { id: 'journal', label: '일지', path: '/journal', mark: '일' },
-  { id: 'island', label: '마이섬', path: '/island', mark: '섬' },
-  { id: 'aidong', label: '아이동', path: null, mark: '아' },
-  { id: 'shop', label: '상점', path: null, mark: '상' },
+  { id: 'myroom', label: '마이룸', path: '/island/lodge/myroom/info', asset: 'Btn01MyRoom' },
+  { id: 'journal', label: '일지', path: '/journal', asset: 'Btn02Diary' },
+  { id: 'island', label: '마이섬', path: '/island', asset: 'Btn03MyIsland' },
+  { id: 'aidong', label: '아이동', path: null, asset: 'Btn04MyIdong' },
+  { id: 'shop', label: '상점', path: null, asset: 'Btn05Shop' },
 ] as const
 
 function isTabActive(tabId: string, pathname: string): boolean {
@@ -39,8 +41,8 @@ export const BottomNav = () => {
           maxWidth: GAME_STAGE_WIDTH,
           transform: 'translateX(-50%)',
           bottom: { xs: 10, sm: 14 },
-          height: { xs: 60, sm: 66 },
-          p: 0.75,
+          height: { xs: 82, sm: 96 },
+          p: { xs: 0.5, sm: 0.75 },
           zIndex: 100,
           display: 'grid',
           gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
@@ -69,44 +71,41 @@ export const BottomNav = () => {
                 minWidth: 0,
                 height: '100%',
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 0.25,
                 cursor: 'pointer',
                 userSelect: 'none',
-                borderRadius: 1.5,
-                overflow: 'hidden',
-                bgcolor: active ? 'primary.main' : 'transparent',
-                color: active ? 'primary.contrastText' : 'text.secondary',
-                backgroundImage: active
-                  ? 'linear-gradient(135deg, #67bda4 0%, #3e9b8f 58%, #f3c35c 100%)'
-                  : 'none',
-                boxShadow: active ? '0 8px 18px rgba(62,155,143,0.22)' : 'none',
-                transition: 'transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease',
+                borderRadius: 1,
+                overflow: 'visible',
+                bgcolor: 'transparent',
+                transition: 'transform 140ms ease, filter 140ms ease',
                 '&:hover': {
                   transform: 'translateY(-1px)',
-                  bgcolor: active ? undefined : 'rgba(36,107,111,0.08)',
                 },
               }}
             >
               <Box
+                component="img"
+                src={`${MAIN_UI_ASSET}/${tab.asset}_${active ? 1 : 0}.png`}
+                alt=""
+                aria-hidden
                 sx={{
-                  width: { xs: 22, sm: 24 },
-                  height: { xs: 22, sm: 24 },
-                  borderRadius: 1.25,
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontSize: 11,
-                  fontWeight: 900,
-                  color: active ? '#3e9b8f' : 'primary.main',
-                  bgcolor: active ? '#fffefa' : 'rgba(62,155,143,0.08)',
-                  border: active ? '1px solid rgba(255,255,255,0.42)' : '1px solid rgba(62,155,143,0.1)',
+                  width: { xs: 62, sm: 78 },
+                  height: { xs: 62, sm: 78 },
+                  objectFit: 'contain',
+                  filter: active ? 'drop-shadow(0 8px 12px rgba(84,78,63,0.18))' : 'none',
+                }}
+              />
+              <Typography
+                sx={{
+                  position: 'absolute',
+                  width: 1,
+                  height: 1,
+                  overflow: 'hidden',
+                  clip: 'rect(0 0 0 0)',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {tab.mark}
-              </Box>
-              <Typography sx={{ fontSize: { xs: 10, sm: 11 }, fontWeight: active ? 900 : 800, lineHeight: 1.1, whiteSpace: 'nowrap' }}>
                 {tab.label}
               </Typography>
             </Box>

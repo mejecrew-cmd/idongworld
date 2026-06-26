@@ -33,7 +33,6 @@ import { AidongSprite, OUTFIT_OPTIONS } from '@/components/AidongSprite'
 import { CareModal } from '@/components/CareModal'
 import { CustomsTransferDialog } from '@/components/CustomsTransferDialog'
 import { GameStage } from '@/components/GameStage'
-import { MyIslandToggle } from '@/components/MyIslandToggle'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { PHASE_COLOR, PHASE_LABEL, getZoneById, getZoneKindLabel } from '@/data/zones'
 import { INITIAL_NEEDS, calcMoodScore, moodFromScore, moodToExpression } from '@/data/needs'
@@ -76,13 +75,14 @@ const AIDONG_ITEMS = [
   { id: 'aidong-ribbon', mark: '리', label: 'Aidong 리본' },
 ]
 
-const LODGE_SECTIONS: Array<{ id: LodgeSection; label: string; description: string }> = [
-  { id: 'yard', label: '마당', description: '보유/대기 Aidong' },
-  { id: 'rooms', label: '방', description: '적극 육성 슬롯' },
-  { id: 'decor', label: '꾸미기', description: '방과 빈 방 가구' },
-  { id: 'practice', label: '연습실', description: '후속 육성 공간' },
-  { id: 'debut', label: '데뷔 회의실', description: '후속 목표 관리' },
-  { id: 'myroom', label: '마이룸', description: '정보/도감/콜렉션' },
+// top/left: 집 이미지(03_Home_04.png) 위에서 각 버튼이 놓일 위치(%). 위치 미세조정은 이 값만 바꾸면 됩니다.
+const LODGE_SECTIONS: Array<{ id: LodgeSection; label: string; description: string; top: string; left: string }> = [
+  { id: 'rooms', label: '방', description: '적극 육성 슬롯', top: '27%', left: '50%' },
+  { id: 'decor', label: '꾸미기', description: '방과 빈 방 가구', top: '49%', left: '30%' },
+  { id: 'practice', label: '연습실', description: '후속 육성 공간', top: '49%', left: '70%' },
+  { id: 'myroom', label: '마이룸', description: '정보/도감/콜렉션', top: '69%', left: '36%' },
+  { id: 'debut', label: '데뷔 회의실', description: '후속 목표 관리', top: '69%', left: '66%' },
+  { id: 'yard', label: '마당', description: '보유/대기 Aidong', top: '90%', left: '50%' },
 ]
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -395,17 +395,20 @@ export const LodgeScene = () => {
         subtitle={LODGE_ZONE ? `${LODGE_ZONE.areaNo} · ${getZoneKindLabel(LODGE_ZONE)}` : '방을 꾸미고 쉬는 Aidong을 돌봐요.'}
         showBack
       />
-      <MyIslandToggle />
 
       <GameStage>
         <Box
           sx={{
             position: 'relative',
-            width: '100%',
-            aspectRatio: '16/6',
-            backgroundImage: 'url(/assets/backgrounds/03_Home_02.png)',
+            // 모바일: 화면 높이(dvh) 기준으로 제한해 집 전체와 아래 콘텐츠가 한 화면에 보이도록.
+            width: { xs: 'min(82vw, calc(52dvh * 3 / 4))', sm: '100%' },
+            maxWidth: 560,
+            mx: 'auto',
+            aspectRatio: '3 / 4',
+            backgroundImage: 'url(/assets/backgrounds/03_Home_04.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
           }}
         >
           <Box
@@ -437,6 +440,39 @@ export const LodgeScene = () => {
               숙소 인벤토리
             </Button>
           </Box>
+
+          {LODGE_SECTIONS.map((item) => (
+            <Button
+              key={item.id}
+              size="small"
+              variant={section === item.id ? 'contained' : 'outlined'}
+              onClick={() => {
+                setSection(item.id)
+                if (item.id === 'decor') setTab('rooms')
+              }}
+              sx={{
+                position: 'absolute',
+                top: item.top,
+                left: item.left,
+                transform: 'translate(-50%, -50%)',
+                minWidth: 0,
+                px: 1.25,
+                py: 0.5,
+                fontSize: 12,
+                fontWeight: 800,
+                whiteSpace: 'nowrap',
+                borderRadius: 999,
+                color: section === item.id ? 'primary.contrastText' : '#5b4636',
+                bgcolor: section === item.id ? 'primary.main' : 'rgba(255,254,250,0.92)',
+                boxShadow: '0 6px 16px rgba(80,57,30,0.24)',
+                '&:hover': {
+                  bgcolor: section === item.id ? 'primary.dark' : 'rgba(255,255,255,0.98)',
+                },
+              }}
+            >
+              {item.label}
+            </Button>
+          ))}
         </Box>
       </GameStage>
 
@@ -448,37 +484,6 @@ export const LodgeScene = () => {
             밥주기, 케어, 옷입히기는 숙소에 있을 때만 가능해요.
           </Alert>
         ) : null}
-
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-            gap: 1,
-            mb: 2,
-          }}
-        >
-          {LODGE_SECTIONS.map((item) => (
-            <Button
-              key={item.id}
-              variant={section === item.id ? 'contained' : 'outlined'}
-              onClick={() => {
-                setSection(item.id)
-                if (item.id === 'decor') setTab('rooms')
-              }}
-              sx={{
-                alignItems: 'flex-start',
-                flexDirection: 'column',
-                minHeight: 68,
-                textAlign: 'left',
-              }}
-            >
-              <Typography sx={{ fontWeight: 800, fontSize: 13 }}>{item.label}</Typography>
-              <Typography variant="caption" sx={{ opacity: 0.8, fontSize: 11 }}>
-                {item.description}
-              </Typography>
-            </Button>
-          ))}
-        </Box>
 
         {section === 'yard' && (
           <Box sx={{ bgcolor: 'background.paper', borderRadius: 2, p: 2, mb: 2 }}>

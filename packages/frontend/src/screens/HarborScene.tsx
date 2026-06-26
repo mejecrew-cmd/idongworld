@@ -23,7 +23,7 @@ import {
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { ROUTE_CATALOG } from '@/data/board'
-import { PHASE_COLOR, PHASE_LABEL, getZoneById, getZoneKindLabel } from '@/data/zones'
+import { getZoneById, getZoneKindLabel } from '@/data/zones'
 import { BoardIcon } from '@/components/AidongSprite'
 import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
@@ -42,6 +42,19 @@ import {
 const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
 const HARBOR_ZONE = getZoneById('harbor')
+// 배 설정(getShipConfig)이 아직/실패로 안 불러와져도 선실·갑판 배치 슬롯이 항상 보이도록 하는 기본 배.
+// 실제 config가 로드되면 shipTypes가 채워지면서 자동으로 대체된다.
+const FALLBACK_SHIP_TYPE: ShipTypeConfig = {
+  shipTypeId: 'dinghy',
+  name: '기본 배',
+  cabinSlots: 1,
+  deckSlots: 1,
+  cargoCapacity: 4,
+  diceBonus: 0,
+  isDefault: true,
+  description: '기본으로 제공되는 작은 배입니다.',
+  phase: 'phase1',
+}
 const FALLBACK_CABIN_FURNITURE: DecorItemConfig[] = [
   { itemId: 'hammock', label: '해먹', cost: 0, defaultOwned: 1 },
   { itemId: 'lamp', label: '선실등', cost: 0, defaultOwned: 1 },
@@ -202,7 +215,8 @@ export const HarborScene = () => {
   const currentShipType = useMemo(
     () => shipTypes.find((shipType) => shipType.shipTypeId === shipState.shipTypeId)
       ?? shipTypes.find((shipType) => shipType.isDefault)
-      ?? shipTypes[0],
+      ?? shipTypes[0]
+      ?? FALLBACK_SHIP_TYPE,
     [shipState.shipTypeId, shipTypes],
   )
 
@@ -297,7 +311,7 @@ export const HarborScene = () => {
   }, [uid])
 
   const assignShipSlot = async (kind: 'cabin' | 'deck', slotId: string, current?: string) => {
-    if (!uid || shipLoading) return
+    if (shipLoading) return
     const characterId = current ? undefined : selectedAidong ?? undefined
     if (!current && !characterId) return
     if (characterId && harborAssignedChars.includes(characterId as AidongCharacterId)) {
@@ -311,8 +325,23 @@ export const HarborScene = () => {
       return
     }
 
-    setShipLoading(true)
+    // 낙관적 로컬 업데이트: 백엔드가 없거나 동기화 전이어도 배치가 즉시 반영되게 한다.
     setShipError(null)
+    setShipState((prev) => {
+      const key = kind === 'cabin' ? 'cabinAssignments' : 'deckAssignments'
+      const nextAssignments = { ...prev[key] }
+      if (characterId) {
+        nextAssignments[slotId] = characterId
+      } else {
+        delete nextAssignments[slotId]
+      }
+      return { ...prev, [key]: nextAssignments }
+    })
+    if (characterId) setSelectedAidong(null)
+
+    // 백엔드는 best-effort 동기화. uid가 없으면 로컬 상태로만 유지한다.
+    if (!uid) return
+    setShipLoading(true)
     try {
       let response
       try {
@@ -329,15 +358,12 @@ export const HarborScene = () => {
           throw error
         }
       }
+      // 백엔드 권위 상태로 재조정.
       setShipState(toShipStateView(response.state))
       applyActionApiResponse(response)
-      if (characterId) setSelectedAidong(null)
     } catch (error) {
-      console.warn('[ship] slot assign failed', error)
-      const code = getApiErrorCode(error)
-      setShipError(code === 'aidong_not_recruited'
-        ? '영입 상태 동기화가 아직 끝나지 않아 배치하지 못했어요. 잠시 후 다시 시도해 주세요.'
-        : '배치를 변경하지 못했어요.')
+      // 동기화 실패 시 낙관적 로컬 배치는 유지한다(화면에는 반영된 상태).
+      console.warn('[ship] slot assign sync failed, keeping local placement', error)
     } finally {
       setShipLoading(false)
     }
@@ -456,56 +482,6 @@ export const HarborScene = () => {
         showBack
       />
 
-      <GameStage>
-        <Box
-          sx={{
-            position: 'relative',
-            width: '100%',
-            aspectRatio: '16/7',
-            backgroundImage: 'url(/assets/backgrounds/03_Home_04.png)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        >
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 16,
-              left: 16,
-              bgcolor: 'rgba(255,255,255,0.9)',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 1,
-            }}
-          >
-            {HARBOR_ZONE && (
-              <Stack direction="row" spacing={0.5} sx={{ mb: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
-                <Chip label={HARBOR_ZONE.areaNo} size="small" color="primary" sx={{ height: 20, fontSize: 10 }} />
-                <Chip label={getZoneKindLabel(HARBOR_ZONE)} size="small" color="warning" sx={{ height: 20, fontSize: 10 }} />
-                <Chip label={PHASE_LABEL[HARBOR_ZONE.phase]} size="small" sx={{ height: 20, fontSize: 10, bgcolor: PHASE_COLOR[HARBOR_ZONE.phase] }} />
-              </Stack>
-            )}
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              항구 · 출항 준비
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 16,
-              left: 16,
-              bgcolor: 'rgba(0,0,0,0.5)',
-              color: 'white',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 1,
-            }}
-          >
-            <Typography variant="caption">주사위 보유 🎲 {diceCount}</Typography>
-          </Box>
-        </Box>
-      </GameStage>
-
       <GameStage stageSx={{ px: 3, py: 3 }}>
         {chargedToast && (
           <Alert severity="success" sx={{ mb: 2 }}>
@@ -526,6 +502,7 @@ export const HarborScene = () => {
                   <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
                     선실 {currentShipType?.cabinSlots ?? 0} · 갑판 {currentShipType?.deckSlots ?? 0} · 적재 {currentShipType?.cargoCapacity ?? 0}
                   </Typography>
+                  <Chip label={`🎲 ${diceCount}`} size="small" color="primary" variant="outlined" sx={{ mt: 0.75 }} />
                 </Box>
                 <Stack direction="row" spacing={1}>
                   <Button size="small" variant="outlined" onClick={() => setInventoryOpen(true)}>
