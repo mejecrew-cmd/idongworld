@@ -80,19 +80,16 @@ const EXPRESSIONS = [
 ]
 
 const BACKGROUND_LIST = [
-  { id: 'island_sunny_meadow',     label: '햇살 초원섬',      use: '황금멍 영입',          phase: 1 },
-  { id: 'island_moonlit_stage',    label: '달빛 무대섬',      use: '춤냥 영입',           phase: 1 },
-  { id: 'island_workshop_honey',   label: '꿀향 작업실섬',    use: '양털곰 영입',          phase: 1 },
-  { id: 'island_maple_grove_dawn', label: '단풍 새벽섬',      use: '단풍볼 영입',          phase: 1 },
-  { id: 'island_red_dusk_stage',   label: '붉은 노을 무대섬', use: '날카여우 영입',         phase: 1 },
-  { id: 'myisland_harbor_warm',    label: '마이섬 (낮)',     use: '마이섬 허브 기본',      phase: 1 },
-  { id: 'myisland_harbor_dawn',    label: '마이섬 (새벽)',    use: '단풍볼 정착',          phase: 1 },
-  { id: 'myisland_harbor_evening', label: '마이섬 (저녁)',    use: '항구',                phase: 1 },
-  { id: 'myisland_harbor_dusk',    label: '마이섬 (노을)',    use: '날카여우 정착',         phase: 1 },
-  { id: 'myisland_harbor_night',   label: '마이섬 (밤)',     use: '춤냥 정착',           phase: 1 },
-  { id: 'ocean_dusk',              label: '바다 (어둠)',     use: '03 첫만남·가챠 진입',    phase: 1 },
-  { id: 'ocean_dusk_glow',         label: '바다 (노을빛)',    use: '가챠 빌드업',          phase: 1 },
-  { id: 'ocean_dawn_warm',         label: '바다 (아침 따뜻)', use: '01 타이틀·가챠 결과',  phase: 1 },
+  { id: '00_Splash',  label: 'Splash',  use: 'LoginScreen', phase: 1 },
+  { id: '01_TitleBG', label: 'Title',   use: 'TitleScreen, OpeningScreen', phase: 1 },
+  { id: '02_MainBG',  label: 'Main',    use: 'App shell background', phase: 1 },
+  { id: '03_Home_00', label: 'Home 00', use: 'Heart island first, naming', phase: 1 },
+  { id: '03_Home_01', label: 'Home 01', use: 'Hub, cleaning, sunny debut', phase: 1 },
+  { id: '03_Home_02', label: 'Home 02', use: 'Lodge, workshop debut', phase: 1 },
+  { id: '03_Home_03', label: 'Home 03', use: 'Red dusk debut', phase: 1 },
+  { id: '03_Home_04', label: 'Home 04', use: 'Harbor, maple debut', phase: 1 },
+  { id: '03_Home_05', label: 'Home 05', use: 'Stage, moonlit debut', phase: 1 },
+  { id: '04_Sea',     label: 'Sea',     use: 'Opening sea, first meeting, voyage', phase: 1 },
 ]
 
 const HUD_ICONS = [
@@ -273,7 +270,7 @@ export const AssetCatalogScreen = () => {
       {/* 2. 배경 */}
       {tab === 'background' && (
         <Box>
-          <Typography variant="h2" sx={{ mb: 1 }}>🏞️ 배경 (1920×1080) 13종</Typography>
+          <Typography variant="h2" sx={{ mb: 1 }}>🏞️ 배경 (1920×1080) 10종</Typography>
           <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
             <SourceTag label="자산: 와이어프레임/assets-dummy/배경/" />
             <SourceTag label="시나리오: 기획/시나리오/*.json" />
@@ -286,7 +283,7 @@ export const AssetCatalogScreen = () => {
                   sx={{
                     width: '100%',
                     aspectRatio: '16/9',
-                    backgroundImage: `url(/assets/배경/${b.id}.png)`,
+                    backgroundImage: `url(/assets/backgrounds/${b.id}.png)`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     borderRadius: 1,

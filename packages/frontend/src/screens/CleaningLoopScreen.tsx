@@ -102,7 +102,7 @@ export const CleaningLoopScreen = () => {
       sx={{
         position: 'relative',
         minHeight: '100vh',
-        backgroundImage: 'url(/assets/배경/myisland_harbor_warm.png)',
+        backgroundImage: 'url(/assets/backgrounds/03_Home_01.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         filter: 'grayscale(80%) brightness(0.7)',

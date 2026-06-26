@@ -39,7 +39,16 @@ export const HubHeartScene = () => {
   return (
     <Box sx={{ p: 0, pb: 12 }}>
       <ScreenHeader category="마이섬" title="마이섬 허브" subtitle={displayName} />
-      <GameStage stageSx={{ px: { xs: 2.5, sm: 3 }, py: 3 }}>
+      <GameStage
+        stageSx={{
+          px: { xs: 2.5, sm: 3 },
+          py: 3,
+          backgroundImage:
+            'linear-gradient(180deg, rgba(255,254,250,0.84), rgba(255,254,250,0.9)), url(/assets/backgrounds/03_Home_01.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
         <Stack spacing={0.75} sx={{ mb: 2.5 }}>
           <Typography variant="h1" sx={{ fontSize: 22 }}>
             전체 지도

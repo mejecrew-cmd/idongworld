@@ -25,11 +25,11 @@ const STEPS = [
 ]
 
 const BG_BY_ZONE: Record<string, string> = {
-  sunny_meadow: 'island_sunny_meadow.png',
-  moonlit_stage: 'island_moonlit_stage.png',
-  workshop_honey: 'island_workshop_honey.png',
-  maple_grove_dawn: 'island_maple_grove_dawn.png',
-  red_dusk_stage: 'island_red_dusk_stage.png',
+  sunny_meadow: '03_Home_01.png',
+  moonlit_stage: '03_Home_05.png',
+  workshop_honey: '03_Home_02.png',
+  maple_grove_dawn: '03_Home_04.png',
+  red_dusk_stage: '03_Home_03.png',
 }
 
 type DebutGrade = 'S' | 'A' | 'B' | 'C'
@@ -102,7 +102,7 @@ export const DebutStageScene = () => {
     )
   }
   const sig = SIGNATURES[characterId]
-  const bg = BG_BY_ZONE[sig.zone] ?? 'ocean_dawn_warm.png'
+  const bg = BG_BY_ZONE[sig.zone] ?? '01_TitleBG.png'
 
   const buildResultPayload = (finalScore: number): DebutResultPayload => {
     const generatedAt = Date.now()
@@ -164,7 +164,7 @@ export const DebutStageScene = () => {
       onClick={onTap}
       sx={{
         minHeight: '100vh',
-        backgroundImage: `url(/assets/배경/${bg})`,
+        backgroundImage: `url(/assets/backgrounds/${bg})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         position: 'relative',

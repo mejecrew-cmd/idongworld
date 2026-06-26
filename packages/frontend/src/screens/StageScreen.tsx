@@ -41,7 +41,7 @@ export const StageScreen = () => {
           display: 'grid',
           alignItems: 'end',
           p: 2,
-          backgroundImage: 'url(/assets/배경/island_moonlit_stage.png)',
+          backgroundImage: 'url(/assets/backgrounds/03_Home_05.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           overflow: 'hidden',

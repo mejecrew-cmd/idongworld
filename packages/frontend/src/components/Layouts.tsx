@@ -14,11 +14,11 @@ const appShellSx = {
     inset: 0,
     zIndex: -2,
     background: [
-      'radial-gradient(circle at 18px 18px, rgba(242,127,117,0.14) 0 2px, transparent 2px 34px)',
-      'radial-gradient(circle at 9px 9px, rgba(62,155,143,0.12) 0 1.5px, transparent 1.5px 30px)',
-      'linear-gradient(180deg, #e7f8f3 0%, #f6fbf7 45%, #fff5dd 100%)',
+      'linear-gradient(180deg, rgba(255,254,250,0.7) 0%, rgba(255,254,250,0.42) 45%, rgba(255,245,221,0.72) 100%)',
+      'url(/assets/backgrounds/02_MainBG.png)',
     ].join(', '),
-    backgroundSize: '34px 34px, 30px 30px, auto',
+    backgroundSize: 'auto, cover',
+    backgroundPosition: 'center, center',
   },
   '&::after': {
     content: '""',

@@ -310,7 +310,10 @@ export const LoginScreen = () => {
         px: 2,
         py: 4,
         overflow: 'hidden',
-        background: 'linear-gradient(180deg, #f6fbf7 0%, #edf7f2 52%, #fffefa 100%)',
+        backgroundImage:
+          'linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,254,250,0.68)), url(/assets/backgrounds/00_Splash.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       }}
     >
       <ScreenHeader category="계정" title="로그인" subtitle="계정 진입" />
