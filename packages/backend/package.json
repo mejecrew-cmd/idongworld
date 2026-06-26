@@ -19,6 +19,7 @@
     "check:migration:local-mongo": "node scripts/check-backend-migration.mjs --local-mongo",
     "smoke:persistence": "node scripts/smoke-persistence.mjs",
     "smoke:state-route-removed": "node scripts/smoke-state-route-removed.mjs",
+    "admin:create-owner": "node scripts/create-admin-owner.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

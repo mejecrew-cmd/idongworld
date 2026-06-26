@@ -15,6 +15,7 @@
     "pm2:restart:backend": "pm2 restart idongworld-backend",
     "pm2:delete:backend": "pm2 delete idongworld-backend",
     "pm2:logs:backend": "pm2 logs idongworld-backend",
+    "admin:create-owner": "pnpm --filter backend admin:create-owner --",
     "typecheck": "pnpm -r typecheck",
     "test": "vitest run",
     "test:watch": "vitest",

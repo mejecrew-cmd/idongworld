@@ -6,8 +6,10 @@
  * 주의: 새 dedicated module storage나 customs adapter를 추가하면 이 테스트의 기대값도 함께 갱신한다.
  */
 import { describe, expect, it } from 'vitest'
+import express from 'express'
 import {
   getDedicatedModuleRepositories,
+  getAdminRepository,
   getUserRepository,
   getHostStateRepository,
   getCustomsLogRepository,
@@ -30,6 +32,8 @@ import {
   isLegacyAuthFallbackEnabled,
   type AuthedRequest,
 } from './middleware/auth.js'
+import { adminMiddleware } from './middleware/admin.js'
+import { adminRouter } from './routes/admin.js'
 import {
   getAidongIslandConfig,
   interactAidongIsland,
@@ -98,6 +102,33 @@ import type { ZoneStateDoc } from './models/ZoneStateModel.js'
 
 function testUid(label: string) {
   return `test-${label}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function createTestResponse() {
+  const context: { statusCode: number; body: unknown } = {
+    statusCode: 200,
+    body: undefined,
+  }
+  const res = {
+    status(code: number) {
+      context.statusCode = code
+      return res
+    },
+    json(body: unknown) {
+      context.body = body
+      return res
+    },
+  }
+  return { context, res }
+}
+
+async function closeTestServer(server: ReturnType<ReturnType<typeof express>['listen']>) {
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => {
+      if (error) reject(error)
+      else resolve()
+    })
+  })
 }
 
 const MODULE_REPOSITORY_OPERATION_CASES: Record<string, {
@@ -467,6 +498,101 @@ describe('backend persistence contracts', () => {
     }
   })
 
+  it('keeps admin APIs protected by server auth and adminUsers state', async () => {
+    initializeRepositories()
+    const previousNodeEnv = process.env.NODE_ENV
+    const previousFallback = process.env.AUTH_LEGACY_UID_FALLBACK_ENABLED
+
+    const ownerUid = testUid('admin-owner')
+    const disabledUid = testUid('admin-disabled')
+    const normalUid = testUid('admin-normal')
+
+    await getAdminRepository().upsertAdminUser({
+      uid: ownerUid,
+      role: 'owner',
+      enabled: true,
+    })
+    await getAdminRepository().upsertAdminUser({
+      uid: disabledUid,
+      role: 'admin',
+      enabled: false,
+    })
+
+    delete process.env.AUTH_LEGACY_UID_FALLBACK_ENABLED
+    process.env.NODE_ENV = 'production'
+
+    const productionReq = {
+      headers: { 'x-uid': ownerUid },
+      query: {},
+      body: {},
+    } as unknown as AuthedRequest
+    await authMiddleware(productionReq, {} as never, () => {})
+    const productionResponse = createTestResponse()
+    let productionNextCalled = false
+    await adminMiddleware(productionReq, productionResponse.res as never, () => {
+      productionNextCalled = true
+    })
+    expect(productionNextCalled).toBe(false)
+    expect(productionResponse.context.statusCode).toBe(401)
+    expect(productionResponse.context.body).toMatchObject({ error: 'auth_required' })
+
+    process.env.NODE_ENV = 'development'
+
+    const normalReq = {
+      headers: { 'x-uid': normalUid },
+      query: {},
+      body: {},
+    } as unknown as AuthedRequest
+    await authMiddleware(normalReq, {} as never, () => {})
+    const normalResponse = createTestResponse()
+    let normalNextCalled = false
+    await adminMiddleware(normalReq, normalResponse.res as never, () => {
+      normalNextCalled = true
+    })
+    expect(normalNextCalled).toBe(false)
+    expect(normalResponse.context.statusCode).toBe(403)
+    expect(normalResponse.context.body).toMatchObject({ error: 'admin_required' })
+
+    const disabledReq = {
+      headers: { 'x-uid': disabledUid },
+      query: {},
+      body: {},
+    } as unknown as AuthedRequest
+    await authMiddleware(disabledReq, {} as never, () => {})
+    const disabledResponse = createTestResponse()
+    let disabledNextCalled = false
+    await adminMiddleware(disabledReq, disabledResponse.res as never, () => {
+      disabledNextCalled = true
+    })
+    expect(disabledNextCalled).toBe(false)
+    expect(disabledResponse.context.statusCode).toBe(403)
+
+    const ownerReq = {
+      headers: { 'x-uid': ownerUid },
+      query: {},
+      body: {},
+    } as unknown as AuthedRequest
+    await authMiddleware(ownerReq, {} as never, () => {})
+    const ownerResponse = createTestResponse()
+    let ownerNextCalled = false
+    await adminMiddleware(ownerReq, ownerResponse.res as never, () => {
+      ownerNextCalled = true
+    })
+    expect(ownerNextCalled).toBe(true)
+    expect((ownerReq as { adminUser?: { role?: string } }).adminUser?.role).toBe('owner')
+
+    if (previousNodeEnv === undefined) {
+      delete process.env.NODE_ENV
+    } else {
+      process.env.NODE_ENV = previousNodeEnv
+    }
+    if (previousFallback === undefined) {
+      delete process.env.AUTH_LEGACY_UID_FALLBACK_ENABLED
+    } else {
+      process.env.AUTH_LEGACY_UID_FALLBACK_ENABLED = previousFallback
+    }
+  })
+
   it('reports production Firebase auth as required unless explicitly disabled', () => {
     const previousNodeEnv = process.env.NODE_ENV
     const previousRequired = process.env.AUTH_FIREBASE_REQUIRED
@@ -501,6 +627,132 @@ describe('backend persistence contracts', () => {
       delete process.env.AUTH_FIREBASE_REQUIRED
     } else {
       process.env.AUTH_FIREBASE_REQUIRED = previousRequired
+    }
+  })
+
+  it('serves admin API smoke cases for owner, normal user, disabled admin, grant, and audit log', async () => {
+    initializeRepositories()
+    const previousNodeEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'development'
+
+    const ownerUid = testUid('admin-api-owner')
+    const disabledUid = testUid('admin-api-disabled')
+    const normalUser = await getUserRepository().createPasswordUser({
+      uid: testUid('admin-api-normal'),
+      loginId: 'admin-api-normal',
+      loginIdNormalized: 'admin-api-normal',
+      passwordHash: 'test-hash',
+    })
+    await getUserRepository().createPasswordUser({
+      uid: ownerUid,
+      loginId: 'admin-api-owner',
+      loginIdNormalized: 'admin-api-owner',
+      passwordHash: 'test-hash',
+    })
+    await getUserRepository().createPasswordUser({
+      uid: disabledUid,
+      loginId: 'admin-api-disabled',
+      loginIdNormalized: 'admin-api-disabled',
+      passwordHash: 'test-hash',
+    })
+    await getAdminRepository().upsertAdminUser({
+      uid: ownerUid,
+      role: 'owner',
+      enabled: true,
+    })
+    await getAdminRepository().upsertAdminUser({
+      uid: disabledUid,
+      role: 'admin',
+      permissions: ['users.resources.grant'],
+      enabled: false,
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api', authMiddleware)
+    app.use('/api/admin', adminRouter)
+    const server = app.listen(0)
+
+    try {
+      const address = server.address()
+      if (!address || typeof address === 'string') throw new Error('invalid_test_server_address')
+      const baseUrl = `http://127.0.0.1:${address.port}/api/admin`
+
+      const normalMe = await fetch(`${baseUrl}/me`, {
+        headers: { 'X-Uid': normalUser.uid },
+      })
+      expect(normalMe.status).toBe(403)
+
+      const disabledMe = await fetch(`${baseUrl}/me`, {
+        headers: { 'X-Uid': disabledUid },
+      })
+      expect(disabledMe.status).toBe(403)
+
+      const ownerMe = await fetch(`${baseUrl}/me`, {
+        headers: { 'X-Uid': ownerUid },
+      })
+      expect(ownerMe.status).toBe(200)
+      await expect(ownerMe.json()).resolves.toMatchObject({
+        isAdmin: true,
+        adminUser: {
+          uid: ownerUid,
+          role: 'owner',
+        },
+      })
+
+      const grant = await fetch(`${baseUrl}/users/${normalUser.uid}/resources/grant`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Uid': ownerUid,
+        },
+        body: JSON.stringify({ resource: 'coins', delta: 25 }),
+      })
+      expect(grant.status).toBe(200)
+      await expect(grant.json()).resolves.toMatchObject({
+        ok: true,
+        host: {
+          uid: normalUser.uid,
+          coins: 125,
+        },
+      })
+
+      const host = await getHostStateRepository().getOrCreate(normalUser.uid)
+      expect(host.coins).toBe(125)
+
+      const logs = await getAdminRepository().listAdminAuditLogs({
+        adminUid: ownerUid,
+        action: 'users.resources.grant',
+        targetUid: normalUser.uid,
+        limit: 5,
+      })
+      expect(logs[0]).toMatchObject({
+        adminUid: ownerUid,
+        targetUid: normalUser.uid,
+        action: 'users.resources.grant',
+        payloadSummary: {
+          resource: 'coins',
+          delta: 25,
+        },
+      })
+
+      const directLog = await getAdminRepository().writeAdminAuditLog({
+        adminUid: ownerUid,
+        action: 'test.probe',
+        targetUid: normalUser.uid,
+      })
+      expect(directLog).toMatchObject({
+        adminUid: ownerUid,
+        action: 'test.probe',
+        targetUid: normalUser.uid,
+      })
+    } finally {
+      await closeTestServer(server)
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV
+      } else {
+        process.env.NODE_ENV = previousNodeEnv
+      }
     }
   })
 
