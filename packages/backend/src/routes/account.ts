@@ -20,12 +20,27 @@ const ACCOUNT_FIELDS = [
   'onboardingComplete',
   'hostName',
   'sooksoName',
+  'soundSettings',
 ] as const
 
 function normalizeTimestamp(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0
     ? Math.floor(value)
     : undefined
+}
+
+function normalizeVolume(value: unknown): number | undefined {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return undefined
+  return Math.max(0, Math.min(100, Math.round(value)))
+}
+
+function normalizeSoundSettings(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const source = value as Record<string, unknown>
+  const bgmVolume = normalizeVolume(source.bgmVolume)
+  const sfxVolume = normalizeVolume(source.sfxVolume)
+  if (bgmVolume === undefined || sfxVolume === undefined) return undefined
+  return { bgmVolume, sfxVolume }
 }
 
 function pickAccountPatch(source: Record<string, unknown>) {
@@ -37,6 +52,11 @@ function pickAccountPatch(source: Record<string, unknown>) {
     const gameStartedAt = normalizeTimestamp(patch.gameStartedAt)
     if (gameStartedAt === undefined) delete patch.gameStartedAt
     else patch.gameStartedAt = gameStartedAt
+  }
+  if ('soundSettings' in patch) {
+    const soundSettings = normalizeSoundSettings(patch.soundSettings)
+    if (soundSettings === undefined) delete patch.soundSettings
+    else patch.soundSettings = soundSettings
   }
   return patch
 }
@@ -59,6 +79,7 @@ accountRouter.get('/state', async (req, res) => {
       onboardingComplete: user.onboardingComplete,
       hostName: user.hostName,
       sooksoName: user.sooksoName,
+      soundSettings: user.soundSettings,
     },
   })
 })
@@ -86,6 +107,7 @@ accountRouter.patch('/state', async (req, res) => {
       onboardingComplete: updated.onboardingComplete,
       hostName: updated.hostName,
       sooksoName: updated.sooksoName,
+      soundSettings: updated.soundSettings,
     },
   })
 })

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { logout as accountLogout } from '@idongworld/account'
 import {
@@ -20,9 +20,11 @@ import {
   SOUND_VOLUME_MAX,
   SOUND_VOLUME_MIN,
   SOUND_VOLUME_STEP,
+  clampVolume,
+  type SoundSettings,
 } from '@/data/settings'
 import { api } from '@/lib/api'
-import { settingsStoreFacade, voyageSessionFacade } from '@/lib/storeFacades'
+import { accountStoreFacade, settingsStoreFacade, voyageSessionFacade } from '@/lib/storeFacades'
 
 const miscSettings = [
   '언어',
@@ -38,6 +40,49 @@ export const SettingsScreen = () => {
   const [activeDialog, setActiveDialog] = useState<(typeof miscSettings)[number] | null>(null)
   const [deletingAccount, setDeletingAccount] = useState(false)
   const soundSettings = settingsStoreFacade.useSoundSettings()
+  const saveTimerRef = useRef<number | undefined>()
+  const pendingSoundSettingsRef = useRef<SoundSettings>(soundSettings)
+
+  const flushSoundSettings = () => {
+    if (saveTimerRef.current) {
+      window.clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = undefined
+    }
+
+    const uid = accountStoreFacade.getFirebaseUid()
+    if (!uid) return
+
+    const next = pendingSoundSettingsRef.current
+    void api.patchAccountState(uid, { soundSettings: next }).catch((error) => {
+      console.warn('[settings] failed to persist sound settings', error)
+    })
+  }
+
+  const scheduleSoundSettingsSave = (next: SoundSettings) => {
+    pendingSoundSettingsRef.current = next
+    if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = window.setTimeout(flushSoundSettings, 600)
+  }
+
+  useEffect(() => {
+    pendingSoundSettingsRef.current = soundSettings
+  }, [soundSettings])
+
+  useEffect(() => () => {
+    flushSoundSettings()
+  }, [])
+
+  const handleVolumeChange = (channel: 'bgm' | 'sfx', value: number) => {
+    const volume = clampVolume(value)
+    if (channel === 'bgm') settingsStoreFacade.setBgmVolume(volume)
+    else settingsStoreFacade.setSfxVolume(volume)
+
+    const next = {
+      ...pendingSoundSettingsRef.current,
+      [channel === 'bgm' ? 'bgmVolume' : 'sfxVolume']: volume,
+    }
+    scheduleSoundSettingsSave(next)
+  }
 
   const logoutToLogin = () => {
     voyageSessionFacade.endSession()
@@ -78,12 +123,12 @@ export const SettingsScreen = () => {
             <VolumeControl
               label="BGM"
               value={soundSettings.bgmVolume}
-              onChange={settingsStoreFacade.setBgmVolume}
+              onChange={(value) => handleVolumeChange('bgm', value)}
             />
             <VolumeControl
               label="효과음"
               value={soundSettings.sfxVolume}
-              onChange={settingsStoreFacade.setSfxVolume}
+              onChange={(value) => handleVolumeChange('sfx', value)}
             />
           </SettingsSection>
 
