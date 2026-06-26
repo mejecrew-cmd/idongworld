@@ -126,8 +126,14 @@ export function getCompletedStarDays(state: DailyJournalState): number[] {
     .filter((day) => isDayComplete(state, day))
 }
 
-export function getDailyJournalProgress(state: DailyJournalState, now = Date.now()) {
-  const elapsedDays = Math.max(0, Math.floor((now - state.cycleStartedAt) / DAY_MS))
+/**
+ * anchorStartedAt: 일정표의 "현재 day" 기준 시각. 디버그 패널의 Day 계산과 동일하게
+ * accountStore.gameStartedAt을 넘기면 디버그 Day와 일정표 현재 day가 항상 일치한다.
+ * 넘기지 않으면 일지 자체의 cycleStartedAt을 사용한다(계정 없는 로컬 동작 폴백).
+ */
+export function getDailyJournalProgress(state: DailyJournalState, now = Date.now(), anchorStartedAt?: number) {
+  const cycleStart = anchorStartedAt ?? state.cycleStartedAt
+  const elapsedDays = Math.max(0, Math.floor((now - cycleStart) / DAY_MS))
   const cycleDay = Math.min(CYCLE_DAYS, elapsedDays + 1)
   const remainingDays = Math.max(0, CYCLE_DAYS - elapsedDays)
   const completedStarDays = getCompletedStarDays(state)

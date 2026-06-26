@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Alert, Box, IconButton, Snackbar, Tooltip, Typography } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { api } from '@/lib/api'
 import {
   accountStoreFacade,
   hostStoreFacade,
@@ -9,6 +10,13 @@ import {
 import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
 const MAIN_UI_ASSET = '/assets/ui/main'
+const MS_PER_DAY = 1000 * 60 * 60 * 24
+
+// 디버그 패널·일정표와 동일한 기준(gameStartedAt)으로 현재 Day를 계산한다.
+function getDayCount(startedAt?: number): number {
+  if (!startedAt) return 1
+  return Math.max(1, Math.floor((Date.now() - startedAt) / MS_PER_DAY) + 1)
+}
 
 type HudCurrency = {
   label: string
@@ -86,17 +94,31 @@ export const HUD = () => {
   const location = useLocation()
   const [notificationOpen, setNotificationOpen] = useState(false)
 
+  const firebaseUid = accountStoreFacade.useFirebaseUid()
   const hostName = accountStoreFacade.useHostName()
   const nickname = accountStoreFacade.useNickname()
   const onboardingComplete = accountStoreFacade.useOnboardingComplete()
+  const gameStartedAt = accountStoreFacade.useGameStartedAt()
   const coins = hostStoreFacade.useCoins()
   const diamonds = hostStoreFacade.useDiamonds()
   const inventory = hostStoreFacade.useInventory()
   const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
 
-  const displayName = hostName || nickname || '게스트'
+  // gameStartedAt이 DB에 없으면 지금 시각으로 추가하고 서버에 저장(있으면 그대로 출력만).
+  useEffect(() => {
+    if (gameStartedAt != null) return
+    const now = Date.now()
+    accountStoreFacade.mergeAccountState({ gameStartedAt: now })
+    if (firebaseUid) {
+      api.patchAccountState(firebaseUid, { gameStartedAt: now })
+        .catch((error) => console.warn('[hud] failed to persist gameStartedAt', error))
+    }
+  }, [gameStartedAt, firebaseUid])
+
+  const displayName = nickname || hostName || '게스트'
+  const dayCount = getDayCount(gameStartedAt)
   const levelName = getProfileLevelName(recruitedAidongs.length, onboardingComplete)
-  const profileLevelLabel = levelName.startsWith('Lv.0') ? '' : levelName
+  const levelShort = levelName.split(' ')[0]
   const moduleCurrency = useMemo(
     () => getModuleCurrency(location.pathname, inventory, coins),
     [location.pathname, inventory, coins],
@@ -142,14 +164,16 @@ export const HUD = () => {
             backgroundRepeat: 'no-repeat',
           }}
         >
+          {/* 닉네임 (흰 패널 상단) */}
           <Typography
             sx={{
               position: 'absolute',
-              left: '34%',
-              top: '38%',
-              width: '48%',
+              left: '38%',
+              top: '34%',
+              width: '56%',
+              transform: 'translateY(-50%)',
               color: '#5c3f3f',
-              fontSize: { xs: 8.5, sm: 12.5, md: 15 },
+              fontSize: { xs: 8.5, sm: 12, md: 14.5 },
               fontWeight: 900,
               lineHeight: 1,
               whiteSpace: 'nowrap',
@@ -160,12 +184,35 @@ export const HUD = () => {
           >
             {displayName}
           </Typography>
+          {/* Day count (닉네임 아래) */}
           <Typography
             sx={{
               position: 'absolute',
-              left: '7%',
-              bottom: '7%',
-              width: '25%',
+              left: '38%',
+              top: '58%',
+              width: '56%',
+              transform: 'translateY(-50%)',
+              color: '#9a7b6b',
+              fontSize: { xs: 6.5, sm: 9, md: 11 },
+              fontWeight: 800,
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              pointerEvents: 'none',
+            }}
+          >
+            Day {dayCount}
+          </Typography>
+          {/* 레벨 (핑크 리본 안) */}
+          <Typography
+            sx={{
+              position: 'absolute',
+              left: '19%',
+              top: '85%',
+              transform: 'translate(-50%, -50%)',
+              display: 'inline-block',
+              maxWidth: '32%',
               color: '#fffefa',
               fontSize: { xs: 5.5, sm: 8, md: 10 },
               fontWeight: 900,
@@ -178,7 +225,7 @@ export const HUD = () => {
               pointerEvents: 'none',
             }}
           >
-            {profileLevelLabel}
+            {levelShort}
           </Typography>
         </Box>
 
@@ -218,7 +265,7 @@ export const HUD = () => {
             <IconButton
               aria-label="설정"
               size="small"
-              onClick={() => navigate('/setting')}
+              onClick={() => { if (location.pathname !== '/setting') navigate('/setting') }}
               sx={iconButtonSx}
             >
               S

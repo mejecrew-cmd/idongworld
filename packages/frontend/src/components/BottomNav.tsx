@@ -65,6 +65,7 @@ export const BottomNav = () => {
                   setMessage(tab.id === 'shop' ? '상점은 제작중입니다.' : '아이동 화면은 준비중입니다.')
                   return
                 }
+                if (location.pathname === tab.path) return
                 navigate(tab.path)
               }}
               sx={{

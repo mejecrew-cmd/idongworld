@@ -13,8 +13,8 @@ type IslandArea = {
 }
 
 const ISLAND_AREAS: IslandArea[] = [
-  { areaNo: 'AREA-02', name: '항구', description: '항해와 이동의 출발점입니다.', gate: 'sooksoClean', path: '/island/harbor' },
   { areaNo: 'AREA-01', name: '등대', description: '마이섬의 첫 불빛이 켜질 자리입니다.', gate: 'future' },
+  { areaNo: 'AREA-02', name: '항구', description: '항해와 이동의 출발점입니다.', gate: 'sooksoClean', path: '/island/harbor' },
   { areaNo: 'AREA-03', name: '기억의 숲', description: '일지와 기억 조각이 쌓이는 구역입니다.', gate: 'future' },
   { areaNo: 'AREA-04', name: '고민 동굴', description: '걱정을 천천히 내려놓는 구역입니다.', gate: 'future' },
   { areaNo: 'AREA-05', name: '자신감 폭포', description: '흔들린 마음을 회복하는 구역입니다.', gate: 'future' },
