@@ -90,7 +90,7 @@ export const TitleScreen = () => {
         justifyContent: 'center',
         flexDirection: 'column',
         gap: 3,
-        backgroundImage: 'url(/assets/諛곌꼍/ocean_dawn_warm.png)',
+        backgroundImage: 'url(/assets/backgrounds/01_TitleBG.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}

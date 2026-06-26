@@ -41,24 +41,24 @@ const STAGES: Stage[] = [
     id: 'light_window',
     text:
       '문득 잠에서 깨었을 때,\n어둠 속에서 여전히 나를 바라보고 미소 짓던 그 빛.\n\n유리창의 빛보석들이\n어쩌면 바다의 윤슬 같다고 느끼며…\n\n다시 스르르 잠들며.',
-    bg: 'ocean_dawn_warm.png',
+    bg: '01_TitleBG.png',
   },
   {
     id: 'swaying',
     text:
       '기분 좋은 흔들림이 느껴졌어요.\n\n가만히 뜬 눈에 여전히 반짝이는 빛조각들.\n그리고 바다.\n\n바다!!!',
-    bg: 'ocean_dusk.png',
+    bg: '04_Sea.png',
   },
   {
     id: 'apuapu',
     text:
       '바다 냄새!\n파도에 반짝이는 빛조각!\n사방이 망망대해!\n\n거기에 — 저기 어푸어푸거리는 건 뭐야?',
-    bg: 'ocean_dusk_glow.png',
+    bg: '04_Sea.png',
   },
   {
     id: 'choice',
     text: '',
-    bg: 'ocean_dusk_glow.png',
+    bg: '04_Sea.png',
   },
 ]
 
@@ -108,7 +108,7 @@ export const OpeningScreen = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundImage: `url(/assets/배경/${cur.bg})`,
+        backgroundImage: `url(/assets/backgrounds/${cur.bg})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         cursor: isChoice ? 'default' : 'pointer',

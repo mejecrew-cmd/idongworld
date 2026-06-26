@@ -85,7 +85,7 @@ export const FirstMeetingScreen = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundImage: 'url(/assets/배경/ocean_dusk.png)',
+        backgroundImage: 'url(/assets/backgrounds/04_Sea.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}

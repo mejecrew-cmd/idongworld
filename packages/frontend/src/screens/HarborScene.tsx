@@ -462,7 +462,7 @@ export const HarborScene = () => {
             position: 'relative',
             width: '100%',
             aspectRatio: '16/7',
-            backgroundImage: 'url(/assets/배경/myisland_harbor_evening.png)',
+            backgroundImage: 'url(/assets/backgrounds/03_Home_04.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}

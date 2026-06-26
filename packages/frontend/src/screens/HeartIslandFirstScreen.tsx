@@ -28,7 +28,7 @@ export const HeartIslandFirstScreen = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundImage: 'url(/assets/배경/myisland_harbor_dawn.png)',
+        backgroundImage: 'url(/assets/backgrounds/03_Home_00.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         position: 'relative',
