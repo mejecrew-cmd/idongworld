@@ -3,7 +3,7 @@
  * ------------------------------------------------------------
  * 역할: 최초 로그인 직후 닉네임을 확정하는 가입 화면.
  * 연결: LoginScreen에서 신규 계정으로 판정되면 /signup으로 이동하고,
- *       이 화면을 통과한 뒤 /title로 이동한다.
+ *       이 화면을 통과한 뒤 /opening으로 이동한다.
  * 주의: DB 문서 생성 시점을 가입 완료 뒤로 옮기는 작업은 backend API 변경 단계에서 처리한다.
  */
 import { FormEvent, useEffect, useMemo, useState } from 'react'
@@ -245,7 +245,7 @@ export const SignupScreen = () => {
         return
       }
       rememberNewEntry()
-      navigate('/title', { replace: true })
+      navigate('/opening', { replace: true })
     } catch (saveError) {
       console.warn('[signup] failed to save profile:', saveError)
       setError('가입 정보를 저장하지 못했어요. 잠시 후 다시 시도해 주세요.')

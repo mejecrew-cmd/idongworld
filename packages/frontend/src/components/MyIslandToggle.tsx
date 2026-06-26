@@ -1,6 +1,7 @@
 import { Box, ToggleButton, ToggleButtonGroup } from '@mui/material'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
+import { accountStoreFacade } from '@/lib/storeFacades'
 
 const MAIN_UI_ASSET = '/assets/ui/main'
 
@@ -23,6 +24,7 @@ function getActiveSection(pathname: string): MyIslandSectionId {
 export const MyIslandToggle = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const sooksoClean = accountStoreFacade.useSooksoClean()
   const activeSection = getActiveSection(location.pathname)
 
   return (
@@ -44,6 +46,7 @@ export const MyIslandToggle = () => {
         value={activeSection}
         onChange={(_, nextSection: MyIslandSectionId | null) => {
           if (!nextSection || nextSection === activeSection) return
+          if (!sooksoClean && (nextSection === 'harbor' || nextSection === 'map')) return
           const target = MY_ISLAND_SECTIONS.find((section) => section.id === nextSection)
           if (target) navigate(target.path)
         }}
@@ -81,11 +84,14 @@ export const MyIslandToggle = () => {
           },
         }}
       >
-        {MY_ISLAND_SECTIONS.map((section) => (
-          <ToggleButton key={section.id} value={section.id}>
-            {section.label}
-          </ToggleButton>
-        ))}
+        {MY_ISLAND_SECTIONS.map((section) => {
+          const locked = !sooksoClean && (section.id === 'harbor' || section.id === 'map')
+          return (
+            <ToggleButton key={section.id} value={section.id} disabled={locked}>
+              {locked ? `${section.label} 잠김` : section.label}
+            </ToggleButton>
+          )
+        })}
       </ToggleButtonGroup>
     </Box>
   )

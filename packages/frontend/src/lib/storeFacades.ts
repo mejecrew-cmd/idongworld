@@ -25,7 +25,17 @@ type HostStatePatch = Partial<
 >
 
 type AccountStatePatch = Partial<
-  Pick<UserState, 'firebaseUid' | 'isGuest' | 'nickname' | 'gameStartedAt' | 'openingSeen' | 'onboardingComplete' | 'hostName'>
+  Pick<
+    UserState,
+    | 'firebaseUid'
+    | 'isGuest'
+    | 'nickname'
+    | 'gameStartedAt'
+    | 'openingSeen'
+    | 'sooksoClean'
+    | 'onboardingComplete'
+    | 'hostName'
+  >
 >
 
 const getUserState = () => useUserStore.getState()
@@ -45,6 +55,7 @@ export const accountStoreFacade = {
   useGameStartedAt: () => useUserStore((state) => state.gameStartedAt),
   useOnboardingComplete: () => useUserStore((state) => state.onboardingComplete),
   useOpeningSeen: () => useUserStore((state) => state.openingSeen),
+  useSooksoClean: () => useUserStore((state) => state.sooksoClean),
   useHostName: () => useUserStore((state) => state.hostName),
 
   getAccountState: () => {
@@ -55,6 +66,7 @@ export const accountStoreFacade = {
       nickname: state.nickname,
       gameStartedAt: state.gameStartedAt,
       openingSeen: state.openingSeen,
+      sooksoClean: state.sooksoClean,
       onboardingComplete: state.onboardingComplete,
       hostName: state.hostName,
     }
@@ -67,6 +79,7 @@ export const accountStoreFacade = {
   setOnboardingComplete: (onboardingComplete: boolean) =>
     useUserStore.setState({ onboardingComplete }),
   setOpeningSeen: (openingSeen: boolean) => useUserStore.setState({ openingSeen }),
+  setSooksoClean: (sooksoClean: boolean) => useUserStore.setState({ sooksoClean }),
   completeOnboarding: (hostName: string) => getUserState().completeOnboarding(hostName),
 }
 
