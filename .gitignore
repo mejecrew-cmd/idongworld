@@ -29,4 +29,7 @@ dist/
 # Resource stage output. Source of truth is resources/.
 packages/frontend/public/assets/
 
+# SSH/개인키 (커밋 금지)
 idongworld.pem
+idong.pem
+*.pem
