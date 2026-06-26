@@ -109,10 +109,6 @@ function readAdminRole(value: unknown): AdminRole | undefined {
     : undefined
 }
 
-function readOptionalBoolean(value: unknown): boolean | undefined {
-  return typeof value === 'boolean' ? value : undefined
-}
-
 function readDelta(value: unknown): number | undefined {
   if (typeof value !== 'number' || !Number.isFinite(value)) return undefined
   const delta = Math.trunc(value)
@@ -228,7 +224,7 @@ function userMatchesSearch(user: UserDoc, query: string): boolean {
   return fields.some((field) => typeof field === 'string' && field.toLowerCase().includes(query))
 }
 
-function toUserDetail(user: UserDoc) {
+function toUserDetail(user: UserDoc, adminUser?: AdminUserDoc) {
   return {
     ...toUserSummary(user),
     displayName: user.displayName,
@@ -244,6 +240,8 @@ function toUserDetail(user: UserDoc) {
     soundSettings: user.soundSettings,
     recruitedAidongs: user.recruitedAidongs,
     firstGachaAttempts: user.firstGachaAttempts,
+    adminRole: adminUser?.enabled ? adminUser.role : undefined,
+    adminEnabled: adminUser?.enabled === true,
   }
 }
 
@@ -337,8 +335,10 @@ adminRouter.get('/users/:uid', requireAdminRole('viewer'), async (req, res) => {
     inventory: user.inventory,
   })
 
+  const adminUser = await getAdminRepository().getAdminUser(uid)
+
   res.json({
-    user: toUserDetail(user),
+    user: toUserDetail(user, adminUser),
     host: toHostSummary(host),
   })
 })
@@ -482,26 +482,28 @@ adminRouter.patch('/admin-users/:uid', requireAdminPermission('adminUsers.write'
     return
   }
 
+  const disableAdmin = req.body?.role === null
   const role = readAdminRole(req.body?.role)
-  const enabled = readOptionalBoolean(req.body?.enabled)
-  if (!role) {
+  if (!role && !disableAdmin) {
     res.status(400).json({ error: 'invalid_admin_role' })
     return
   }
 
-  const permissions = permissionsForRole(role)
+  const previousAdminUser = await getAdminRepository().getAdminUser(uid)
+  const nextRole = role ?? previousAdminUser?.role ?? 'viewer'
+  const permissions = role ? permissionsForRole(role) : previousAdminUser?.permissions ?? permissionsForRole('viewer')
 
   const adminUser = await getAdminRepository().upsertAdminUser({
     uid,
-    role,
+    role: nextRole,
     permissions,
-    enabled,
+    enabled: role ? true : false,
   })
 
-  await writeAudit(req, 'adminUsers.upsert', uid, {
-    role,
-    permissions: permissions ?? adminUser.permissions,
-    enabled: enabled ?? adminUser.enabled,
+  await writeAudit(req, disableAdmin ? 'adminUsers.disable' : 'adminUsers.upsert', uid, {
+    role: role ?? null,
+    permissions: adminUser.permissions,
+    enabled: adminUser.enabled,
   })
 
   res.json({

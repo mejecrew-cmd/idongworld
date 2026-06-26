@@ -3,9 +3,11 @@ import {
   Alert,
   Box,
   Button,
+  Checkbox,
   Chip,
   CircularProgress,
   Divider,
+  FormControlLabel,
   MenuItem,
   Paper,
   Stack,
@@ -48,6 +50,10 @@ function boolText(value?: boolean) {
   return value ? '예' : '아니오'
 }
 
+function adminRoleText(role?: AdminRole, enabled?: boolean) {
+  return enabled && role ? role : '유저'
+}
+
 export const AdminScreen = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -65,8 +71,7 @@ export const AdminScreen = () => {
     hostName: '',
     sooksoName: '',
   })
-  const [targetRole, setTargetRole] = useState<AdminRole>('viewer')
-  const [targetEnabled, setTargetEnabled] = useState(true)
+  const [targetRole, setTargetRole] = useState<AdminRole | ''>('')
 
   const canManageAdmins = adminUser?.role === 'owner' || adminUser?.permissions.includes('adminUsers.write')
 
@@ -102,6 +107,7 @@ export const AdminScreen = () => {
       hostName: response.user.hostName ?? '',
       sooksoName: response.user.sooksoName ?? '',
     })
+    setTargetRole(response.user.adminEnabled ? response.user.adminRole ?? '' : '')
   }
 
   useEffect(() => {
@@ -184,11 +190,14 @@ export const AdminScreen = () => {
 
   const handleGrantAdmin = () => {
     if (!selectedUid) return
-    if (!confirm(`${selectedUid}에게 ${targetRole} 관리자 권한을 부여/수정할까요?`)) return
+    const nextRole = targetRole || null
+    const message = nextRole
+      ? `${selectedUid}에게 ${nextRole} 관리자 권한을 부여/수정할까요?`
+      : `${selectedUid}의 관리자 권한을 해제할까요?`
+    if (!confirm(message)) return
     void runAction(async () => {
       await api.adminUpsertAdminUser(selectedUid, {
-        role: targetRole,
-        enabled: targetEnabled,
+        role: nextRole,
       })
     })
   }
@@ -311,6 +320,7 @@ export const AdminScreen = () => {
                 ) : (
                   <Stack spacing={1.25} sx={{ mt: 2 }}>
                     <Typography variant="body2">UID: {detail.user.uid}</Typography>
+                    <Typography variant="body2">역할: {adminRoleText(detail.user.adminRole, detail.user.adminEnabled)}</Typography>
                     <Typography variant="body2">닉네임: {detail.user.nickname ?? '-'}</Typography>
                     <Typography variant="body2">이메일: {detail.user.email ?? '-'}</Typography>
                     <Typography variant="body2">숙소 이름: {detail.user.sooksoName ?? '-'}</Typography>
@@ -381,16 +391,25 @@ export const AdminScreen = () => {
                   관리자 권한 부여
                 </Typography>
                 <Stack spacing={1.5}>
-                  <TextField select size="small" label="Role" value={targetRole} onChange={(event) => setTargetRole(event.target.value as AdminRole)}>
+                  <Box>
                     {ADMIN_ROLES.map((role) => (
-                      <MenuItem key={role} value={role}>{role}</MenuItem>
+                      <FormControlLabel
+                        key={role}
+                        control={
+                          <Checkbox
+                            checked={targetRole === role}
+                            onChange={(event) => {
+                              setTargetRole(event.target.checked ? role : '')
+                            }}
+                          />
+                        }
+                        label={role}
+                      />
                     ))}
-                  </TextField>
-                  <Alert severity="info">{ROLE_PERMISSION_DESCRIPTIONS[targetRole]}</Alert>
-                  <TextField select size="small" label="Enabled" value={targetEnabled ? 'true' : 'false'} onChange={(event) => setTargetEnabled(event.target.value === 'true')}>
-                    <MenuItem value="true">true</MenuItem>
-                    <MenuItem value="false">false</MenuItem>
-                  </TextField>
+                  </Box>
+                  <Alert severity="info">
+                    {targetRole ? ROLE_PERMISSION_DESCRIPTIONS[targetRole] : '아무 역할도 선택하지 않으면 일반 유저로 저장됩니다.'}
+                  </Alert>
                   <Button variant="contained" onClick={handleGrantAdmin} disabled={busy}>
                     관리자 권한 저장
                   </Button>

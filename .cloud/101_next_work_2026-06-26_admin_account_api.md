@@ -118,6 +118,7 @@
 
 ## Change Log
 
+- 2026-06-26: 관리자 화면 보강. 유저 상세에 현재 관리자 역할을 표시하고, 관리자 권한 부여 UI를 role 체크박스 단일 선택/선택 해제 방식으로 변경. 선택 해제 후 저장하면 일반 유저로 처리되도록 API에서 `role: null`을 disabled admin으로 반영.
 - 2026-06-26: 관리자 권한 부여 방식을 role preset 기반으로 변경. 화면/API에서 permissions 직접 입력을 제거하고, viewer/operator/admin/owner별 고정 permission을 서버가 부여하도록 정리. `/admin`에 DB 관리 빈 메뉴 자리 추가.
 - 2026-06-26: 관리자 화면 보강. 유저 조회를 전체 목록이 아니라 검색 결과 화면으로 변경, `/api/admin/users?q=`에서 uid/email/nickname/loginId/displayName 검색 지원.
 - 2026-06-26: 10번 진행. Express smoke 테스트로 `/api/admin/me`, disabled admin 차단, owner 통과, resources grant 후 hostStates 변경, `adminAuditLogs` 기록 조회를 검증. `pnpm build`와 `pnpm exec vitest run packages/backend/src/backendPersistence.test.ts` 통과.

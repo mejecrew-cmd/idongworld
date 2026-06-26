@@ -192,6 +192,8 @@ export interface AdminUserDetail extends AdminUserSummary {
   soundSettings?: Record<string, unknown>
   recruitedAidongs?: string[]
   firstGachaAttempts?: number
+  adminRole?: AdminRole
+  adminEnabled?: boolean
 }
 
 export interface AdminHostSummary {
@@ -345,7 +347,7 @@ export const api = {
 
   adminUpsertAdminUser: (
     uid: string,
-    request: { role: AdminRole; enabled?: boolean },
+    request: { role: AdminRole | null },
   ) =>
     apiFetch<{ ok: boolean; adminUser: AdminUserContext }>(
       `/api/admin/admin-users/${encodeURIComponent(uid)}`,
