@@ -65,6 +65,7 @@ export interface UserDoc {
   profileImageSource?: 'first-aidong' | 'firebase' | 'default' | string
   gameStartedAt?: number
   hostName?: string
+  sooksoName?: string
   sooksoClean?: boolean
   coins: number
   diamonds: number

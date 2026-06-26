@@ -92,6 +92,7 @@ export interface UserState {
   sooksoClean: boolean
   onboardingComplete: boolean
   hostName?: string
+  sooksoName?: string
 
   // 캐릭터
   recruitedAidongs: AidongCharacterId[]
@@ -128,6 +129,7 @@ export interface UserState {
   addAffinity: (id: AidongCharacterId, delta: number) => void
   completeOnboarding: (hostName: string) => void
   setSooksoClean: (sooksoClean: boolean) => void
+  setSooksoName: (sooksoName?: string) => void
   unlockZone: (zone: string) => void
   setZoneSlots: (zoneSlots: Record<string, MyIslandZoneSlot>) => void
   upsertDynamicAidongZone: (zone: DynamicAidongZone) => void
@@ -169,6 +171,7 @@ const initialUser = {
   gems: 0,
   openingSeen: true,
   sooksoClean: false,
+  sooksoName: undefined as string | undefined,
   onboardingComplete: false,
   recruitedAidongs: [] as AidongCharacterId[],
   firstGachaAttempts: 0,
@@ -197,6 +200,7 @@ const loggedOutUserPatch = {
   firebaseUid: undefined,
   nickname: undefined,
   hostName: undefined,
+  sooksoName: undefined,
   firstGachaCandidate: undefined,
   currentRoute: undefined,
   harborLastChargedAt: undefined,
@@ -262,6 +266,8 @@ export const useUserStore = create<UserState>()(
         }),
 
       setSooksoClean: (sooksoClean) => set({ sooksoClean }),
+
+      setSooksoName: (sooksoName) => set({ sooksoName }),
 
       unlockZone: (zone) =>
         set((s) => ({

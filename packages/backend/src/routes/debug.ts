@@ -82,6 +82,7 @@ debugRouter.post('/reset', async (req, res) => {
   const account = await getUserRepository().updateUser(uid, {
     nickname: undefined,
     hostName: undefined,
+    sooksoName: undefined,
     openingSeen: true,
     sooksoClean: false,
     onboardingComplete: false,

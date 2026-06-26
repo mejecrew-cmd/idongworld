@@ -35,6 +35,7 @@ type AccountStatePatch = Partial<
     | 'sooksoClean'
     | 'onboardingComplete'
     | 'hostName'
+    | 'sooksoName'
   >
 >
 
@@ -57,6 +58,7 @@ export const accountStoreFacade = {
   useOpeningSeen: () => useUserStore((state) => state.openingSeen),
   useSooksoClean: () => useUserStore((state) => state.sooksoClean),
   useHostName: () => useUserStore((state) => state.hostName),
+  useSooksoName: () => useUserStore((state) => state.sooksoName),
 
   getAccountState: () => {
     const state = getUserState()
@@ -69,6 +71,7 @@ export const accountStoreFacade = {
       sooksoClean: state.sooksoClean,
       onboardingComplete: state.onboardingComplete,
       hostName: state.hostName,
+      sooksoName: state.sooksoName,
     }
   },
   getFirebaseUid: () => getUserState().firebaseUid,
@@ -80,6 +83,7 @@ export const accountStoreFacade = {
     useUserStore.setState({ onboardingComplete }),
   setOpeningSeen: (openingSeen: boolean) => useUserStore.setState({ openingSeen }),
   setSooksoClean: (sooksoClean: boolean) => useUserStore.setState({ sooksoClean }),
+  setSooksoName: (sooksoName?: string) => useUserStore.setState({ sooksoName }),
   completeOnboarding: (hostName: string) => getUserState().completeOnboarding(hostName),
 }
 

@@ -15,7 +15,7 @@ let isSyncing = false
 
 const SYNCED_KEYS = [
   'coins', 'diamonds', 'gems',
-  'gameStartedAt', 'openingSeen', 'sooksoClean', 'onboardingComplete', 'hostName', 'soundSettings',
+  'gameStartedAt', 'openingSeen', 'sooksoClean', 'sooksoName', 'onboardingComplete', 'hostName', 'soundSettings',
   'recruitedAidongs', 'firstGachaCandidate', 'firstGachaAttempts',
   'affinities', 'needs',
   'unlockedZones', 'zoneSlots', 'dynamicAidongZones',
@@ -45,6 +45,7 @@ const ACCOUNT_KEYS = [
   'gameStartedAt',
   'openingSeen',
   'sooksoClean',
+  'sooksoName',
   'onboardingComplete',
   'hostName',
   'soundSettings',

@@ -19,6 +19,7 @@ const ACCOUNT_FIELDS = [
   'sooksoClean',
   'onboardingComplete',
   'hostName',
+  'sooksoName',
 ] as const
 
 function normalizeTimestamp(value: unknown) {
@@ -57,6 +58,7 @@ accountRouter.get('/state', async (req, res) => {
       sooksoClean: Boolean(user.sooksoClean),
       onboardingComplete: user.onboardingComplete,
       hostName: user.hostName,
+      sooksoName: user.sooksoName,
     },
   })
 })
@@ -83,6 +85,7 @@ accountRouter.patch('/state', async (req, res) => {
       sooksoClean: Boolean(updated.sooksoClean),
       onboardingComplete: updated.onboardingComplete,
       hostName: updated.hostName,
+      sooksoName: updated.sooksoName,
     },
   })
 })

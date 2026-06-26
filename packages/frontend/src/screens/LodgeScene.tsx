@@ -25,6 +25,7 @@ import {
   Stack,
   Tab,
   Tabs,
+  TextField,
   Typography,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
@@ -84,6 +85,8 @@ const LODGE_SECTIONS: Array<{ id: LodgeSection; label: string; description: stri
   { id: 'debut', label: '데뷔 회의실', description: '후속 목표 관리', top: '69%', left: '66%' },
   { id: 'yard', label: '마당', description: '보유/대기 Aidong', top: '90%', left: '50%' },
 ]
+
+const CLEANING_SPOTS = LODGE_SECTIONS.filter((section) => section.id !== 'yard')
 
 const RESOURCE_LABELS: Record<string, string> = {
   acorn: '도토리',
@@ -166,11 +169,212 @@ function renderInventoryList(items: Record<string, number>) {
   )
 }
 
+function LodgeCleaningScene() {
+  const navigate = useNavigate()
+  const uid = accountStoreFacade.useFirebaseUid()
+  const [cleanedSpots, setCleanedSpots] = useState<Set<LodgeSection>>(() => new Set())
+  const [namingOpen, setNamingOpen] = useState(false)
+  const [lodgeName, setLodgeName] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const cleanedCount = cleanedSpots.size
+  const allCleaned = cleanedCount >= CLEANING_SPOTS.length
+  const trimmedName = lodgeName.trim()
+  const nameValid = trimmedName.length >= 2 && trimmedName.length <= 10
+
+  const onCleanSpot = (spotId: LodgeSection) => {
+    setCleanedSpots((prev) => {
+      const next = new Set(prev)
+      next.add(spotId)
+      return next
+    })
+  }
+
+  const onComplete = async () => {
+    if (!nameValid || saving) return
+    setSaving(true)
+    accountStoreFacade.setSooksoName(trimmedName)
+    accountStoreFacade.setSooksoClean(true)
+    accountStoreFacade.setOnboardingComplete(true)
+    if (uid) {
+      try {
+        await api.patchAccountState(uid, {
+          sooksoName: trimmedName,
+          sooksoClean: true,
+          onboardingComplete: true,
+        })
+      } catch (error) {
+        console.warn('[lodge] failed to persist sooksoClean', error)
+      }
+    }
+    navigate('/island')
+  }
+
+  return (
+    <Box sx={{ p: 0 }}>
+      <ScreenHeader
+        category="마이섬"
+        title="숙소"
+        subtitle="반짝이는 곳을 정리해서 숙소를 깨워요."
+        showBack
+      />
+
+      <GameStage>
+        <Box
+          sx={{
+            position: 'relative',
+            width: { xs: 'min(82vw, calc(52dvh * 3 / 4))', sm: '100%' },
+            maxWidth: 560,
+            mx: 'auto',
+            aspectRatio: '3 / 4',
+            backgroundImage: 'url(/assets/backgrounds/03_Home_04.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            overflow: 'hidden',
+          }}
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 14,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 'min(88%, 420px)',
+              bgcolor: 'rgba(255,255,255,0.94)',
+              border: '1px solid rgba(255,211,112,0.9)',
+              borderRadius: 3,
+              px: 2,
+              py: 1.25,
+              textAlign: 'center',
+              boxShadow: '0 12px 30px rgba(80,57,30,0.18)',
+              cursor: allCleaned && !namingOpen ? 'pointer' : 'default',
+              zIndex: 3,
+            }}
+            onClick={() => {
+              if (allCleaned && !namingOpen) setNamingOpen(true)
+            }}
+          >
+            {allCleaned ? (
+              <Typography sx={{ fontWeight: 900, whiteSpace: 'pre-line', lineHeight: 1.7 }}>
+                {'숙소가 아주 깨끗해져서 너무 좋다!\n예쁜 숙소에 이름을 지어보자~!'}
+              </Typography>
+            ) : (
+              <>
+                <Typography sx={{ fontWeight: 900, fontSize: 18 }}>
+                  숙소 청소하기
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.25 }}>
+                  반짝이는 곳을 탭해서 주변을 정리하세요
+                </Typography>
+                <Stack direction="row" spacing={0.5} justifyContent="center" sx={{ mt: 0.75 }}>
+                  {CLEANING_SPOTS.map((spot, index) => (
+                    <Typography
+                      key={spot.id}
+                      sx={{
+                        fontSize: 22,
+                        lineHeight: 1,
+                        color: index < cleanedCount ? '#f2b632' : 'rgba(120,104,86,0.28)',
+                        textShadow: index < cleanedCount ? '0 2px 8px rgba(242,182,50,0.45)' : 'none',
+                      }}
+                    >
+                      ★
+                    </Typography>
+                  ))}
+                </Stack>
+              </>
+            )}
+          </Box>
+
+          {!allCleaned && CLEANING_SPOTS.map((spot) => {
+            const cleaned = cleanedSpots.has(spot.id)
+            if (cleaned) return null
+            return (
+              <Button
+                key={spot.id}
+                aria-label={`${spot.label} 청소`}
+                onClick={() => onCleanSpot(spot.id)}
+                sx={{
+                  position: 'absolute',
+                  top: spot.top,
+                  left: spot.left,
+                  transform: 'translate(-50%, -50%)',
+                  minWidth: 0,
+                  width: { xs: 42, sm: 52 },
+                  height: { xs: 42, sm: 52 },
+                  borderRadius: '50%',
+                  fontSize: { xs: 24, sm: 30 },
+                  color: '#fff7c7',
+                  bgcolor: 'rgba(255, 197, 73, 0.28)',
+                  border: '1px solid rgba(255,255,255,0.75)',
+                  boxShadow: '0 0 18px rgba(255,211,92,0.9), 0 8px 20px rgba(80,57,30,0.18)',
+                  textShadow: '0 0 10px rgba(255,255,255,0.95)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 211, 92, 0.42)',
+                    boxShadow: '0 0 24px rgba(255,226,120,0.95), 0 8px 20px rgba(80,57,30,0.2)',
+                  },
+                }}
+              >
+                ✦
+              </Button>
+            )
+          })}
+
+          {namingOpen && (
+            <Box
+              sx={{
+                position: 'absolute',
+                left: '50%',
+                bottom: 18,
+                transform: 'translateX(-50%)',
+                width: 'min(88%, 420px)',
+                bgcolor: 'rgba(255,255,255,0.96)',
+                border: '1px solid rgba(62,155,143,0.28)',
+                borderRadius: 3,
+                p: 2,
+                boxShadow: '0 14px 34px rgba(66,86,80,0.2)',
+                zIndex: 4,
+              }}
+            >
+              <Typography sx={{ fontWeight: 900, fontSize: 18 }}>
+                숙소 이름 짓기
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5, mb: 1.5 }}>
+                새롭게 태어난 숙소에 따뜻한 이름을 선물해주세요.
+              </Typography>
+              <TextField
+                value={lodgeName}
+                onChange={(event) => setLodgeName(event.target.value.slice(0, 10))}
+                placeholder="2~10자"
+                size="small"
+                fullWidth
+                inputProps={{ minLength: 2, maxLength: 10 }}
+                error={lodgeName.length > 0 && !nameValid}
+                helperText="숙소 이름은 추후 변경이 가능해요."
+              />
+              <Button
+                variant="contained"
+                fullWidth
+                disabled={!nameValid || saving}
+                onClick={onComplete}
+                sx={{ mt: 1.5 }}
+              >
+                완료
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </GameStage>
+    </Box>
+  )
+}
+
 export const LodgeScene = () => {
   const navigate = useNavigate()
   const uid = accountStoreFacade.useFirebaseUid()
   const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
-  const hostName = accountStoreFacade.useHostName()
+  const sooksoName = accountStoreFacade.useSooksoName()
+  const sooksoClean = accountStoreFacade.useSooksoClean()
   const needs = myAidongStoreFacade.useNeeds()
   const coins = hostStoreFacade.useCoins()
   const inventory = hostStoreFacade.useInventory()
@@ -387,6 +591,10 @@ export const LodgeScene = () => {
       .catch((error) => console.warn('[my-aidong] outfit action api failed', error))
   }
 
+  if (!sooksoClean) {
+    return <LodgeCleaningScene />
+  }
+
   return (
     <Box sx={{ p: 0 }}>
       <ScreenHeader
@@ -431,7 +639,7 @@ export const LodgeScene = () => {
               </Stack>
             )}
             <Typography variant="body2" sx={{ fontWeight: 700 }}>
-              {hostName ? `${hostName}의 숙소` : 'Aidong 숙소'}
+              {sooksoName ? `${sooksoName}` : 'Aidong 숙소'}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               보유 코인 {coins}

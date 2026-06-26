@@ -126,6 +126,7 @@ export function applyAccountActionState(account: unknown, options: ApplyOptions 
     gameStartedAt: state.gameStartedAt as UserState['gameStartedAt'],
     openingSeen: state.openingSeen as UserState['openingSeen'],
     sooksoClean: state.sooksoClean as UserState['sooksoClean'],
+    sooksoName: state.sooksoName as UserState['sooksoName'],
     onboardingComplete: state.onboardingComplete as UserState['onboardingComplete'],
     hostName: state.hostName as UserState['hostName'],
   })
