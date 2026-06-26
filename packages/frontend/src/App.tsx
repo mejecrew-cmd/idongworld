@@ -24,6 +24,7 @@ import { Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { usePageTracking } from './lib/usePageTracking'
 
 import { LoginScreen } from './screens/LoginScreen'
+import { SignupScreen } from './screens/SignupScreen'
 import { TitleScreen } from './screens/TitleScreen'
 import { OpeningScreen } from './screens/OpeningScreen'
 import { OpeningPart2Screen } from './screens/OpeningPart2Screen'
@@ -121,6 +122,7 @@ export const App = () => {
 
     {/* 온보딩 시퀀스 — 풀스크린 시네마틱 (HUD/네비 X) */}
     <Route element={<FullScreenLayout />}>
+      <Route path="/signup" element={<SignupScreen />} />
       <Route path="/title" element={<TitleScreen />} />
       <Route path="/opening" element={<OpeningScreen />} />
       <Route path="/opening/part2" element={<OpeningPart2Screen />} />

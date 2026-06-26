@@ -4,7 +4,7 @@
   "private": true,
   "description": "아이동월드 — Phase 1 POC (v1_260509)",
   "scripts": {
-    "dev": "concurrently -n FE,BE -c green,blue \"pnpm --filter frontend dev\" \"pnpm --filter backend dev\"",
+    "dev": "node tools/dev/runDev.mjs",
     "dev:fe": "pnpm --filter frontend dev",
     "dev:be": "pnpm --filter backend dev",
     "dev:mongo:local": "pnpm --filter backend dev:mongo:local",

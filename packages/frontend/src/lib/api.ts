@@ -119,11 +119,24 @@ export interface AuthSessionRequest {
   photoURL?: string | null
 }
 
+export interface AuthSessionResponse {
+  uid: string
+  isNew?: boolean
+  user?: unknown
+  pendingProfile?: AuthSessionRequest
+}
+
 export interface PasswordAuthResponse {
   uid: string
   token: string
   isNew?: boolean
   user: unknown
+}
+
+export interface PasswordSignupStartResponse {
+  signupToken: string
+  loginId: string
+  isNew: true
 }
 
 function getPasswordSessionToken(): string | null {
@@ -182,14 +195,27 @@ export const api = {
     }),
 
   authSession: (uid: string, request: AuthSessionRequest) =>
-    apiFetch<{ uid: string; isNew?: boolean; user: unknown }>('/api/auth/session', {
+    apiFetch<AuthSessionResponse>('/api/auth/session', {
+      method: 'POST',
+      uid,
+      body: JSON.stringify(request),
+    }),
+
+  authSocialCompleteSignup: (uid: string, request: AuthSessionRequest & { nickname: string }) =>
+    apiFetch<{ uid: string; isNew?: boolean; user: unknown }>('/api/auth/session/complete', {
       method: 'POST',
       uid,
       body: JSON.stringify(request),
     }),
 
   authPasswordSignup: (request: { loginId: string; password: string; passwordConfirm: string }) =>
-    apiFetch<PasswordAuthResponse>('/api/auth/password/signup', {
+    apiFetch<PasswordSignupStartResponse>('/api/auth/password/signup', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  authPasswordCompleteSignup: (request: { signupToken: string; nickname: string }) =>
+    apiFetch<PasswordAuthResponse>('/api/auth/password/signup/complete', {
       method: 'POST',
       body: JSON.stringify(request),
     }),

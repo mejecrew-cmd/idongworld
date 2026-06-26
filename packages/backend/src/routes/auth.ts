@@ -8,7 +8,13 @@
 import { Router } from 'express'
 import { getUserRepository } from '../repositories/index.js'
 import { getRequestUid, getRequestUser } from '../middleware/auth.js'
-import { hashPassword, issuePasswordSessionToken, verifyPassword } from '../auth/passwordAuth.js'
+import {
+  hashPassword,
+  issuePasswordSessionToken,
+  issuePasswordSignupToken,
+  verifyPassword,
+  verifyPasswordSignupToken,
+} from '../auth/passwordAuth.js'
 import { buildAccountResponse } from '../account/accountProgress.js'
 import {
   SocialProviderVerificationError,
@@ -23,6 +29,8 @@ type SocialProvider = 'google' | 'twitter' | 'firebase'
 
 const LOGIN_ID_PATTERN = /^[a-zA-Z0-9_]{4,20}$/
 const MIN_PASSWORD_LENGTH = 6
+const NICKNAME_MAX_LENGTH = 8
+const FORBIDDEN_NICKNAME_PARTS = ['운영자', '관리자', 'admin', 'system']
 
 function readString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
@@ -54,6 +62,17 @@ function readPassword(value: unknown): string {
   return typeof value === 'string' ? value : ''
 }
 
+function normalizeNickname(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function isValidNickname(value: string): boolean {
+  if (!value) return false
+  if ([...value].length > NICKNAME_MAX_LENGTH) return false
+  const lower = value.toLocaleLowerCase('ko-KR')
+  return !FORBIDDEN_NICKNAME_PARTS.some((word) => lower.includes(word))
+}
+
 function createPasswordUid(loginIdKey: string): string {
   return `id-${loginIdKey}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
@@ -76,6 +95,34 @@ authRouter.post('/session', async (req, res) => {
   const requestUser = getRequestUser(req)
   const repo = getUserRepository()
   const existing = await repo.getUser(uid)
+  if (!existing) {
+    return res.json({
+      uid,
+      isNew: true,
+      user: null,
+      pendingProfile: {
+        provider,
+        email: readString(body.email) ?? requestUser?.email,
+        displayName: readString(body.displayName),
+        photoURL: readString(body.photoURL),
+      },
+    })
+  }
+
+  if (existing.signupProfileCompleted === false) {
+    return res.json({
+      uid,
+      isNew: true,
+      user: existing,
+      pendingProfile: {
+        provider,
+        email: readString(body.email) ?? requestUser?.email ?? existing.email,
+        displayName: readString(body.displayName) ?? existing.displayName,
+        photoURL: readString(body.photoURL) ?? existing.photoURL,
+      },
+    })
+  }
+
   const user = await repo.createOrUpdateAuthUser({
     uid,
     provider,
@@ -85,6 +132,36 @@ authRouter.post('/session', async (req, res) => {
   })
 
   res.json({ uid: user.uid, isNew: !existing, user })
+})
+
+authRouter.post('/session/complete', async (req, res) => {
+  const uid = getRequestUid(req)
+  if (!uid) return res.status(401).json({ error: 'no_uid' })
+
+  const body = req.body && typeof req.body === 'object'
+    ? req.body as Record<string, unknown>
+    : {}
+  const provider = readProvider(body.provider)
+  const nickname = normalizeNickname(body.nickname)
+  if (!provider) return res.status(400).json({ error: 'invalid_provider' })
+  if (!isValidNickname(nickname)) return res.status(400).json({ error: 'invalid_nickname' })
+
+  const requestUser = getRequestUser(req)
+  const repo = getUserRepository()
+  const createdOrUpdated = await repo.createOrUpdateAuthUser({
+    uid,
+    provider,
+    email: readString(body.email) ?? requestUser?.email,
+    displayName: readString(body.displayName),
+    photoURL: readString(body.photoURL),
+  })
+  const user = await repo.updateUser(createdOrUpdated.uid, {
+    nickname,
+    nicknameNormalized: nickname.toLocaleLowerCase('ko-KR'),
+    signupProfileCompleted: true,
+  }) ?? createdOrUpdated
+
+  res.json({ uid: user.uid, isNew: true, user })
 })
 
 authRouter.post('/social/entry', async (req, res) => {
@@ -151,12 +228,33 @@ authRouter.post('/password/signup', async (req, res) => {
   const existing = await repo.findByLoginId(loginIdNormalized)
   if (existing) return res.status(409).json({ error: 'login_id_taken' })
 
-  const user = await repo.createPasswordUser({
+  const signupToken = issuePasswordSignupToken({
     uid: createPasswordUid(loginIdNormalized),
     loginId,
     loginIdNormalized,
     passwordHash: hashPassword(password),
   })
+  res.json({ signupToken, loginId, isNew: true })
+})
+
+authRouter.post('/password/signup/complete', async (req, res) => {
+  const signupToken = readString(req.body?.signupToken)
+  const nickname = normalizeNickname(req.body?.nickname)
+  if (!isValidNickname(nickname)) return res.status(400).json({ error: 'invalid_nickname' })
+
+  const pending = verifyPasswordSignupToken(signupToken)
+  if (!pending) return res.status(401).json({ error: 'invalid_signup_token' })
+
+  const repo = getUserRepository()
+  const existing = await repo.findByLoginId(pending.loginIdNormalized)
+  if (existing) return res.status(409).json({ error: 'login_id_taken' })
+
+  const created = await repo.createPasswordUser(pending)
+  const user = await repo.updateUser(created.uid, {
+    nickname,
+    nicknameNormalized: nickname.toLocaleLowerCase('ko-KR'),
+    signupProfileCompleted: true,
+  }) ?? created
   const token = issuePasswordSessionToken(user.uid)
   res.json({ uid: user.uid, token, isNew: true, user })
 })

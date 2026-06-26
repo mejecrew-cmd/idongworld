@@ -43,6 +43,9 @@ const authProviders = [
   { label: 'Twitter', mark: 'X', tone: '#111111' },
 ] as const
 const AUTH_ENTRY_IS_NEW_KEY = 'idongworld-auth-entry-is-new'
+const PENDING_PASSWORD_SIGNUP_TOKEN_KEY = 'idongworld-pending-password-signup-token'
+const PENDING_PASSWORD_SIGNUP_LOGIN_ID_KEY = 'idongworld-pending-password-signup-login-id'
+const PENDING_SOCIAL_SIGNUP_KEY = 'idongworld-pending-social-signup'
 
 function readOnboardingComplete(user: unknown): boolean {
   return Boolean(
@@ -74,6 +77,28 @@ function rememberAuthEntryIsNew(isNew: boolean | undefined): void {
     else window.sessionStorage.setItem(AUTH_ENTRY_IS_NEW_KEY, isNew ? 'true' : 'false')
   } catch {
     // If sessionStorage is unavailable, TitleScreen will fall back to account state.
+  }
+}
+
+function rememberPendingPasswordSignup(signupToken: string, loginId: string): void {
+  try {
+    window.sessionStorage.setItem(PENDING_PASSWORD_SIGNUP_TOKEN_KEY, signupToken)
+    window.sessionStorage.setItem(PENDING_PASSWORD_SIGNUP_LOGIN_ID_KEY, loginId)
+  } catch {
+    // SignupScreen will show a retry path if the pending token cannot be stored.
+  }
+}
+
+function rememberPendingSocialSignup(payload: {
+  provider: 'google' | 'twitter' | 'firebase'
+  email?: string | null
+  displayName?: string | null
+  photoURL?: string | null
+}): void {
+  try {
+    window.sessionStorage.setItem(PENDING_SOCIAL_SIGNUP_KEY, JSON.stringify(payload))
+  } catch {
+    // SignupScreen can still continue from Firebase auth state, but profile hints may be missing.
   }
 }
 
@@ -149,15 +174,29 @@ export const LoginScreen = () => {
         setError(null)
         try {
           const providerId = user.providerData?.[0]?.providerId
-          const r = await api.authSession(user.uid, {
+          const socialProfile = {
             provider: readFirebaseSessionProvider(providerId),
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
-          })
-          await hydrateSplitState(r.uid)
+          }
+          const r = await api.authSession(user.uid, socialProfile)
           const latestAccount = accountStoreFacade.getAccountState()
           rememberAuthEntryIsNew(r.isNew)
+          if (r.isNew) {
+            rememberPendingSocialSignup(socialProfile)
+            accountStoreFacade.mergeAccountState({
+              firebaseUid: r.uid,
+              isGuest: false,
+              gameStartedAt: latestAccount.gameStartedAt ?? Date.now(),
+              nickname: user.displayName ?? user.email ?? '사용자',
+            })
+            trackEvent('sign_up_start', { method: providerId ?? 'firebaseui' })
+            navigate('/signup')
+            return false
+          }
+
+          await hydrateSplitState(r.uid)
           accountStoreFacade.mergeAccountState({
             firebaseUid: r.uid,
             isGuest: false,
@@ -167,7 +206,7 @@ export const LoginScreen = () => {
             nickname: user.displayName ?? user.email ?? '사용자',
           })
           trackEvent('login', { method: providerId ?? 'firebaseui' })
-          navigate('/title')
+          navigate(r.isNew ? '/signup' : '/title')
         } catch (e) {
           console.warn('[auth] FirebaseUI login failed:', e)
           setError('Firebase 로그인 처리 중 문제가 발생했습니다. 서버 연결과 Firebase 설정을 확인해 주세요.')
@@ -205,7 +244,7 @@ export const LoginScreen = () => {
       nickname: id,
     })
     trackEvent(eventName, { method: 'test_credentials' })
-    navigate('/title')
+    navigate(response.isNew ? '/signup' : '/title')
     setLoading(false)
   }
 
@@ -248,7 +287,11 @@ export const LoginScreen = () => {
       })
       setSignupOpen(false)
       setSignupDraft({ id: '', password: '', passwordConfirm: '' })
-      await completePasswordSession(id, response, 'sign_up')
+      rememberAuthEntryIsNew(true)
+      rememberPendingPasswordSignup(response.signupToken, id)
+      trackEvent('sign_up_start', { method: 'test_credentials' })
+      navigate('/signup')
+      setLoading(false)
     } catch (e) {
       console.warn('[auth] password signup failed:', e)
       setSignupError('이미 사용 중인 ID이거나 가입 정보를 확인할 수 없습니다.')

@@ -21,7 +21,7 @@ import { ShipStateModel } from '../models/ShipStateModel.js'
 import { ZoneStateModel } from '../models/ZoneStateModel.js'
 import { mongoHostStateRepository } from './mongoHostStateRepository.js'
 import type { HostStatePatch } from './hostStateRepository.js'
-import type { AuthUserInput, PasswordUserInput, UserRepository } from './userRepository.js'
+import type { PasswordUserInput, UserRepository } from './userRepository.js'
 
 function toUserDoc(doc: unknown): UserDoc {
   const plain = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>
@@ -39,42 +39,6 @@ function createGuestDoc(): UserDoc {
     uid,
     isGuest: true,
     nickname: 'guest',
-    gameStartedAt: now,
-    coins: 100,
-    diamonds: 0,
-    gems: 0,
-    openingSeen: false,
-    onboardingComplete: false,
-    soundSettings: DEFAULT_SOUND_SETTINGS,
-    recruitedAidongs: [],
-    firstGachaAttempts: 0,
-    affinities: {},
-    needs: {},
-    unlockedDiaries: [],
-    unlockedCodexEntries: [],
-    codexFullyRegistered: [],
-    inventory: {},
-    diceCount: 6,
-    boardPosition: 0,
-    harborAssignedChars: [],
-    createdAt: now,
-    updatedAt: now,
-  }
-}
-
-function createAuthDoc(input: AuthUserInput): UserDoc {
-  const now = Date.now()
-  return {
-    uid: input.uid,
-    isGuest: false,
-    authProvider: input.provider,
-    providerUid: input.providerUid ?? input.uid,
-    email: input.email,
-    emailNormalized: input.emailNormalized,
-    displayName: input.displayName,
-    photoURL: input.photoURL,
-    nickname: input.displayName ?? input.email ?? input.provider,
-    signupProfileCompleted: false,
     gameStartedAt: now,
     coins: 100,
     diamonds: 0,
@@ -158,7 +122,8 @@ export const mongoUserRepository: UserRepository = {
   },
 
   async createOrUpdateAuthUser(input) {
-    const existing = await UserModel.findOne({ uid: input.uid }).lean()
+    const now = Date.now()
+    const fallbackNickname = input.displayName ?? input.email ?? input.provider
     const patch: Partial<UserDoc> = {
       isGuest: false,
       authProvider: input.provider,
@@ -167,21 +132,40 @@ export const mongoUserRepository: UserRepository = {
       emailNormalized: input.emailNormalized,
       displayName: input.displayName,
       photoURL: input.photoURL,
-      nickname: (existing as { nickname?: string } | null)?.nickname
-        ?? input.displayName
-        ?? input.email
-        ?? input.provider,
-      signupProfileCompleted: (existing as { signupProfileCompleted?: boolean } | null)?.signupProfileCompleted ?? false,
-      updatedAt: Date.now(),
+      updatedAt: now,
     }
 
-    const doc = existing
-      ? await UserModel.findOneAndUpdate(
+    const doc = await UserModel.findOneAndUpdate(
         { uid: input.uid },
-        { $set: patch },
-        { new: true, lean: true },
+        {
+          $set: patch,
+          $setOnInsert: {
+            uid: input.uid,
+            nickname: fallbackNickname,
+            signupProfileCompleted: false,
+            gameStartedAt: now,
+            coins: 100,
+            diamonds: 0,
+            gems: 0,
+            openingSeen: false,
+            onboardingComplete: false,
+            soundSettings: DEFAULT_SOUND_SETTINGS,
+            recruitedAidongs: [],
+            firstGachaAttempts: 0,
+            affinities: {},
+            needs: {},
+            unlockedDiaries: [],
+            unlockedCodexEntries: [],
+            codexFullyRegistered: [],
+            inventory: {},
+            diceCount: 6,
+            boardPosition: 0,
+            harborAssignedChars: [],
+            createdAt: now,
+          },
+        },
+        { new: true, upsert: true, lean: true, setDefaultsOnInsert: true },
       )
-      : (await UserModel.create({ ...createAuthDoc(input), ...patch })).toObject()
 
     const user = toUserDoc(doc)
     await mongoHostStateRepository.getOrCreate(user.uid, {
