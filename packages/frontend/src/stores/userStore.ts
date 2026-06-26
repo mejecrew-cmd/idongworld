@@ -3,7 +3,7 @@
  * ───────────────────────────────────────────────
  * 📌 역할: 게임의 모든 사용자 상태를 한 곳에 보관.
  *           - Auth (firebaseUid, isGuest, nickname)
- *           - 자원 (coins, diamonds, gems)
+ *           - 자원 (coins, diamonds)
  *           - 진행 (onboardingComplete, hostName)
  *           - 캐릭터 (recruitedAidongs, affinities, needs, careLog)
  *           - 마이섬 (unlockedZones, unlockedDiaries, codex...)
@@ -85,7 +85,6 @@ export interface UserState {
   // 게임 자원
   coins: number
   diamonds: number
-  gems: number
 
   // 진행
   openingSeen: boolean
@@ -168,7 +167,6 @@ const initialUser = {
   gameStartedAt: undefined as number | undefined,
   coins: 100,  // 시작 시 100 코인 (케어 액션 검증)
   diamonds: 0,
-  gems: 0,
   openingSeen: true,
   sooksoClean: false,
   sooksoName: undefined as string | undefined,

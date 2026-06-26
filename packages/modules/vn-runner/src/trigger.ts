@@ -25,7 +25,7 @@
  *   - unlock_codex_full:{char}    → store.fullyRegisterCodex(char)
  *   - give_material:{id}          → 인벤토리 차감
  *   - gacha_retry                 → 가챠 재시도 카운트 +1
- *   - deduct_gems:{N}             → 보석 차감
+ *   - deduct_diamonds:{N}         → 다이아 차감
  *   - play_sfx:{id}               → onPlaySfx (Phase 1.5)
  *   - navigate:{path}             → 라우터·시나리오 분기 (내부)
  */

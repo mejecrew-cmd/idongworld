@@ -63,7 +63,6 @@ const RESOURCE_LABEL: Record<string, string> = {
   'pearl-dust': '진주 가루',
   'aidong-ribbon': '아이동 리본',
   coins: '코인',
-  gems: '젬',
   diamonds: '다이아',
 }
 

@@ -6,7 +6,7 @@
  *           훅 미주입 시 console.warn + false 반환.
  *
  * 🔗 사용 (Phase 2 정착 시):
- *   - gacha → 가챠 비용 차감: spendGems(150)
+ *   - gacha → 가챠 비용 차감: spendDiamonds(150)
  *   - customs → 자원 변환 적립: rewardCoins(N)
  *   - care → 케어 비용 차감: spendCoins(N) + consumeMaterial(id)
  */
@@ -15,7 +15,6 @@ import type { HostResources, MaterialId, HostMutateResult } from './types.ts'
 
 const EMPTY_RESOURCES: HostResources = {
   coins: 0,
-  gems: 0,
   diamonds: 0,
   diceCount: 0,
   inventory: {},
@@ -40,22 +39,16 @@ export function spendCoins(amount: number): HostMutateResult {
   return mutate('mutateCoins', -amount, 'spendCoins')
 }
 
-/** 보석 적립. */
-export function rewardGems(amount: number): HostMutateResult {
-  if (amount <= 0) return false
-  return mutate('mutateGems', amount, 'rewardGems')
-}
-
-/** 보석 차감. */
-export function spendGems(amount: number): HostMutateResult {
-  if (amount <= 0) return false
-  return mutate('mutateGems', -amount, 'spendGems')
-}
-
-/** 다이아 적립 (Phase 2). */
+/** 다이아 적립. */
 export function rewardDiamonds(amount: number): HostMutateResult {
   if (amount <= 0) return false
   return mutate('mutateDiamonds', amount, 'rewardDiamonds')
+}
+
+/** 다이아 차감. */
+export function spendDiamonds(amount: number): HostMutateResult {
+  if (amount <= 0) return false
+  return mutate('mutateDiamonds', -amount, 'spendDiamonds')
 }
 
 /** 주사위 적립. */
@@ -88,7 +81,7 @@ export function consumeMaterial(id: MaterialId, amount = 1): HostMutateResult {
 
 // ─── 내부 ───
 function mutate(
-  key: 'mutateCoins' | 'mutateGems' | 'mutateDiamonds' | 'mutateDice',
+  key: 'mutateCoins' | 'mutateDiamonds' | 'mutateDice',
   delta: number,
   label: string,
 ): boolean {

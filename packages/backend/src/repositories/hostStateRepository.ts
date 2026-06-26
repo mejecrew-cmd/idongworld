@@ -8,12 +8,11 @@
 import type { ClientSession } from 'mongoose'
 import type { HostStateDoc } from '../models/HostStateModel.js'
 
-export type HostResource = 'coins' | 'gems' | 'diamonds' | 'diceCount'
+export type HostResource = 'coins' | 'diamonds' | 'diceCount'
 
 export interface HostStatePatch {
   hostName?: string
   coins?: number
-  gems?: number
   diamonds?: number
   diceCount?: number
   inventory?: Record<string, number>

@@ -11,8 +11,8 @@
  *   - Phase 2: 모듈 매니페스트에서 자동 수집 + raw 로더로 CSV 직접 import.
  *
  * 💡 등록 모듈:
- *   - zone-garden  (acorn·flower → coins·gems·deck-cargo)
- *   - route-neighbor (deck-cargo → coins·gems)
+ *   - zone-garden  (acorn·flower → coins·diamonds·deck-cargo)
+ *   - route-neighbor (deck-cargo → coins·diamonds)
  *   - zone-oasis·memory·mine (Phase 1.5 PM 검수 후 추가 — 더미 SCSV 보유)
  */
 import { configure, registerRule } from '@idongworld/customs'
@@ -39,16 +39,16 @@ const ROUTE_NEIGHBOR_RULES = [
     description: '갑판 자원 1 = 코인 2 (귀항 환전)',
   },
   {
-    ruleId: 'deck-to-gems',
+    ruleId: 'deck-to-diamonds',
     fromModule: 'route-neighbor',
     fromResource: 'deck-cargo',
     toScope: 'global' as const,
-    toResource: 'gems',
+    toResource: 'diamonds',
     ratio: 5,
-    label: '갑판 → 보석',
+    label: '갑판 → 다이아',
     minAmount: 1,
     maxAmount: 200,
-    description: '갑판 자원 5 = 보석 1 (드물게)',
+    description: '갑판 자원 5 = 다이아 1 (드물게)',
   },
 ]
 
@@ -67,16 +67,16 @@ const ZONE_GARDEN_RULES = [
     description: '5 도토리를 1 코인으로 환전',
   },
   {
-    ruleId: 'garden-flower-to-gems',
+    ruleId: 'garden-flower-to-diamonds',
     fromModule: 'zone-garden',
     fromResource: 'flower',
     toScope: 'global' as const,
-    toResource: 'gems',
+    toResource: 'diamonds',
     ratio: 3,
-    label: '꽃 → 보석',
+    label: '꽃 → 다이아',
     minAmount: 3,
     maxAmount: 300,
-    description: '3 꽃을 1 보석으로 환전',
+    description: '3 꽃을 1 다이아로 환전',
   },
   {
     ruleId: 'garden-acorn-to-deck',
@@ -116,7 +116,6 @@ export function bootstrapCustoms(): void {
     onCredit: ({ scope, resource, amount }) => {
       if (scope === 'global') {
         if (resource === 'coins') host.rewardCoins(amount)
-        else if (resource === 'gems') host.rewardGems(amount)
         else if (resource === 'diamonds') host.rewardDiamonds(amount)
         else {
           // eslint-disable-next-line no-console

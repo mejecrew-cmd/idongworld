@@ -14,7 +14,7 @@ let debounceTimer: number | undefined
 let isSyncing = false
 
 const SYNCED_KEYS = [
-  'coins', 'diamonds', 'gems',
+  'coins', 'diamonds',
   'gameStartedAt', 'openingSeen', 'sooksoClean', 'sooksoName', 'onboardingComplete', 'hostName', 'soundSettings',
   'recruitedAidongs', 'firstGachaCandidate', 'firstGachaAttempts',
   'affinities', 'needs',
@@ -25,7 +25,7 @@ const SYNCED_KEYS = [
   'equippedOutfit', 'equippedItems',
 ] as const
 
-const HOST_KEYS = ['coins', 'diamonds', 'gems', 'hostName', 'inventory', 'diceCount'] as const
+const HOST_KEYS = ['coins', 'diamonds', 'hostName', 'inventory', 'diceCount'] as const
 const MY_AIDONG_KEYS = [
   'recruitedAidongs',
   'firstGachaCandidate',
@@ -104,7 +104,6 @@ function normalizeHostState(state: Record<string, unknown>) {
   return {
     hostName: state.hostName,
     coins: state.coins,
-    gems: state.gems,
     diamonds: state.diamonds,
     diceCount: state.diceCount,
     inventory: state.inventory,

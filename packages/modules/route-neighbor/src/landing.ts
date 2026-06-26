@@ -11,7 +11,7 @@ import type { BoardSlot, LandingResult } from './types.ts'
 
 /**
  * 칸 도착 처리.
- * 자원 칸은 host inventory 적립·보물은 코인/보석 적립.
+ * 자원 칸은 host inventory 적립·보물은 코인/다이아 적립.
  * 캐릭터 칸은 시나리오 ID 반환 (화면이 navigate).
  * 폭풍은 dice 차감.
  */
@@ -36,7 +36,7 @@ export function processLanding(slot: BoardSlot): LandingResult {
       const amount = Number(slot.meta?.amount ?? 0)
       if (!resource || amount <= 0) break
       if (resource === 'coins') host.rewardCoins(amount)
-      else if (resource === 'gems') host.rewardGems(amount)
+      else if (resource === 'diamonds') host.rewardDiamonds(amount)
       result.rewards = [{ resource, amount }]
       break
     }

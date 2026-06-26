@@ -109,7 +109,6 @@ export function applyHostActionState(host: unknown, options: ApplyOptions = {}):
   hostStoreFacade.mergeHostState({
     hostName: state.hostName as UserState['hostName'],
     coins: state.coins as UserState['coins'],
-    gems: state.gems as UserState['gems'],
     diamonds: state.diamonds as UserState['diamonds'],
     diceCount: state.diceCount as UserState['diceCount'],
     inventory: state.inventory as UserState['inventory'],

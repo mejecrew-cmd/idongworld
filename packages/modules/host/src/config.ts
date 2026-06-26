@@ -20,10 +20,7 @@ export interface HostHooks {
    */
   mutateCoins?: (delta: number) => boolean
 
-  /** 보석 변경. */
-  mutateGems?: (delta: number) => boolean
-
-  /** 다이아 변경 (Phase 2). */
+  /** 다이아 변경. */
   mutateDiamonds?: (delta: number) => boolean
 
   /** 주사위 변경. */

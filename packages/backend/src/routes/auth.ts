@@ -260,9 +260,14 @@ authRouter.post('/password/signup', async (req, res) => {
   const loginId = normalizeLoginId(req.body?.loginId)
   const password = readPassword(req.body?.password)
   const passwordConfirm = readPassword(req.body?.passwordConfirm)
+  const signUpCode = readString(req.body?.signUpCode)?.trim() ?? ''
+  const expectedSignUpCode = process.env.SIGN_UP_CODE?.trim() ?? ''
 
   if (!LOGIN_ID_PATTERN.test(loginId)) {
     return res.status(400).json({ error: 'invalid_login_id' })
+  }
+  if (!expectedSignUpCode || signUpCode !== expectedSignUpCode) {
+    return res.status(403).json({ error: 'invalid_sign_up_code' })
   }
   if (password.length < MIN_PASSWORD_LENGTH) {
     return res.status(400).json({ error: 'invalid_password' })

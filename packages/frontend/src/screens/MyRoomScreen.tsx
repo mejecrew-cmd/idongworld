@@ -20,7 +20,6 @@ export const MyRoomScreen = () => {
   const nickname = accountStoreFacade.useNickname()
   const hostName = accountStoreFacade.useHostName()
   const coins = hostStoreFacade.useCoins()
-  const gems = hostStoreFacade.useGems()
   const diamonds = hostStoreFacade.useDiamonds()
   const inventory = hostStoreFacade.useInventory()
   const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
@@ -55,7 +54,6 @@ export const MyRoomScreen = () => {
   const aidongs = asRecord(summary?.aidongs)
   const displayName = String(account.hostName ?? hostName ?? account.nickname ?? nickname ?? '내 정보')
   const displayCoins = Number(host.coins ?? coins)
-  const displayGems = Number(host.gems ?? gems)
   const displayDiamonds = Number(host.diamonds ?? diamonds)
   const displayAidongs = Array.isArray(aidongs.recruitedAidongs)
     ? aidongs.recruitedAidongs as string[]
@@ -86,7 +84,6 @@ export const MyRoomScreen = () => {
           </Typography>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
             <Chip label={`코인 ${displayCoins}`} />
-            <Chip label={`젬 ${displayGems}`} />
             <Chip label={`다이아 ${displayDiamonds}`} />
             <Chip label={`아이동 ${displayAidongs.length}`} color="primary" variant="outlined" />
           </Stack>

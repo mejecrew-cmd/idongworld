@@ -95,7 +95,6 @@ const BACKGROUND_LIST = [
 const HUD_ICONS = [
   { id: 'coin',     emoji: '🪙', label: '코인',    desc: '기본 통화. 케어·구매·미니게임 보상에 쓰임.' },
   { id: 'diamond',  emoji: '💎', label: '다이아', desc: '프리미엄 통화 (Phase 1.5+ 활성).' },
-  { id: 'gem',      emoji: '❤️', label: '보석',    desc: '가챠 재시도 BM 통화.' },
   { id: 'dice',     emoji: '🎲', label: '주사위', desc: '항해 1d6. 항구 친구 배치 시 시간당 1d6 충전.' },
   { id: 'time',     emoji: '🕐', label: '시간대', desc: '5존 (☁️ 휴식·🌅 아침·☀️ 점심·🌆 저녁·🌙 밤).' },
   { id: 'affinity', emoji: '❤️', label: '친밀도', desc: '캐릭터별 score·Lv (Lv 0~10).' },
@@ -156,7 +155,7 @@ const TRIGGERS = [
   { id: 'unlock_codex_full:char',  handler: 'fullyRegisterCodex',  use: '첫 케어 액션 시 본 등재' },
   { id: 'give_material:id',   handler: 'inventory[id] -1', use: '자재 건넴 분기 (require 검증)' },
   { id: 'gacha_retry',        handler: 'firstGachaAttempts +1', use: '가챠 재시도' },
-  { id: 'deduct_gems:N',      handler: 'gems -N',          use: '보석 BM 차감' },
+  { id: 'deduct_diamonds:N',  handler: 'diamonds -N',      use: '다이아 BM 차감' },
   { id: 'navigate:path',      handler: 'react-router push', use: '시나리오 종료 후 이동' },
 ]
 
@@ -310,7 +309,7 @@ export const AssetCatalogScreen = () => {
           <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
             <SourceTag label="컴포넌트: components/HUD.tsx" />
             <SourceTag label="자산: 와이어프레임/assets-dummy/UI/HUD/" />
-            <SourceTag label="데이터: stores/userStore.ts (coins·diamonds·gems·diceCount)" />
+            <SourceTag label="데이터: stores/userStore.ts (coins·diamonds·diceCount)" />
           </Stack>
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 2 }}>
             {HUD_ICONS.map((h) => (

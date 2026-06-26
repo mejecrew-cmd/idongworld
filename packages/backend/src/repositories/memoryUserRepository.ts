@@ -23,7 +23,6 @@ function pickDefinedHostPatch(patch: Partial<UserDoc>): HostStatePatch {
   const hostPatch: HostStatePatch = {}
   if (patch.hostName !== undefined) hostPatch.hostName = patch.hostName
   if (patch.coins !== undefined) hostPatch.coins = patch.coins
-  if (patch.gems !== undefined) hostPatch.gems = patch.gems
   if (patch.diamonds !== undefined) hostPatch.diamonds = patch.diamonds
   if (patch.diceCount !== undefined) hostPatch.diceCount = patch.diceCount
   if (patch.inventory !== undefined) hostPatch.inventory = patch.inventory
@@ -47,7 +46,6 @@ function createAuthDoc(input: AuthUserInput): UserDoc {
     sooksoClean: false,
     coins: 100,
     diamonds: 0,
-    gems: 0,
     openingSeen: false,
     onboardingComplete: false,
     soundSettings: DEFAULT_SOUND_SETTINGS,
@@ -81,7 +79,6 @@ function createPasswordDoc(input: PasswordUserInput): UserDoc {
     sooksoClean: false,
     coins: 100,
     diamonds: 0,
-    gems: 0,
     openingSeen: false,
     onboardingComplete: false,
     soundSettings: DEFAULT_SOUND_SETTINGS,
@@ -107,7 +104,6 @@ export const memoryUserRepository: UserRepository = {
     await memoryHostStateRepository.getOrCreate(user.uid, {
       hostName: user.hostName,
       coins: user.coins,
-      gems: user.gems,
       diamonds: user.diamonds,
       diceCount: user.diceCount,
       inventory: user.inventory,
@@ -154,7 +150,6 @@ export const memoryUserRepository: UserRepository = {
     await memoryHostStateRepository.getOrCreate(user.uid, {
       hostName: user.hostName,
       coins: user.coins,
-      gems: user.gems,
       diamonds: user.diamonds,
       diceCount: user.diceCount,
       inventory: user.inventory,
@@ -168,7 +163,6 @@ export const memoryUserRepository: UserRepository = {
     await memoryHostStateRepository.getOrCreate(user.uid, {
       hostName: user.hostName,
       coins: user.coins,
-      gems: user.gems,
       diamonds: user.diamonds,
       diceCount: user.diceCount,
       inventory: user.inventory,

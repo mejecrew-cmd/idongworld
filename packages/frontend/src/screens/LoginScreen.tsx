@@ -39,12 +39,14 @@ interface CredentialDraft {
 
 interface SignupDraft extends CredentialDraft {
   passwordConfirm: string
+  signUpCode: string
 }
 
 const authProviders = [
   { label: 'Google', mark: 'G', tone: '#4285f4' },
   { label: 'Twitter', mark: 'X', tone: '#111111' },
 ] as const
+const SOCIAL_LOGIN_VISIBLE = false
 const AUTH_ENTRY_IS_NEW_KEY = 'idongworld-auth-entry-is-new'
 const PENDING_PASSWORD_SIGNUP_TOKEN_KEY = 'idongworld-pending-password-signup-token'
 const PENDING_PASSWORD_SIGNUP_LOGIN_ID_KEY = 'idongworld-pending-password-signup-login-id'
@@ -147,7 +149,8 @@ function getSignupError(draft: SignupDraft): string | null {
   return (
     getIdError(draft.id) ??
     getPasswordError(draft.password) ??
-    (draft.password !== draft.passwordConfirm ? '비밀번호 확인이 일치하지 않습니다.' : null)
+    (draft.password !== draft.passwordConfirm ? '비밀번호 확인이 일치하지 않습니다.' : null) ??
+    (!draft.signUpCode.trim() ? '회원가입 코드를 입력해 주세요.' : null)
   )
 }
 
@@ -159,6 +162,7 @@ export const LoginScreen = () => {
     id: '',
     password: '',
     passwordConfirm: '',
+    signUpCode: '',
   })
   const [signupOpen, setSignupOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -166,7 +170,7 @@ export const LoginScreen = () => {
   const [loading, setLoading] = useState(false)
   const [firebaseUiShown, setFirebaseUiShown] = useState(false)
 
-  const firebaseEnabled = isFirebaseUiEnabled()
+  const firebaseEnabled = SOCIAL_LOGIN_VISIBLE && isFirebaseUiEnabled()
 
   const loginIdError = useMemo(() => {
     if (!loginDraft.id) return null
@@ -308,9 +312,10 @@ export const LoginScreen = () => {
         loginId: id,
         password: signupDraft.password,
         passwordConfirm: signupDraft.passwordConfirm,
+        signUpCode: signupDraft.signUpCode.trim(),
       })
       setSignupOpen(false)
-      setSignupDraft({ id: '', password: '', passwordConfirm: '' })
+      setSignupDraft({ id: '', password: '', passwordConfirm: '', signUpCode: '' })
       rememberAuthEntryIsNew(true)
       rememberPendingPasswordSignup(response.signupToken, id)
       trackEvent('sign_up_start', { method: 'test_credentials' })
@@ -318,7 +323,12 @@ export const LoginScreen = () => {
       setLoading(false)
     } catch (e) {
       console.warn('[auth] password signup failed:', e)
-      setSignupError('이미 사용 중인 ID이거나 가입 정보를 확인할 수 없습니다.')
+      const message = e instanceof Error ? e.message : ''
+      setSignupError(
+        message.includes('invalid_sign_up_code')
+          ? '회원가입 코드가 일치하지 않습니다.'
+          : '이미 사용 중인 ID이거나 가입 정보를 확인할 수 없습니다.',
+      )
       setLoading(false)
     }
   }
@@ -408,7 +418,7 @@ export const LoginScreen = () => {
           />
           <Typography variant="h1">아이동월드</Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            ID, 비밀번호 또는 소셜 계정으로 섬에 들어가세요.
+            ID와 비밀번호로 섬에 들어가세요.
           </Typography>
         </Stack>
 
@@ -473,78 +483,82 @@ export const LoginScreen = () => {
           회원가입
         </Button>
 
-        <Divider>또는 소셜 로그인</Divider>
+        {SOCIAL_LOGIN_VISIBLE && (
+          <>
+            <Divider>또는 소셜 로그인</Divider>
 
-        {firebaseEnabled ? (
-          <Stack spacing={1}>
-            {!firebaseUiShown && (
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ py: 1 }}>
-                <CircularProgress size={18} />
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  소셜 로그인을 준비하고 있어요.
-                </Typography>
+            {firebaseEnabled ? (
+              <Stack spacing={1}>
+                {!firebaseUiShown && (
+                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ py: 1 }}>
+                    <CircularProgress size={18} />
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      소셜 로그인을 준비하고 있어요.
+                    </Typography>
+                  </Stack>
+                )}
+                <Box
+                  ref={firebaseUiContainerRef}
+                  id="firebaseui-auth-container"
+                  sx={{
+                    display: firebaseUiShown ? 'block' : 'none',
+                    '& .firebaseui-container': {
+                      maxWidth: '100%',
+                      boxShadow: 'none',
+                      bgcolor: 'transparent',
+                    },
+                  }}
+                />
+              </Stack>
+            ) : (
+              <Stack spacing={1}>
+                {authProviders.map((provider) => (
+                  <Button
+                    key={provider.label}
+                    variant="outlined"
+                    fullWidth
+                    disabled
+                    sx={{
+                      height: 50,
+                      justifyContent: 'flex-start',
+                      px: 1.25,
+                      bgcolor: 'transparent',
+                      border: 0,
+                      backgroundImage: `url(${loginUi(provider.label === 'Google' ? 'BtnGoogle.png' : 'BtnX.png')})`,
+                      backgroundSize: '100% 100%',
+                      backgroundRepeat: 'no-repeat',
+                      '&.Mui-disabled': {
+                        color: 'text.primary',
+                        opacity: 0.84,
+                      },
+                    }}
+                  >
+                    <Box
+                      component="span"
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        mr: 1.25,
+                        borderRadius: '50%',
+                        display: 'inline-grid',
+                        placeItems: 'center',
+                        bgcolor: provider.tone,
+                        color: '#fff',
+                        fontSize: 13,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {provider.mark}
+                    </Box>
+                    {provider.label}로 로그인
+                    <Box component="span" sx={{ ml: 'auto', fontSize: 11, color: 'text.secondary' }}>
+                      Firebase 설정 필요
+                    </Box>
+                  </Button>
+                ))}
               </Stack>
             )}
-            <Box
-              ref={firebaseUiContainerRef}
-              id="firebaseui-auth-container"
-              sx={{
-                display: firebaseUiShown ? 'block' : 'none',
-                '& .firebaseui-container': {
-                  maxWidth: '100%',
-                  boxShadow: 'none',
-                  bgcolor: 'transparent',
-                },
-              }}
-            />
-          </Stack>
-        ) : (
-          <Stack spacing={1}>
-            {authProviders.map((provider) => (
-              <Button
-                key={provider.label}
-                variant="outlined"
-                fullWidth
-                disabled
-                sx={{
-                  height: 50,
-                  justifyContent: 'flex-start',
-                  px: 1.25,
-                  bgcolor: 'transparent',
-                  border: 0,
-                  backgroundImage: `url(${loginUi(provider.label === 'Google' ? 'BtnGoogle.png' : 'BtnX.png')})`,
-                  backgroundSize: '100% 100%',
-                  backgroundRepeat: 'no-repeat',
-                  '&.Mui-disabled': {
-                    color: 'text.primary',
-                    opacity: 0.84,
-                  },
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    width: 24,
-                    height: 24,
-                    mr: 1.25,
-                    borderRadius: '50%',
-                    display: 'inline-grid',
-                    placeItems: 'center',
-                    bgcolor: provider.tone,
-                    color: '#fff',
-                    fontSize: 13,
-                    fontWeight: 900,
-                  }}
-                >
-                  {provider.mark}
-                </Box>
-                {provider.label}로 로그인
-                <Box component="span" sx={{ ml: 'auto', fontSize: 11, color: 'text.secondary' }}>
-                  Firebase 설정 필요
-                </Box>
-              </Button>
-            ))}
-          </Stack>
+          </>
         )}
       </Stack>
 
@@ -607,6 +621,20 @@ export const LoginScreen = () => {
                   setSignupDraft((current) => ({ ...current, passwordConfirm: event.target.value }))
                   setSignupError(null)
                 }}
+                autoComplete="off"
+                fullWidth
+                size="small"
+              />
+              <TextField
+                label="회원가입 코드"
+                name="idong-signup-code"
+                type="password"
+                value={signupDraft.signUpCode}
+                onChange={(event) => {
+                  setSignupDraft((current) => ({ ...current, signUpCode: event.target.value }))
+                  setSignupError(null)
+                }}
+                helperText="초대받은 회원가입 코드를 입력해 주세요."
                 autoComplete="off"
                 fullWidth
                 size="small"

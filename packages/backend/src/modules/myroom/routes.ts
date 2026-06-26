@@ -73,7 +73,6 @@ export async function buildMyRoomSummary(uid: string) {
     },
     host: {
       coins: host.coins,
-      gems: host.gems,
       diamonds: host.diamonds,
       diceCount: host.diceCount,
       inventory: host.inventory,

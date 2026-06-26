@@ -11,6 +11,8 @@ import type { HostResource, HostStatePatch, HostStateRepository } from './hostSt
 function toHostStateDoc(doc: unknown): HostStateDoc {
   const plain = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>
   delete plain._id
+  if (plain.diamonds === undefined && typeof plain.gems === 'number') plain.diamonds = plain.gems
+  delete plain.gems
   return plain as unknown as HostStateDoc
 }
 
@@ -20,7 +22,6 @@ function createDefaultState(uid: string, seed: HostStatePatch = {}) {
     uid,
     hostName: seed.hostName,
     coins: seed.coins ?? 100,
-    gems: seed.gems ?? 0,
     diamonds: seed.diamonds ?? 0,
     diceCount: seed.diceCount ?? 6,
     inventory: seed.inventory ?? {},

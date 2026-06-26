@@ -1,7 +1,7 @@
 /**
  * 📁 host/manifest.ts — 광역 모듈 host
  * ───────────────────────────────────────────────
- * 📌 역할: 글로벌 자원·재화 (coins·gems·diamonds·diceCount·inventory) 단일 소유.
+ * 📌 역할: 글로벌 자원·재화 (coins·diamonds·diceCount·inventory) 단일 소유.
  *           다른 모듈은 본 모듈의 actions 를 통해서만 자원 변경.
  *
  * 🔗 헌법:
@@ -24,13 +24,12 @@ export default defineManifest({
   exports: [
     'getResources',         // 현재 자원 조회
     'rewardCoins',          // 코인 적립
-    'rewardGems',           // 보석 적립
+    'rewardDiamonds',       // 다이아 적립
     'spendCoins',           // 코인 차감 (보유 부족 시 false)
-    'spendGems',            // 보석 차감
+    'spendDiamonds',        // 다이아 차감
     'addMaterial',          // 인벤토리 +1
     'consumeMaterial',      // 인벤토리 -1 (부족 시 false)
     'getInitialCoins',      // balance.csv: initial_coins
-    'getInitialGems',       // balance.csv: initial_gems
     'getInitialDiamonds',   // balance.csv: initial_diamonds
     'getInitialDice',       // balance.csv: initial_dice
     'getDiceMaxCapacity',   // balance.csv: dice_max_capacity

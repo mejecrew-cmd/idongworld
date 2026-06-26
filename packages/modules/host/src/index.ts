@@ -2,7 +2,7 @@
  * 📁 host/src/index.ts — @idongworld/host 공개 표면
  *
  * 사용 예 (다른 모듈):
- *   import { rewardCoins, spendGems, addMaterial } from '@idongworld/host'
+ *   import { rewardCoins, spendDiamonds, addMaterial } from '@idongworld/host'
  *
  * 사용 예 (frontend bootstrap):
  *   import { configure } from '@idongworld/host'
@@ -12,9 +12,8 @@ export {
   getResources,
   rewardCoins,
   spendCoins,
-  rewardGems,
-  spendGems,
   rewardDiamonds,
+  spendDiamonds,
   rewardDice,
   addMaterial,
   consumeMaterial,
@@ -29,11 +28,6 @@ import { getBalance as _getBalance } from './balance.ts'
 /** balance.csv 기반: 게임 시작 시 코인. */
 export function getInitialCoins(): number {
   return _getBalance('initial_coins', 100)
-}
-
-/** balance.csv 기반: 게임 시작 시 보석. */
-export function getInitialGems(): number {
-  return _getBalance('initial_gems', 0)
 }
 
 /** balance.csv 기반: 게임 시작 시 다이아 (BM 재화). */

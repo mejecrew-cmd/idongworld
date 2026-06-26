@@ -103,7 +103,6 @@ debugRouter.post('/reset', async (req, res) => {
   const host = await getHostStateRepository().patch(uid, {
     hostName: undefined,
     coins: 100,
-    gems: 0,
     diamonds: 0,
     diceCount: 6,
     inventory: {},

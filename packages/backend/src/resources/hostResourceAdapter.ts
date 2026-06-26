@@ -9,7 +9,7 @@ import type { HostResource } from '../repositories/hostStateRepository.js'
 import { getHostStateRepository } from '../repositories/index.js'
 import type { ResourceAdapter } from './resourceAdapter.js'
 
-const HOST_NUMERIC_RESOURCES = new Set(['coins', 'gems', 'diamonds', 'diceCount'])
+const HOST_NUMERIC_RESOURCES = new Set(['coins', 'diamonds', 'diceCount'])
 
 function asHostResource(resource: string): HostResource | undefined {
   return HOST_NUMERIC_RESOURCES.has(resource) ? resource as HostResource : undefined

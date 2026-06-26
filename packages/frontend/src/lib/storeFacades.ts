@@ -21,7 +21,7 @@ export {
 } from './voyageSessionStore'
 
 type HostStatePatch = Partial<
-  Pick<UserState, 'hostName' | 'coins' | 'diamonds' | 'gems' | 'diceCount' | 'inventory'>
+  Pick<UserState, 'hostName' | 'coins' | 'diamonds' | 'diceCount' | 'inventory'>
 >
 
 type AccountStatePatch = Partial<
@@ -90,7 +90,6 @@ export const accountStoreFacade = {
 export const hostStoreFacade = {
   useCoins: () => useUserStore((state) => state.coins),
   useDiamonds: () => useUserStore((state) => state.diamonds),
-  useGems: () => useUserStore((state) => state.gems),
   useDiceCount: () => useUserStore((state) => state.diceCount),
   useInventory: () => useUserStore((state) => state.inventory),
 
@@ -99,7 +98,6 @@ export const hostStoreFacade = {
     return {
       coins: state.coins,
       diamonds: state.diamonds,
-      gems: state.gems,
       diceCount: state.diceCount,
       inventory: state.inventory,
     }
@@ -109,14 +107,11 @@ export const hostStoreFacade = {
     useUserStore.setState(patch)
   },
   getCoins: () => getUserState().coins,
-  getGems: () => getUserState().gems,
   getDiamonds: () => getUserState().diamonds,
   getDiceCount: () => getUserState().diceCount,
   getInventoryQty: (itemId: string) => getUserState().inventory[itemId] ?? 0,
   mutateCoins: (delta: number) =>
     useUserStore.setState((state) => ({ coins: state.coins + delta })),
-  mutateGems: (delta: number) =>
-    useUserStore.setState((state) => ({ gems: state.gems + delta })),
   mutateDiamonds: (delta: number) =>
     useUserStore.setState((state) => ({ diamonds: state.diamonds + delta })),
   mutateDiceCount: (delta: number) =>

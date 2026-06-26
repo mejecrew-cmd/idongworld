@@ -79,8 +79,8 @@ export function bootstrapVNRunner(): void {
         incrementRetryCount('first-meeting')
       },
       // 자원 변경 — host actions 위임 (정착)
-      deduct_gems: (n) => {
-        host.spendGems(Number(n))
+      deduct_diamonds: (n) => {
+        host.spendDiamonds(Number(n))
       },
       give_material: (matId) => {
         // payload 가 자재 ID — 1개 사용 (시나리오에서 비용 차감 의미)
