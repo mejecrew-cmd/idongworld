@@ -53,6 +53,7 @@ import { renderModuleRoutes } from './lib/moduleRoutes'
 import { accountStoreFacade } from './lib/storeFacades'
 import { isFirebaseEnabled, onFirebaseAuthChanged } from './lib/firebase'
 import { hydrateSplitState } from './lib/syncStore'
+import { api, hasPasswordSessionToken } from './lib/api'
 
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
 const LegacyDebutRedirect = () => {
@@ -109,34 +110,79 @@ const LoginGuard = () => {
 
 const IslandHydrationGate = () => {
   const firebaseUid = accountStoreFacade.useFirebaseUid()
-  const [ready, setReady] = useState(false)
+  const [status, setStatus] = useState<'checking' | 'ready' | 'login'>('checking')
 
   useEffect(() => {
     let cancelled = false
 
-    if (!firebaseUid) {
-      setReady(true)
+    const finishReady = () => {
+      if (!cancelled) setStatus('ready')
+    }
+    const finishLogin = () => {
+      if (!cancelled) setStatus('login')
+    }
+    const hydrateUid = async (uid: string) => {
+      await hydrateSplitState(uid)
+      accountStoreFacade.mergeAccountState({ firebaseUid: uid, isGuest: false })
+    }
+
+    setStatus('checking')
+
+    if (firebaseUid) {
+      void hydrateUid(firebaseUid)
+        .catch((error) => {
+          console.warn('[island] failed to hydrate account state before route render', error)
+        })
+        .finally(finishReady)
       return () => {
         cancelled = true
       }
     }
 
-    setReady(false)
-    void hydrateSplitState(firebaseUid)
-      .catch((error) => {
-        console.warn('[island] failed to hydrate account state before route render', error)
-      })
-      .finally(() => {
-        if (!cancelled) setReady(true)
-      })
+    if (hasPasswordSessionToken()) {
+      void api.authMe()
+        .then((response) => {
+          const uid = typeof response.user?.uid === 'string' ? response.user.uid : undefined
+          if (!uid) throw new Error('password_session_user_missing_uid')
+          return hydrateUid(uid)
+        })
+        .then(finishReady)
+        .catch((error) => {
+          console.warn('[island] failed to restore password session before route render', error)
+          finishLogin()
+        })
+      return () => {
+        cancelled = true
+      }
+    }
+
+    if (!isFirebaseEnabled) {
+      finishLogin()
+      return () => {
+        cancelled = true
+      }
+    }
+
+    const unsubscribe = onFirebaseAuthChanged((user) => {
+      if (!user) {
+        finishLogin()
+        return
+      }
+      void hydrateUid(user.uid)
+        .catch((error) => {
+          console.warn('[island] failed to restore Firebase session before route render', error)
+        })
+        .finally(finishReady)
+    })
 
     return () => {
       cancelled = true
+      unsubscribe()
     }
   }, [firebaseUid])
 
-  if (!firebaseUid) return <Navigate to="/login" replace />
-  if (!ready) {
+  if (status === 'login') return <Navigate to="/login" replace />
+  if (status !== 'ready') {
     return (
       <div
         style={{

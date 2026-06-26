@@ -13,7 +13,7 @@ import {
   onFirebaseAuthChanged,
 } from './firebase'
 import { api } from './api'
-import { clearPasswordSessionToken } from './api'
+import { clearPasswordSessionToken, hasPasswordSessionToken } from './api'
 import { accountStoreFacade } from './storeFacades'
 import { hydrateSplitState } from './syncStore'
 
@@ -64,6 +64,7 @@ export function bootstrapAccount(): void {
 
   onFirebaseAuthChanged((user) => {
     if (!user) {
+      if (hasPasswordSessionToken()) return
       clearPasswordSessionToken()
       accountStoreFacade.logout()
       return

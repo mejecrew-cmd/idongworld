@@ -158,6 +158,10 @@ function getPasswordSessionToken(): string | null {
   }
 }
 
+export function hasPasswordSessionToken(): boolean {
+  return Boolean(getPasswordSessionToken())
+}
+
 export function setPasswordSessionToken(token: string): void {
   try {
     window.localStorage.setItem(PASSWORD_SESSION_TOKEN_KEY, token)
@@ -241,6 +245,9 @@ export const api = {
     apiFetch<{ ok: boolean }>('/api/auth/account', {
       method: 'DELETE',
     }),
+
+  authMe: () =>
+    apiFetch<{ user: Record<string, unknown> }>('/api/auth/me'),
 
   getAccountState: <TState = Record<string, unknown>>(uid: string) =>
     apiFetch<{ state: TState }>(`/api/account/state?uid=${encodeURIComponent(uid)}`, { uid }),
