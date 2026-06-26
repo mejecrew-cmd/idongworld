@@ -6,9 +6,19 @@
  *       이 화면을 통과한 뒤 /title로 이동한다.
  * 주의: DB 문서 생성 시점을 가입 완료 뒤로 옮기는 작업은 backend API 변경 단계에서 처리한다.
  */
-import { FormEvent, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { logout as accountLogout } from '@idongworld/account'
-import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material'
+import {
+  Alert,
+  Box,
+  Button,
+  Checkbox,
+  Divider,
+  FormControlLabel,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { api, setPasswordSessionToken } from '@/lib/api'
@@ -21,6 +31,8 @@ const PENDING_PASSWORD_SIGNUP_LOGIN_ID_KEY = 'idongworld-pending-password-signup
 const PENDING_SOCIAL_SIGNUP_KEY = 'idongworld-pending-social-signup'
 const NICKNAME_MAX_LENGTH = 8
 const FORBIDDEN_NICKNAME_PARTS = ['운영자', '관리자', 'admin', 'system']
+const TERMS_URL = 'https://meje.kr/terms'
+const POLICY_URL = 'https://meje.kr/privacy'
 
 type PendingSocialSignup = {
   provider: 'google' | 'twitter' | 'firebase'
@@ -105,6 +117,38 @@ function clearPendingSocialSignup(): void {
   }
 }
 
+function getBrowserTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+}
+
+function getUtcOffsetMinutes(date = new Date()): number {
+  return -date.getTimezoneOffset()
+}
+
+function formatUtcOffset(offsetMinutes: number): string {
+  const sign = offsetMinutes >= 0 ? '+' : '-'
+  const absolute = Math.abs(offsetMinutes)
+  const hours = Math.floor(absolute / 60)
+  const minutes = absolute % 60
+  return `UTC${sign}${hours}${minutes ? `:${String(minutes).padStart(2, '0')}` : ''}`
+}
+
+function formatLocalTime(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('ko-KR', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).format(date)
+}
+
+function openPolicy(url: string): void {
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 export const SignupScreen = () => {
   const navigate = useNavigate()
   const firebaseUid = accountStoreFacade.useFirebaseUid()
@@ -114,8 +158,24 @@ export const SignupScreen = () => {
   const [nickname, setNickname] = useState(
     currentNickname ?? pendingPasswordSignup?.loginId ?? pendingSocialSignup?.displayName ?? '',
   )
+  const [now, setNow] = useState(() => new Date())
+  const [serviceTermsAccepted, setServiceTermsAccepted] = useState(false)
+  const [privacyPolicyAccepted, setPrivacyPolicyAccepted] = useState(false)
+  const [marketingAccepted, setMarketingAccepted] = useState(false)
+  const [pushNotificationAccepted, setPushNotificationAccepted] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const timeZone = useMemo(() => getBrowserTimeZone(), [])
+  const utcOffsetMinutes = useMemo(() => getUtcOffsetMinutes(now), [now])
+  const canSubmit = !saving &&
+    !getNicknameError(nickname) &&
+    serviceTermsAccepted &&
+    privacyPolicyAccepted
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const nicknameError = useMemo(() => (
     nickname ? getNicknameError(nickname) : null
@@ -135,10 +195,21 @@ export const SignupScreen = () => {
     setError(null)
 
     try {
+      const completionPayload = {
+        nickname: normalized,
+        timeZone,
+        detectedTimeZone: timeZone,
+        utcOffsetMinutes,
+        serviceTermsAccepted,
+        privacyPolicyAccepted,
+        marketingAccepted,
+        pushNotificationAccepted,
+      }
+
       if (pendingPasswordSignup) {
         const response = await api.authPasswordCompleteSignup({
           signupToken: pendingPasswordSignup.signupToken,
-          nickname: normalized,
+          ...completionPayload,
         })
         setPasswordSessionToken(response.token)
         await hydrateSplitState(response.uid).catch((hydrateError) => {
@@ -154,7 +225,7 @@ export const SignupScreen = () => {
       } else if (firebaseUid && pendingSocialSignup) {
         const response = await api.authSocialCompleteSignup(firebaseUid, {
           ...pendingSocialSignup,
-          nickname: normalized,
+          ...completionPayload,
         })
         await hydrateSplitState(response.uid).catch((hydrateError) => {
           console.warn('[signup] failed to hydrate social account session:', hydrateError)
@@ -245,7 +316,81 @@ export const SignupScreen = () => {
           fullWidth
         />
 
-        <Button type="submit" variant="contained" size="large" disabled={saving} fullWidth>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 1.5,
+            bgcolor: 'rgba(246,251,247,0.78)',
+            border: '1px solid rgba(62,155,143,0.14)',
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 0.5 }}>
+            현지 시간
+          </Typography>
+          <Typography sx={{ fontWeight: 900 }}>
+            {formatLocalTime(now, timeZone)}
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            {timeZone} · {formatUtcOffset(utcOffsetMinutes)}
+          </Typography>
+          <Typography variant="caption" sx={{ display: 'block', mt: 0.75, color: 'text.secondary' }}>
+            현재 브라우저 기준 시간대이며, 가입 완료 시 계정에 저장됩니다.
+          </Typography>
+        </Box>
+
+        <Divider />
+
+        <Stack spacing={0.5}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={serviceTermsAccepted}
+                onChange={(event) => setServiceTermsAccepted(event.target.checked)}
+              />
+            }
+            label="서비스 이용약관에 동의합니다. (필수)"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={privacyPolicyAccepted}
+                onChange={(event) => setPrivacyPolicyAccepted(event.target.checked)}
+              />
+            }
+            label="개인정보 처리방침에 동의합니다. (필수)"
+          />
+          <Stack direction="row" spacing={1}>
+            <Button size="small" variant="text" onClick={() => openPolicy(TERMS_URL)}>
+              이용약관 보기
+            </Button>
+            <Button size="small" variant="text" onClick={() => openPolicy(POLICY_URL)}>
+              개인정보 처리방침 보기
+            </Button>
+          </Stack>
+        </Stack>
+
+        <Stack spacing={0.5}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={marketingAccepted}
+                onChange={(event) => setMarketingAccepted(event.target.checked)}
+              />
+            }
+            label="마케팅 정보 수신에 동의합니다. (선택)"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={pushNotificationAccepted}
+                onChange={(event) => setPushNotificationAccepted(event.target.checked)}
+              />
+            }
+            label="푸시 알림 수신에 동의합니다. (선택)"
+          />
+        </Stack>
+
+        <Button type="submit" variant="contained" size="large" disabled={!canSubmit} fullWidth>
           {saving ? '가입 정보 저장 중...' : '가입하고 계속'}
         </Button>
 

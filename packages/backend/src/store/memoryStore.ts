@@ -31,6 +31,7 @@ export interface TermsAgreementState {
   privacyPolicyVersion?: string
   marketingTermsVersion?: string
   marketingAccepted: boolean
+  pushNotificationAccepted?: boolean
   ageConfirmed?: boolean
   ageGateVersion?: string
   agreedAt?: number

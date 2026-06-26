@@ -22,6 +22,7 @@ import {
   type SocialEntryInput,
 } from '../auth/socialProviderAdapters.js'
 import { readSocialProvider } from '../auth/socialProviders.js'
+import { getCurrentTermsConfig } from '../account/termsPolicy.js'
 
 export const authRouter = Router()
 
@@ -71,6 +72,55 @@ function isValidNickname(value: string): boolean {
   if ([...value].length > NICKNAME_MAX_LENGTH) return false
   const lower = value.toLocaleLowerCase('ko-KR')
   return !FORBIDDEN_NICKNAME_PARTS.some((word) => lower.includes(word))
+}
+
+function readBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined
+}
+
+function readUtcOffsetMinutes(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isInteger(value) && value >= -840 && value <= 840
+    ? value
+    : undefined
+}
+
+function buildSignupCompletionPatch(body: Record<string, unknown>, nickname: string) {
+  const serviceTermsAccepted = readBoolean(body.serviceTermsAccepted)
+  const privacyPolicyAccepted = readBoolean(body.privacyPolicyAccepted)
+  if (serviceTermsAccepted !== true || privacyPolicyAccepted !== true) {
+    return { error: 'required_terms_not_accepted' as const }
+  }
+
+  const timeZone = readString(body.timeZone)
+  const detectedTimeZone = readString(body.detectedTimeZone) ?? timeZone
+  const utcOffsetMinutes = readUtcOffsetMinutes(body.utcOffsetMinutes)
+  if (!timeZone || !detectedTimeZone || utcOffsetMinutes === undefined) {
+    return { error: 'invalid_timezone' as const }
+  }
+
+  const terms = getCurrentTermsConfig()
+  const now = Date.now()
+  return {
+    patch: {
+      nickname,
+      nicknameNormalized: nickname.toLocaleLowerCase('ko-KR'),
+      signupProfileCompleted: true,
+      timeZone,
+      detectedTimeZone,
+      utcOffsetMinutes,
+      timezoneCompleted: true,
+      termsCompleted: true,
+      termsAgreements: {
+        serviceTermsVersion: terms.serviceTermsVersion,
+        privacyPolicyVersion: terms.privacyPolicyVersion,
+        marketingTermsVersion: terms.marketingTermsVersion,
+        marketingAccepted: readBoolean(body.marketingAccepted) === true,
+        pushNotificationAccepted: readBoolean(body.pushNotificationAccepted) === true,
+        agreedAt: now,
+      },
+      profileImageSource: 'first-aidong',
+    },
+  }
 }
 
 function createPasswordUid(loginIdKey: string): string {
@@ -145,6 +195,8 @@ authRouter.post('/session/complete', async (req, res) => {
   const nickname = normalizeNickname(body.nickname)
   if (!provider) return res.status(400).json({ error: 'invalid_provider' })
   if (!isValidNickname(nickname)) return res.status(400).json({ error: 'invalid_nickname' })
+  const completion = buildSignupCompletionPatch(body, nickname)
+  if ('error' in completion) return res.status(400).json({ error: completion.error })
 
   const requestUser = getRequestUser(req)
   const repo = getUserRepository()
@@ -155,11 +207,7 @@ authRouter.post('/session/complete', async (req, res) => {
     displayName: readString(body.displayName),
     photoURL: readString(body.photoURL),
   })
-  const user = await repo.updateUser(createdOrUpdated.uid, {
-    nickname,
-    nicknameNormalized: nickname.toLocaleLowerCase('ko-KR'),
-    signupProfileCompleted: true,
-  }) ?? createdOrUpdated
+  const user = await repo.updateUser(createdOrUpdated.uid, completion.patch) ?? createdOrUpdated
 
   res.json({ uid: user.uid, isNew: true, user })
 })
@@ -241,6 +289,11 @@ authRouter.post('/password/signup/complete', async (req, res) => {
   const signupToken = readString(req.body?.signupToken)
   const nickname = normalizeNickname(req.body?.nickname)
   if (!isValidNickname(nickname)) return res.status(400).json({ error: 'invalid_nickname' })
+  const body = req.body && typeof req.body === 'object'
+    ? req.body as Record<string, unknown>
+    : {}
+  const completion = buildSignupCompletionPatch(body, nickname)
+  if ('error' in completion) return res.status(400).json({ error: completion.error })
 
   const pending = verifyPasswordSignupToken(signupToken)
   if (!pending) return res.status(401).json({ error: 'invalid_signup_token' })
@@ -250,11 +303,7 @@ authRouter.post('/password/signup/complete', async (req, res) => {
   if (existing) return res.status(409).json({ error: 'login_id_taken' })
 
   const created = await repo.createPasswordUser(pending)
-  const user = await repo.updateUser(created.uid, {
-    nickname,
-    nicknameNormalized: nickname.toLocaleLowerCase('ko-KR'),
-    signupProfileCompleted: true,
-  }) ?? created
+  const user = await repo.updateUser(created.uid, completion.patch) ?? created
   const token = issuePasswordSessionToken(user.uid)
   res.json({ uid: user.uid, token, isNew: true, user })
 })

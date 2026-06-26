@@ -126,6 +126,17 @@ export interface AuthSessionResponse {
   pendingProfile?: AuthSessionRequest
 }
 
+export interface SignupCompletionRequest {
+  nickname: string
+  timeZone: string
+  detectedTimeZone: string
+  utcOffsetMinutes: number
+  serviceTermsAccepted: boolean
+  privacyPolicyAccepted: boolean
+  marketingAccepted: boolean
+  pushNotificationAccepted: boolean
+}
+
 export interface PasswordAuthResponse {
   uid: string
   token: string
@@ -201,7 +212,7 @@ export const api = {
       body: JSON.stringify(request),
     }),
 
-  authSocialCompleteSignup: (uid: string, request: AuthSessionRequest & { nickname: string }) =>
+  authSocialCompleteSignup: (uid: string, request: AuthSessionRequest & SignupCompletionRequest) =>
     apiFetch<{ uid: string; isNew?: boolean; user: unknown }>('/api/auth/session/complete', {
       method: 'POST',
       uid,
@@ -214,7 +225,7 @@ export const api = {
       body: JSON.stringify(request),
     }),
 
-  authPasswordCompleteSignup: (request: { signupToken: string; nickname: string }) =>
+  authPasswordCompleteSignup: (request: { signupToken: string } & SignupCompletionRequest) =>
     apiFetch<PasswordAuthResponse>('/api/auth/password/signup/complete', {
       method: 'POST',
       body: JSON.stringify(request),

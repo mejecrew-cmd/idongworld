@@ -52,7 +52,10 @@ export function buildAccountProgress(user: UserDoc): AccountProgress {
     utcOffsetMinutes: user.utcOffsetMinutes,
     timezoneCompleted: Boolean(user.timezoneCompleted),
     termsCompleted: Boolean(user.termsCompleted),
-    termsAgreements: user.termsAgreements ?? { marketingAccepted: false },
+    termsAgreements: user.termsAgreements ?? {
+      marketingAccepted: false,
+      pushNotificationAccepted: false,
+    },
     profileImageSource: user.profileImageSource,
     onboardingComplete: Boolean(user.onboardingComplete),
     openingSeen: Boolean(user.openingSeen),
