@@ -15,6 +15,9 @@ import { mongoHostStateRepository } from './mongoHostStateRepository.js'
 import { createDedicatedModuleRepositories, type ModuleRepositoryMap } from './moduleRepositoryRegistry.js'
 import { memoryCustomsLogRepository } from './memoryCustomsLogRepository.js'
 import { mongoCustomsLogRepository } from './mongoCustomsLogRepository.js'
+import { memoryAdminRepository } from './memoryAdminRepository.js'
+import { mongoAdminRepository } from './mongoAdminRepository.js'
+import type { AdminRepository } from './adminRepository.js'
 import type { CustomsLogRepository } from './customsLogRepository.js'
 import type { HostStateRepository } from './hostStateRepository.js'
 import type { ModuleStateRepository } from './moduleStateRepository.js'
@@ -25,6 +28,7 @@ let moduleStateRepository: ModuleStateRepository = memoryModuleStateRepository
 let hostStateRepository: HostStateRepository = memoryHostStateRepository
 let dedicatedModuleRepositories: ModuleRepositoryMap = createDedicatedModuleRepositories('memory')
 let customsLogRepository: CustomsLogRepository = memoryCustomsLogRepository
+let adminRepository: AdminRepository = memoryAdminRepository
 let repositoryBackend: 'memory' | 'mongo' = 'memory'
 
 export function initializeRepositories(): void {
@@ -36,6 +40,7 @@ export function initializeRepositories(): void {
     hostStateRepository = mongoHostStateRepository
     dedicatedModuleRepositories = createDedicatedModuleRepositories('mongo')
     customsLogRepository = mongoCustomsLogRepository
+    adminRepository = mongoAdminRepository
     console.info('[repositories] using mongo repositories')
     return
   }
@@ -46,6 +51,7 @@ export function initializeRepositories(): void {
   hostStateRepository = memoryHostStateRepository
   dedicatedModuleRepositories = createDedicatedModuleRepositories('memory')
   customsLogRepository = memoryCustomsLogRepository
+  adminRepository = memoryAdminRepository
   console.info('[repositories] using memory repositories')
 }
 
@@ -67,6 +73,10 @@ export function getDedicatedModuleRepositories(): ModuleRepositoryMap {
 
 export function getCustomsLogRepository(): CustomsLogRepository {
   return customsLogRepository
+}
+
+export function getAdminRepository(): AdminRepository {
+  return adminRepository
 }
 
 export function getRepositoryStatus() {

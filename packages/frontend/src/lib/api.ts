@@ -150,6 +150,61 @@ export interface PasswordSignupStartResponse {
   isNew: true
 }
 
+export type AdminRole = 'owner' | 'admin' | 'operator' | 'viewer'
+export type AdminHostResource = 'coins' | 'diamonds' | 'diceCount'
+
+export interface AdminUserContext {
+  uid: string
+  role: AdminRole
+  permissions: string[]
+  enabled: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+export interface AdminUserSummary {
+  uid: string
+  isGuest: boolean
+  authProvider?: string
+  nickname?: string
+  email?: string
+  signupProfileCompleted?: boolean
+  timezoneCompleted?: boolean
+  termsCompleted?: boolean
+  sooksoClean?: boolean
+  openingSeen?: boolean
+  onboardingComplete?: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+export interface AdminUserDetail extends AdminUserSummary {
+  displayName?: string
+  photoURL?: string
+  timeZone?: string
+  detectedTimeZone?: string
+  utcOffsetMinutes?: number
+  termsAgreements?: Record<string, unknown>
+  profileImageSource?: string
+  gameStartedAt?: number
+  hostName?: string
+  sooksoName?: string
+  soundSettings?: Record<string, unknown>
+  recruitedAidongs?: string[]
+  firstGachaAttempts?: number
+}
+
+export interface AdminHostSummary {
+  uid: string
+  hostName?: string
+  coins: number
+  diamonds: number
+  diceCount: number
+  inventory: Record<string, number>
+  createdAt: number
+  updatedAt: number
+}
+
 function getPasswordSessionToken(): string | null {
   try {
     return window.localStorage.getItem(PASSWORD_SESSION_TOKEN_KEY)
@@ -248,6 +303,57 @@ export const api = {
 
   authMe: () =>
     apiFetch<{ user: Record<string, unknown> }>('/api/auth/me'),
+
+  adminMe: () =>
+    apiFetch<{ isAdmin: boolean; adminUser: AdminUserContext }>('/api/admin/me'),
+
+  adminListUsers: (limit = 50) =>
+    apiFetch<{ users: AdminUserSummary[]; limit: number; hasMore: boolean }>(
+      `/api/admin/users?limit=${encodeURIComponent(String(limit))}`,
+    ),
+
+  adminGetUser: (uid: string) =>
+    apiFetch<{ user: AdminUserDetail; host: AdminHostSummary }>(
+      `/api/admin/users/${encodeURIComponent(uid)}`,
+    ),
+
+  adminGrantResource: (uid: string, resource: AdminHostResource, delta: number) =>
+    apiFetch<{ ok: boolean; host: AdminHostSummary }>(
+      `/api/admin/users/${encodeURIComponent(uid)}/resources/grant`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ resource, delta }),
+      },
+    ),
+
+  adminResetUser: (uid: string) =>
+    apiFetch<{ ok: boolean; account?: AdminUserDetail; host: AdminHostSummary; modules: Record<string, unknown> }>(
+      `/api/admin/users/${encodeURIComponent(uid)}/reset`,
+      {
+        method: 'POST',
+      },
+    ),
+
+  adminPatchUserAccount: (uid: string, patch: Record<string, unknown>) =>
+    apiFetch<{ ok: boolean; user: AdminUserDetail }>(
+      `/api/admin/users/${encodeURIComponent(uid)}/account`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ patch }),
+      },
+    ),
+
+  adminUpsertAdminUser: (
+    uid: string,
+    request: { role: AdminRole; permissions?: string[]; enabled?: boolean },
+  ) =>
+    apiFetch<{ ok: boolean; adminUser: AdminUserContext }>(
+      `/api/admin/admin-users/${encodeURIComponent(uid)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(request),
+      },
+    ),
 
   getAccountState: <TState = Record<string, unknown>>(uid: string) =>
     apiFetch<{ state: TState }>(`/api/account/state?uid=${encodeURIComponent(uid)}`, { uid }),
