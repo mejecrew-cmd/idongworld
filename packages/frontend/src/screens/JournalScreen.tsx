@@ -30,6 +30,7 @@ function todayKey(): string {
 
 export const JournalScreen = () => {
   const uid = accountStoreFacade.useFirebaseUid()
+  const gameStartedAt = accountStoreFacade.useGameStartedAt()
   const careLog = myAidongStoreFacade.useCareLog()
   const [journal, setJournal] = useState<DailyJournalState>(() => readDailyJournalState(uid))
 
@@ -37,7 +38,8 @@ export const JournalScreen = () => {
     setJournal(readDailyJournalState(uid))
   }, [uid])
 
-  const progress = getDailyJournalProgress(journal)
+  // 디버그 패널 Day와 동일하게 gameStartedAt 기준으로 현재 day를 계산한다.
+  const progress = getDailyJournalProgress(journal, Date.now(), gameStartedAt)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
