@@ -34,8 +34,8 @@ gachaRouter.post('/first', async (req, res) => {
   if (attempts >= COSTS.length) {
     return res.status(400).json({ error: 'limit_exceeded' })
   }
-  if (user.gems < cost) {
-    return res.status(402).json({ error: 'insufficient_gems', cost })
+  if (user.diamonds < cost) {
+    return res.status(402).json({ error: 'insufficient_diamonds', cost })
   }
 
   const idx = Math.floor(Math.random() * POOL.length)
@@ -43,7 +43,7 @@ gachaRouter.post('/first', async (req, res) => {
   const updated = await repo.updateUser(uid, {
     firstGachaCandidate: candidate,
     firstGachaAttempts: attempts + 1,
-    gems: user.gems - cost,
+    diamonds: user.diamonds - cost,
   })
 
   res.json({

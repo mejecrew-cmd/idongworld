@@ -2,7 +2,7 @@
  * packages/backend/src/routes/host.ts
  * ------------------------------------------------------------
  * 역할: host/global resource API를 처리한다.
- * 연결: coins, gems, diamonds, diceCount, inventory, hostName 같은 전역 상태를 hostStates로 분리한다.
+ * 연결: coins, diamonds, diceCount, inventory, hostName 같은 전역 상태를 hostStates로 분리한다.
  * 주의: 모듈 지역 상태를 host API에 넣지 말고, 모듈 간 이동은 customs에서 처리한다.
  */
 import { Router } from 'express'
@@ -12,7 +12,7 @@ import type { HostResource } from '../repositories/hostStateRepository.js'
 
 export const hostRouter = Router()
 
-const HOST_RESOURCES = new Set(['coins', 'gems', 'diamonds', 'diceCount'])
+const HOST_RESOURCES = new Set(['coins', 'diamonds', 'diceCount'])
 
 function parseDelta(value: unknown): number | undefined {
   const delta = Number(value)

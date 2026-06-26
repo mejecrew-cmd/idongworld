@@ -37,7 +37,6 @@ const UserSchema = new Schema(
     sooksoClean: { type: Boolean, required: true, default: false },
     coins: { type: Number, required: true, default: 0 },
     diamonds: { type: Number, required: true, default: 0 },
-    gems: { type: Number, required: true, default: 0 },
     openingSeen: { type: Boolean, required: true, default: false },
     onboardingComplete: { type: Boolean, required: true, default: false },
     soundSettings: {

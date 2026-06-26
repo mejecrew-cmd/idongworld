@@ -6,8 +6,7 @@
  *
  * 💡 키 컨벤션:
  *   - coins:     게임 내 일반 재화 (가챠 X·구매 OK)
- *   - gems:      소프트 재화 (친밀도·하트)
- *   - diamonds:  하드 재화 (BM·결제) — Phase 2
+ *   - diamonds:  통합 보석 재화
  *   - diceCount: 항해 보드 주사위 잔량
  *   - inventory: 자재 ID → 개수 (basic_food·rest_token·memory_piece·ore·basic_water·basic_wood·flower)
  */
@@ -25,7 +24,6 @@ export type MaterialId =
 /** host 가 소유하는 자원 묶음. */
 export interface HostResources {
   coins: number
-  gems: number
   diamonds: number
   diceCount: number
   inventory: Partial<Record<MaterialId, number>>

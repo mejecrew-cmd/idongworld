@@ -2,7 +2,7 @@
  * 📁 lib/hostBootstrap.ts — host 광역 모듈 DI 부트스트랩
  * ───────────────────────────────────────────────
  * 📌 역할: @idongworld/host 의 자원 변경 훅을 useUserStore 백업으로 연결.
- *           다른 모듈이 host actions (rewardCoins·spendGems 등) 호출 시
+ *           다른 모듈이 host actions (rewardCoins·rewardDiamonds 등) 호출 시
  *           실제 zustand store 가 갱신되도록.
  *
  * 🔗 연결: main.tsx → bootstrapHost() 1회
@@ -19,7 +19,7 @@ import { accountStoreFacade, hostStoreFacade } from './storeFacades'
 const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
 
 function syncHostResource(
-  resource: 'coins' | 'gems' | 'diamonds' | 'diceCount',
+  resource: 'coins' | 'diamonds' | 'diceCount',
   delta: number,
 ): void {
   if (!MODULE_ACTION_API_SYNC) return
@@ -57,7 +57,6 @@ export function bootstrapHost(): void {
       const s = hostStoreFacade.getResources()
       return {
         coins: s.coins,
-        gems: s.gems,
         diamonds: s.diamonds,
         diceCount: s.diceCount,
         inventory: s.inventory as Record<MaterialId, number>,
@@ -69,13 +68,6 @@ export function bootstrapHost(): void {
       (delta) => {
         hostStoreFacade.mutateCoins(delta)
         syncHostResource('coins', delta)
-      },
-    ),
-    mutateGems: makeNumericMutator(
-      () => hostStoreFacade.getGems(),
-      (delta) => {
-        hostStoreFacade.mutateGems(delta)
-        syncHostResource('gems', delta)
       },
     ),
     mutateDiamonds: makeNumericMutator(

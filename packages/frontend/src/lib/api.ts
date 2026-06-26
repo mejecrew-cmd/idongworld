@@ -219,7 +219,7 @@ export const api = {
       body: JSON.stringify(request),
     }),
 
-  authPasswordSignup: (request: { loginId: string; password: string; passwordConfirm: string }) =>
+  authPasswordSignup: (request: { loginId: string; password: string; passwordConfirm: string; signUpCode: string }) =>
     apiFetch<PasswordSignupStartResponse>('/api/auth/password/signup', {
       method: 'POST',
       body: JSON.stringify(request),
@@ -270,7 +270,7 @@ export const api = {
 
   mutateHostResource: <TState = Record<string, unknown>>(
     uid: string,
-    resource: 'coins' | 'gems' | 'diamonds' | 'diceCount',
+    resource: 'coins' | 'diamonds' | 'diceCount',
     delta: number,
   ) =>
     apiFetch<ActionResponse<TState>>('/api/host/resources/mutate', {

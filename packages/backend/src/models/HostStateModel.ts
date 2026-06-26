@@ -11,7 +11,6 @@ export interface HostStateDoc {
   uid: string
   hostName?: string
   coins: number
-  gems: number
   diamonds: number
   diceCount: number
   inventory: Record<string, number>
@@ -24,7 +23,6 @@ const HostStateSchema = new Schema<HostStateDoc>(
     uid: { type: String, required: true, unique: true, index: true },
     hostName: String,
     coins: { type: Number, required: true, default: 100 },
-    gems: { type: Number, required: true, default: 0 },
     diamonds: { type: Number, required: true, default: 0 },
     diceCount: { type: Number, required: true, default: 6 },
     inventory: { type: Schema.Types.Mixed, required: true, default: {} },

@@ -28,6 +28,8 @@ function toUserDoc(doc: unknown): UserDoc {
   delete plain._id
   if (plain.openingSeen === undefined) plain.openingSeen = true
   if (plain.sooksoClean === undefined) plain.sooksoClean = false
+  if (plain.diamonds === undefined && typeof plain.gems === 'number') plain.diamonds = plain.gems
+  delete plain.gems
   if (plain.soundSettings === undefined) plain.soundSettings = DEFAULT_SOUND_SETTINGS
   if (plain.gameStartedAt === undefined) plain.gameStartedAt = plain.createdAt
   return plain as unknown as UserDoc
@@ -44,7 +46,6 @@ function createGuestDoc(): UserDoc {
     sooksoClean: false,
     coins: 100,
     diamonds: 0,
-    gems: 0,
     openingSeen: false,
     onboardingComplete: false,
     soundSettings: DEFAULT_SOUND_SETTINGS,
@@ -78,7 +79,6 @@ function createPasswordDoc(input: PasswordUserInput): UserDoc {
     sooksoClean: false,
     coins: 100,
     diamonds: 0,
-    gems: 0,
     openingSeen: false,
     onboardingComplete: false,
     soundSettings: DEFAULT_SOUND_SETTINGS,
@@ -102,7 +102,6 @@ function pickDefinedHostPatch(patch: Partial<UserDoc>): HostStatePatch {
   const hostPatch: HostStatePatch = {}
   if (patch.hostName !== undefined) hostPatch.hostName = patch.hostName
   if (patch.coins !== undefined) hostPatch.coins = patch.coins
-  if (patch.gems !== undefined) hostPatch.gems = patch.gems
   if (patch.diamonds !== undefined) hostPatch.diamonds = patch.diamonds
   if (patch.diceCount !== undefined) hostPatch.diceCount = patch.diceCount
   if (patch.inventory !== undefined) hostPatch.inventory = patch.inventory
@@ -116,7 +115,6 @@ export const mongoUserRepository: UserRepository = {
     await mongoHostStateRepository.getOrCreate(user.uid, {
       hostName: user.hostName,
       coins: user.coins,
-      gems: user.gems,
       diamonds: user.diamonds,
       diceCount: user.diceCount,
       inventory: user.inventory,
@@ -150,7 +148,6 @@ export const mongoUserRepository: UserRepository = {
             sooksoClean: false,
             coins: 100,
             diamonds: 0,
-            gems: 0,
             openingSeen: false,
             onboardingComplete: false,
             soundSettings: DEFAULT_SOUND_SETTINGS,
@@ -175,7 +172,6 @@ export const mongoUserRepository: UserRepository = {
     await mongoHostStateRepository.getOrCreate(user.uid, {
       hostName: user.hostName,
       coins: user.coins,
-      gems: user.gems,
       diamonds: user.diamonds,
       diceCount: user.diceCount,
       inventory: user.inventory,
@@ -190,7 +186,6 @@ export const mongoUserRepository: UserRepository = {
     await mongoHostStateRepository.getOrCreate(user.uid, {
       hostName: user.hostName,
       coins: user.coins,
-      gems: user.gems,
       diamonds: user.diamonds,
       diceCount: user.diceCount,
       inventory: user.inventory,

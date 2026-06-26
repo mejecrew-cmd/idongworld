@@ -16,7 +16,6 @@ function createHostState(uid: string, seed: HostStatePatch = {}): HostStateDoc {
     uid,
     hostName: seed.hostName,
     coins: seed.coins ?? 100,
-    gems: seed.gems ?? 0,
     diamonds: seed.diamonds ?? 0,
     diceCount: seed.diceCount ?? 6,
     inventory: seed.inventory ?? {},

@@ -242,7 +242,7 @@ async function applyHostRewards(uid: string, rewards: HostReward[]): Promise<Hos
     if (reward.amount <= 0) continue
     if (reward.kind === 'inventory') {
       host = await hostRepo.mutateInventory(uid, reward.id, reward.amount)
-    } else if (reward.id === 'coins' || reward.id === 'gems' || reward.id === 'diamonds' || reward.id === 'diceCount') {
+    } else if (reward.id === 'coins' || reward.id === 'diamonds' || reward.id === 'diceCount') {
       host = await hostRepo.mutateResource(uid, reward.id, reward.amount)
     } else {
       throw new ServiceError('unsupported_host_reward', 500)

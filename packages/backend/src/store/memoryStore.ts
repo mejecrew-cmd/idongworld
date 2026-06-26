@@ -69,7 +69,6 @@ export interface UserDoc {
   sooksoClean?: boolean
   coins: number
   diamonds: number
-  gems: number
   openingSeen: boolean
   onboardingComplete: boolean
   soundSettings: SoundSettings
@@ -105,7 +104,6 @@ export function createGuestUser(): UserDoc {
     gameStartedAt: now,
     coins: 100,
     diamonds: 0,
-    gems: 0,
     openingSeen: false,
     onboardingComplete: false,
     soundSettings: DEFAULT_SOUND_SETTINGS,

@@ -124,7 +124,7 @@ export const DebugPanel = () => {
           <Typography variant="caption" sx={{ fontWeight: 600 }}>💰 자원</Typography>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mb: 2, mt: 0.5 }}>
             <Button size="small" variant="outlined" onClick={() => hostStoreFacade.rewardCoins(50)}>🪙 +50</Button>
-            <Button size="small" variant="outlined" onClick={() => hostStoreFacade.mutateGems(50)}>❤️ +50</Button>
+            <Button size="small" variant="outlined" onClick={() => hostStoreFacade.mutateDiamonds(50)}>💎 +50</Button>
             <Button size="small" variant="outlined" onClick={() => hostStoreFacade.mutateDiceCount(6)}>🎲 +6</Button>
           </Stack>
 

@@ -2,7 +2,6 @@
 # 헤더: paramId,value,type,description,phase
 paramId,value,type,description,phase
 initial_coins,100,number,게임 시작 시 코인 (1주차 케어 액션 검증용),Phase 1
-initial_gems,0,number,게임 시작 시 보석,Phase 1
 initial_diamonds,0,number,게임 시작 시 다이아 (BM 재화),Phase 2
 initial_dice,6,number,게임 시작 시 주사위 잔량,Phase 1
 max_inventory_per_item,999,number,자재 슬롯당 최대 보유 개수,Phase 1

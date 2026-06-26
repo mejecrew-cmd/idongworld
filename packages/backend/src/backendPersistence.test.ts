@@ -281,10 +281,10 @@ describe('backend persistence contracts', () => {
 
     expect(ruleIds).toEqual([
       'deck-to-coins',
-      'deck-to-gems',
+      'deck-to-diamonds',
       'garden-acorn-to-coins',
       'garden-acorn-to-deck',
-      'garden-flower-to-gems',
+      'garden-flower-to-diamonds',
       'lodge-aidong-ribbon-to-host',
       'shell-fragment-to-coins',
       'shell-fragment-to-ship',
@@ -739,7 +739,7 @@ describe('backend persistence contracts', () => {
     const uid = user.uid
     const hostPatch = {
       coins: 77,
-      gems: 3,
+      diamonds: 3,
     }
     const myAidongPatch = {
       recruitedAidongs: ['test-aidong'],
@@ -756,7 +756,7 @@ describe('backend persistence contracts', () => {
     const host = await getHostStateRepository().getOrCreate(uid) as HostStateDoc
 
     expect(host.coins).toBe(77)
-    expect(host.gems).toBe(3)
+    expect(host.diamonds).toBe(3)
     expect(myAidong.recruitedAidongs).toEqual(['test-aidong'])
     expect(myAidong.affinities['test-aidong']).toEqual({ score: 12, level: 1 })
     expect(myAidong.equippedItems).toEqual({})
