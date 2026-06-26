@@ -4,6 +4,14 @@ const HASH_ITERATIONS = 120_000
 const HASH_KEY_LENGTH = 32
 const HASH_DIGEST = 'sha256'
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 14
+const SIGNUP_TTL_MS = 1000 * 60 * 30
+
+export interface PasswordSignupPayload {
+  uid: string
+  loginId: string
+  loginIdNormalized: string
+  passwordHash: string
+}
 
 function base64UrlEncode(value: Buffer | string): string {
   return Buffer.from(value).toString('base64url')
@@ -51,6 +59,53 @@ export function issuePasswordSessionToken(uid: string): string {
   const expiresAt = Date.now() + SESSION_TTL_MS
   const payload = base64UrlEncode(JSON.stringify({ uid, expiresAt }))
   return `${payload}.${sign(payload)}`
+}
+
+export function issuePasswordSignupToken(input: PasswordSignupPayload): string {
+  const expiresAt = Date.now() + SIGNUP_TTL_MS
+  const payload = base64UrlEncode(JSON.stringify({
+    ...input,
+    purpose: 'password_signup',
+    expiresAt,
+  }))
+  return `${payload}.${sign(payload)}`
+}
+
+export function verifyPasswordSignupToken(token?: string): PasswordSignupPayload | undefined {
+  if (!token || !getPasswordAuthSecret()) return undefined
+  const [payload, signature] = token.split('.')
+  if (!payload || !signature) return undefined
+  const expected = sign(payload)
+  const actualBuffer = Buffer.from(signature)
+  const expectedBuffer = Buffer.from(expected)
+  if (actualBuffer.length !== expectedBuffer.length || !timingSafeEqual(actualBuffer, expectedBuffer)) {
+    return undefined
+  }
+
+  try {
+    const parsed = JSON.parse(base64UrlDecode(payload)) as Partial<PasswordSignupPayload> & {
+      purpose?: unknown
+      expiresAt?: unknown
+    }
+    if (parsed.purpose !== 'password_signup') return undefined
+    if (typeof parsed.expiresAt !== 'number' || parsed.expiresAt < Date.now()) return undefined
+    if (
+      typeof parsed.uid !== 'string' ||
+      typeof parsed.loginId !== 'string' ||
+      typeof parsed.loginIdNormalized !== 'string' ||
+      typeof parsed.passwordHash !== 'string'
+    ) {
+      return undefined
+    }
+    return {
+      uid: parsed.uid,
+      loginId: parsed.loginId,
+      loginIdNormalized: parsed.loginIdNormalized,
+      passwordHash: parsed.passwordHash,
+    }
+  } catch {
+    return undefined
+  }
 }
 
 export function verifyPasswordSessionToken(token?: string): { uid: string } | undefined {
