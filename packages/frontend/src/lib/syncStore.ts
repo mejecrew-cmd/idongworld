@@ -15,7 +15,7 @@ let isSyncing = false
 
 const SYNCED_KEYS = [
   'coins', 'diamonds', 'gems',
-  'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName', 'soundSettings',
+  'gameStartedAt', 'openingSeen', 'sooksoClean', 'onboardingComplete', 'hostName', 'soundSettings',
   'recruitedAidongs', 'firstGachaCandidate', 'firstGachaAttempts',
   'affinities', 'needs',
   'unlockedZones', 'zoneSlots', 'dynamicAidongZones',
@@ -39,7 +39,16 @@ const MY_ISLAND_KEYS = ['unlockedZones', 'zoneSlots', 'dynamicAidongZones'] as c
 const CODEX_KEYS = ['unlockedDiaries', 'unlockedCodexEntries', 'codexFullyRegistered'] as const
 const ROUTE_NEIGHBOR_KEYS = [] as const
 const SHIP_KEYS = ['harborAssignedChars', 'harborLastChargedAt'] as const
-const ACCOUNT_KEYS = ['isGuest', 'nickname', 'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName', 'soundSettings'] as const
+const ACCOUNT_KEYS = [
+  'isGuest',
+  'nickname',
+  'gameStartedAt',
+  'openingSeen',
+  'sooksoClean',
+  'onboardingComplete',
+  'hostName',
+  'soundSettings',
+] as const
 
 function pickKeys(keys: readonly string[]) {
   const state = userStoreRuntimeFacade.getRecord()

@@ -27,6 +27,7 @@ function toUserDoc(doc: unknown): UserDoc {
   const plain = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>
   delete plain._id
   if (plain.openingSeen === undefined) plain.openingSeen = true
+  if (plain.sooksoClean === undefined) plain.sooksoClean = false
   if (plain.soundSettings === undefined) plain.soundSettings = DEFAULT_SOUND_SETTINGS
   if (plain.gameStartedAt === undefined) plain.gameStartedAt = plain.createdAt
   return plain as unknown as UserDoc
@@ -40,6 +41,7 @@ function createGuestDoc(): UserDoc {
     isGuest: true,
     nickname: 'guest',
     gameStartedAt: now,
+    sooksoClean: false,
     coins: 100,
     diamonds: 0,
     gems: 0,
@@ -73,6 +75,7 @@ function createPasswordDoc(input: PasswordUserInput): UserDoc {
     passwordHash: input.passwordHash,
     nickname: input.loginId,
     gameStartedAt: now,
+    sooksoClean: false,
     coins: 100,
     diamonds: 0,
     gems: 0,
@@ -144,6 +147,7 @@ export const mongoUserRepository: UserRepository = {
             nickname: fallbackNickname,
             signupProfileCompleted: false,
             gameStartedAt: now,
+            sooksoClean: false,
             coins: 100,
             diamonds: 0,
             gems: 0,

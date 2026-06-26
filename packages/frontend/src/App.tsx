@@ -106,6 +106,17 @@ const LoginGuard = () => {
   return <LoginScreen />
 }
 
+const HarborGate = () => {
+  const sooksoClean = accountStoreFacade.useSooksoClean()
+  if (!sooksoClean) return <Navigate to="/island" replace />
+  return <HarborScene />
+}
+
+const HarborAreaRedirect = () => {
+  const sooksoClean = accountStoreFacade.useSooksoClean()
+  return <Navigate to={sooksoClean ? '/island/harbor' : '/island'} replace />
+}
+
 export const App = () => {
   usePageTracking()  // GA4 SPA page view (env 미설정 시 no-op)
   return (
@@ -136,14 +147,14 @@ export const App = () => {
     <Route path="/island" element={<MyIslandLayout />}>
       <Route index element={<HubHeartScene />} />              {/* /island */}
       <Route path="full-map" element={<Navigate to="/island" replace />} />
-      <Route path="area/02" element={<Navigate to="/island/harbor" replace />} />
+      <Route path="area/02" element={<HarborAreaRedirect />} />
       <Route path="area/03" element={<Navigate to="/island/memory" replace />} />
       <Route path="area/06" element={<Navigate to="/island/oasis" replace />} />
       <Route path="area/12" element={<Navigate to="/island/mine" replace />} />
       <Route path="area/13" element={<Navigate to="/island/lodge" replace />} />
       <Route path="area/14" element={<Navigate to="/island/garden" replace />} />
       <Route path="area/:areaNo" element={<IslandAreaPlaceholderScene />} />
-      <Route path="harbor" element={<HarborScene />} />             {/* /island/harbor */}
+      <Route path="harbor" element={<HarborGate />} />             {/* /island/harbor */}
       <Route path="lodge" element={<LodgeScene />} />               {/* /island/lodge */}
       <Route path="lodge/myroom" element={<Navigate to="/island/lodge/myroom/info" replace />} />
       <Route path="lodge/myroom/info" element={<MyRoomScreen />} />

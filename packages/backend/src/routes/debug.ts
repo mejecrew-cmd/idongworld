@@ -83,6 +83,7 @@ debugRouter.post('/reset', async (req, res) => {
     nickname: undefined,
     hostName: undefined,
     openingSeen: true,
+    sooksoClean: false,
     onboardingComplete: false,
     recruitedAidongs: [],
     firstGachaCandidate: undefined,

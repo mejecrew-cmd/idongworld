@@ -89,6 +89,7 @@ export interface UserState {
 
   // 진행
   openingSeen: boolean
+  sooksoClean: boolean
   onboardingComplete: boolean
   hostName?: string
 
@@ -126,6 +127,7 @@ export interface UserState {
   recruitAidong: (id: AidongCharacterId) => void
   addAffinity: (id: AidongCharacterId, delta: number) => void
   completeOnboarding: (hostName: string) => void
+  setSooksoClean: (sooksoClean: boolean) => void
   unlockZone: (zone: string) => void
   setZoneSlots: (zoneSlots: Record<string, MyIslandZoneSlot>) => void
   upsertDynamicAidongZone: (zone: DynamicAidongZone) => void
@@ -166,6 +168,7 @@ const initialUser = {
   diamonds: 0,
   gems: 0,
   openingSeen: true,
+  sooksoClean: false,
   onboardingComplete: false,
   recruitedAidongs: [] as AidongCharacterId[],
   firstGachaAttempts: 0,
@@ -251,7 +254,14 @@ export const useUserStore = create<UserState>()(
 
       // 온보딩 완료 처리 — SOOKSO 이름 + 항구·숙소 자동 해금
       completeOnboarding: (hostName) =>
-        set({ onboardingComplete: true, hostName, unlockedZones: ['harbor', 'lodge'] }),
+        set({
+          onboardingComplete: true,
+          hostName,
+          sooksoClean: true,
+          unlockedZones: ['harbor', 'lodge'],
+        }),
+
+      setSooksoClean: (sooksoClean) => set({ sooksoClean }),
 
       unlockZone: (zone) =>
         set((s) => ({

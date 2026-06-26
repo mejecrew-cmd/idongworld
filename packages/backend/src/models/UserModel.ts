@@ -33,6 +33,7 @@ const UserSchema = new Schema(
     profileImageSource: String,
     gameStartedAt: Number,
     hostName: String,
+    sooksoClean: { type: Boolean, required: true, default: false },
     coins: { type: Number, required: true, default: 0 },
     diamonds: { type: Number, required: true, default: 0 },
     gems: { type: Number, required: true, default: 0 },

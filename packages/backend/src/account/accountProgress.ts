@@ -21,6 +21,7 @@ export interface AccountProgress {
   nickname?: string
   nicknameNormalized?: string
   hostName?: string
+  sooksoClean: boolean
   signupProfileCompleted: boolean
   timeZone?: string
   detectedTimeZone?: string
@@ -46,6 +47,7 @@ export function buildAccountProgress(user: UserDoc): AccountProgress {
     nickname: user.nickname,
     nicknameNormalized: user.nicknameNormalized,
     hostName: user.hostName,
+    sooksoClean: Boolean(user.sooksoClean),
     signupProfileCompleted: Boolean(user.signupProfileCompleted),
     timeZone: user.timeZone,
     detectedTimeZone: user.detectedTimeZone,

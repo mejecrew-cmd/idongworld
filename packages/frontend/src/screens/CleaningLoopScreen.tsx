@@ -24,7 +24,8 @@ import { Box, Typography, Button, LinearProgress, Stack, Chip } from '@mui/mater
 import { useNavigate } from 'react-router-dom'
 import type { AidongCharacterId } from '@/stores/userStore'
 import { ScreenHeader } from '@/components/ScreenHeader'
-import { myAidongStoreFacade } from '@/lib/storeFacades'
+import { accountStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
+import { api } from '@/lib/api'
 
 // 개발 모드: 30초로 단축 / 베타: 실시간 24h·4h
 const DEV_SHORTENED = true
@@ -86,6 +87,13 @@ export const CleaningLoopScreen = () => {
   }
 
   const onComplete = () => {
+    const uid = accountStoreFacade.getFirebaseUid()
+    accountStoreFacade.setSooksoClean(true)
+    if (uid) {
+      void api.patchAccountState(uid, { sooksoClean: true }).catch((error) => {
+        console.warn('[cleaning] failed to persist sooksoClean', error)
+      })
+    }
     localStorage.removeItem(STORAGE_KEY)
     navigate('/heart-island/naming')
   }

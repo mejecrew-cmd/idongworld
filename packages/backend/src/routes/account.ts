@@ -11,7 +11,15 @@ import { getUserRepository } from '../repositories/index.js'
 
 export const accountRouter = Router()
 
-const ACCOUNT_FIELDS = ['isGuest', 'nickname', 'gameStartedAt', 'openingSeen', 'onboardingComplete', 'hostName'] as const
+const ACCOUNT_FIELDS = [
+  'isGuest',
+  'nickname',
+  'gameStartedAt',
+  'openingSeen',
+  'sooksoClean',
+  'onboardingComplete',
+  'hostName',
+] as const
 
 function normalizeTimestamp(value: unknown) {
   return typeof value === 'number' && Number.isFinite(value) && value > 0
@@ -46,6 +54,7 @@ accountRouter.get('/state', async (req, res) => {
       nickname: user.nickname,
       gameStartedAt: user.gameStartedAt,
       openingSeen: user.openingSeen,
+      sooksoClean: Boolean(user.sooksoClean),
       onboardingComplete: user.onboardingComplete,
       hostName: user.hostName,
     },
@@ -71,6 +80,7 @@ accountRouter.patch('/state', async (req, res) => {
       nickname: updated.nickname,
       gameStartedAt: updated.gameStartedAt,
       openingSeen: updated.openingSeen,
+      sooksoClean: Boolean(updated.sooksoClean),
       onboardingComplete: updated.onboardingComplete,
       hostName: updated.hostName,
     },
