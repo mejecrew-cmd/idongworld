@@ -548,6 +548,11 @@ export function parseStaticTableCodeFromFileName(fileName: string): string | und
   const doubleUnderscoreCode = baseName.includes('__') ? baseName.split('__')[0] : undefined
   if (doubleUnderscoreCode && resolveStaticTableDefinition(doubleUnderscoreCode)) return doubleUnderscoreCode
 
+  const shortAidongDialogueMatch = /^X-DLG-A(\d+)_daily_dialogue$/i.exec(baseName)
+  if (shortAidongDialogueMatch) {
+    return `X-DLG-AIDONG-${shortAidongDialogueMatch[1]}`
+  }
+
   const definitions = [...STATIC_TABLE_DEFINITIONS].sort((a, b) => b.tableCode.length - a.tableCode.length)
   for (const definition of definitions) {
     if (isPatternTableCode(definition.tableCode)) {

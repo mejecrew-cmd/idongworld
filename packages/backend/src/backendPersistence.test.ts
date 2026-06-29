@@ -995,6 +995,8 @@ describe('backend persistence contracts', () => {
     expect(parseStaticTableCodeFromFileName('G-CHR-01_aidong_master.csv')).toBe('G-CHR-01')
     expect(parseStaticTableCodeFromFileName('G-STR-01_M03-HUB-MAP_string_table.csv')).toBe('G-STR-01')
     expect(parseStaticTableCodeFromFileName('X-DLG-AIDONG-0019_daily_dialogue.csv')).toBe('X-DLG-AIDONG-0019')
+    expect(parseStaticTableCodeFromFileName('X-DLG-A0019_daily_dialogue.csv')).toBe('X-DLG-AIDONG-0019')
+    expect(parseStaticTableCodeFromFileName('X-DLG-A0119_daily_dialogue.csv')).toBe('X-DLG-AIDONG-0119')
     expect(parseStaticTableCodeFromFileName('X-ECO-00__currency_master.csv')).toBe('X-ECO-00')
 
     expect(isStaticTableImportable('G-CHR-01')).toBe(true)
