@@ -27,6 +27,10 @@ import {
   type AdminHostSummary,
   type AdminRole,
   type AdminSplitSummary,
+  type AdminStaticTableDefinition,
+  type AdminStaticTableFileSummary,
+  type AdminStaticTableImportBatch,
+  type AdminStaticTableImportPreview,
   type AdminUserContext,
   type AdminUserDetail,
   type AdminUserSummary,
@@ -63,6 +67,21 @@ function formatProviderAccounts(splitSummary?: AdminSplitSummary) {
     .join(', ')
 }
 
+function countValidationIssues(preview?: AdminStaticTableImportPreview | null) {
+  const validation = preview?.validation
+  if (!validation) return { errors: 0, warnings: 0 }
+  const flatErrors = validation.errors?.length ?? 0
+  const flatWarnings = validation.warnings?.length ?? 0
+  const summaryErrors = validation.summaries?.reduce((sum, summary) => sum + (summary.errors?.length ?? 0), 0) ?? 0
+  const summaryWarnings = validation.summaries?.reduce((sum, summary) => sum + (summary.warnings?.length ?? 0), 0) ?? 0
+  const issueErrors = validation.issues?.filter((issue) => issue.level === 'error').length ?? 0
+  const issueWarnings = validation.issues?.filter((issue) => issue.level === 'warning').length ?? 0
+  return {
+    errors: flatErrors + summaryErrors + issueErrors,
+    warnings: flatWarnings + summaryWarnings + issueWarnings,
+  }
+}
+
 export const AdminScreen = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -81,8 +100,22 @@ export const AdminScreen = () => {
     sooksoName: '',
   })
   const [targetRole, setTargetRole] = useState<AdminRole | ''>('')
+  const [staticDefinitions, setStaticDefinitions] = useState<AdminStaticTableDefinition[]>([])
+  const [staticFiles, setStaticFiles] = useState<AdminStaticTableFileSummary[]>([])
+  const [staticScanErrors, setStaticScanErrors] = useState<Array<{ fileName: string; code: string; message: string }>>([])
+  const [staticImports, setStaticImports] = useState<AdminStaticTableImportBatch[]>([])
+  const [staticPreview, setStaticPreview] = useState<AdminStaticTableImportPreview | null>(null)
+  const [staticSelectedTableCodes, setStaticSelectedTableCodes] = useState<string[]>([])
+  const [staticVersion, setStaticVersion] = useState('')
+  const [staticImportBatchId, setStaticImportBatchId] = useState('')
+  const [staticBusy, setStaticBusy] = useState(false)
 
   const canManageAdmins = adminUser?.role === 'owner' || adminUser?.permissions.includes('adminUsers.write')
+  const canReadDb = Boolean(adminUser && (adminUser.role === 'owner' || adminUser.permissions.includes('db.read')))
+  const canWriteDb = Boolean(adminUser && (adminUser.role === 'owner' || adminUser.permissions.includes('db.write')))
+  const canActivateStaticImport = adminUser?.role === 'owner' || adminUser?.role === 'admin'
+  const selectedStaticFileCount = staticFiles.filter((file) => staticSelectedTableCodes.includes(file.tableCode)).length
+  const validationIssueCount = countValidationIssues(staticPreview)
 
   const permissionText = useMemo(() => {
     if (!adminUser) return ''
@@ -119,6 +152,28 @@ export const AdminScreen = () => {
     setTargetRole(response.user.adminEnabled ? response.user.adminRole ?? '' : '')
   }
 
+  const loadStaticTables = async () => {
+    const [registryResponse, filesResponse, importsResponse] = await Promise.all([
+      api.adminStaticTableRegistry(),
+      api.adminStaticTableFiles(),
+      api.adminStaticTableImports(),
+    ])
+    setStaticDefinitions(registryResponse.definitions)
+    setStaticFiles(filesResponse.files)
+    setStaticScanErrors(filesResponse.errors)
+    setStaticImports(importsResponse.imports)
+    setStaticSelectedTableCodes((prev) => {
+      const importableCodes = filesResponse.files
+        .filter((file) => file.importable)
+        .map((file) => file.tableCode)
+      if (prev.length > 0) {
+        const stillAvailable = prev.filter((tableCode) => importableCodes.includes(tableCode))
+        if (stillAvailable.length > 0) return stillAvailable
+      }
+      return importableCodes
+    })
+  }
+
   useEffect(() => {
     let mounted = true
     setLoading(true)
@@ -128,6 +183,9 @@ export const AdminScreen = () => {
       .then(async (response) => {
         if (!mounted) return
         setAdminUser(response.adminUser)
+        if (response.adminUser.role === 'owner' || response.adminUser.permissions.includes('db.read')) {
+          await loadStaticTables()
+        }
       })
       .catch((caught: unknown) => {
         if (!mounted) return
@@ -163,6 +221,25 @@ export const AdminScreen = () => {
       setBusy(false)
     }
   }
+
+  const runStaticAction = async (action: () => Promise<void>) => {
+    setStaticBusy(true)
+    setError(null)
+    try {
+      await action()
+      await loadStaticTables()
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : String(caught))
+    } finally {
+      setStaticBusy(false)
+    }
+  }
+
+  const buildStaticRequest = () => ({
+    ...(staticVersion.trim() ? { version: staticVersion.trim() } : {}),
+    ...(staticImportBatchId.trim() ? { importBatchId: staticImportBatchId.trim() } : {}),
+    ...(staticSelectedTableCodes.length ? { tableCodes: staticSelectedTableCodes } : {}),
+  })
 
   const handleGrantResource = () => {
     if (!selectedUid) return
@@ -208,6 +285,13 @@ export const AdminScreen = () => {
       await api.adminUpsertAdminUser(selectedUid, {
         role: nextRole,
       })
+    })
+  }
+
+  const handleStaticTableSelect = (tableCode: string, checked: boolean) => {
+    setStaticSelectedTableCodes((prev) => {
+      if (checked) return [...new Set([...prev, tableCode])]
+      return prev.filter((value) => value !== tableCode)
     })
   }
 
@@ -417,9 +501,245 @@ export const AdminScreen = () => {
               <Typography variant="h2" sx={{ fontSize: 18, mb: 1 }}>
                 DB 관리
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                DB 관리 메뉴 자리입니다. 정적 테이블 import/update 전용으로 연결하고, 유저 진행도처럼 계속 변하는 동적 데이터는 유저 상세와 전용 API에서만 확인/수정합니다.
-              </Typography>
+              {!canReadDb ? (
+                <Alert severity="warning">DB 관리 정보를 볼 권한이 없습니다.</Alert>
+              ) : (
+                <Stack spacing={2}>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                    정적 테이블 import/update 전용입니다. 유저 진행도처럼 계속 변하는 동적 데이터는 유저 상세와 전용 API에서만 확인/수정합니다.
+                  </Typography>
+
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                    <Chip label={`registry ${staticDefinitions.length}`} size="small" />
+                    <Chip label={`files ${staticFiles.length}`} size="small" />
+                    <Chip label={`selected ${selectedStaticFileCount}`} size="small" color={selectedStaticFileCount > 0 ? 'primary' : 'default'} />
+                    <Chip label={`history ${staticImports.length}`} size="small" />
+                    <Box sx={{ flex: 1 }} />
+                    <Button variant="outlined" onClick={() => void runStaticAction(loadStaticTables)} disabled={staticBusy}>
+                      DB 관리 새로고침
+                    </Button>
+                  </Stack>
+
+                  {staticScanErrors.length > 0 && (
+                    <Alert severity="warning">
+                      CSV scan 오류 {staticScanErrors.length}건: {staticScanErrors.slice(0, 3).map((item) => `${item.fileName}(${item.code})`).join(', ')}
+                    </Alert>
+                  )}
+
+                  <Box sx={{ overflowX: 'auto' }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>선택</TableCell>
+                          <TableCell>tableCode</TableCell>
+                          <TableCell>파일명</TableCell>
+                          <TableCell>row</TableCell>
+                          <TableCell>kind</TableCell>
+                          <TableCell>target</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {staticFiles.map((file) => (
+                          <TableRow key={`${file.tableCode}:${file.fileName}`}>
+                            <TableCell>
+                              <Checkbox
+                                size="small"
+                                disabled={!file.importable || staticBusy}
+                                checked={staticSelectedTableCodes.includes(file.tableCode)}
+                                onChange={(event) => handleStaticTableSelect(file.tableCode, event.target.checked)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Stack direction="row" spacing={0.75} alignItems="center">
+                                <Typography variant="body2">{file.tableCode}</Typography>
+                                {!file.importable && <Chip size="small" label="excluded" color="warning" />}
+                              </Stack>
+                            </TableCell>
+                            <TableCell sx={{ minWidth: 220 }}>{file.fileName}</TableCell>
+                            <TableCell>{file.rowCount}</TableCell>
+                            <TableCell>{file.importKind ?? '-'}</TableCell>
+                            <TableCell>{file.bundleCollection ?? file.targetCollection ?? '-'}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                  {staticFiles.length === 0 && (
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      `resources/table`에서 읽힌 CSV 파일이 없습니다.
+                    </Typography>
+                  )}
+
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 1 }}>
+                    <TextField
+                      size="small"
+                      label="version 선택 입력"
+                      value={staticVersion}
+                      onChange={(event) => setStaticVersion(event.target.value)}
+                      placeholder="비우면 서버가 자동 생성"
+                    />
+                    <TextField
+                      size="small"
+                      label="importBatchId 선택 입력"
+                      value={staticImportBatchId}
+                      onChange={(event) => setStaticImportBatchId(event.target.value)}
+                      placeholder="비우면 서버가 자동 생성"
+                    />
+                  </Box>
+
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button
+                      variant="outlined"
+                      disabled={!canWriteDb || staticBusy || selectedStaticFileCount === 0}
+                      onClick={() => void runStaticAction(async () => {
+                        const response = await api.adminStaticTableValidate(buildStaticRequest())
+                        setStaticPreview({
+                          ok: response.ok,
+                          version: response.version,
+                          importBatchId: response.importBatchId,
+                          sourceDir: response.sourceDir,
+                          sourceFiles: response.files.map((file) => ({
+                            fileName: file.fileName,
+                            tableCode: file.tableCode,
+                            sourceHash: file.sourceHash,
+                            rowCount: file.rowCount,
+                          })),
+                          validation: response.validation,
+                          tableRowCount: response.files.reduce((sum, file) => sum + file.rowCount, 0),
+                          runtimeRowCounts: {},
+                          bundleCounts: {},
+                          scanErrors: response.scanErrors,
+                        })
+                      })}
+                    >
+                      validation 실행
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      disabled={!canWriteDb || staticBusy || selectedStaticFileCount === 0}
+                      onClick={() => void runStaticAction(async () => {
+                        const response = await api.adminStaticTableDryRun(buildStaticRequest())
+                        setStaticPreview(response)
+                      })}
+                    >
+                      dry-run 실행
+                    </Button>
+                    <Button
+                      variant="contained"
+                      disabled={!canWriteDb || staticBusy || selectedStaticFileCount === 0}
+                      onClick={() => {
+                        if (!confirm(`선택한 정적 테이블 ${selectedStaticFileCount}개를 commit할까요?`)) return
+                        void runStaticAction(async () => {
+                          const response = await api.adminStaticTableCommit(buildStaticRequest())
+                          setStaticPreview(response)
+                        })
+                      }}
+                    >
+                      commit
+                    </Button>
+                  </Stack>
+                  {!canWriteDb && (
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      viewer 권한은 조회만 가능합니다. validate/dry-run/commit은 operator 이상 권한이 필요합니다.
+                    </Typography>
+                  )}
+
+                  {staticPreview && (
+                    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+                      <Stack spacing={1}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+                          <Chip label={staticPreview.ok ? 'validation ok' : 'validation failed'} color={staticPreview.ok ? 'success' : 'error'} size="small" />
+                          <Chip label={`version ${staticPreview.version}`} size="small" />
+                          <Chip label={`batch ${staticPreview.importBatchId}`} size="small" />
+                          <Chip label={`rows ${staticPreview.tableRowCount}`} size="small" />
+                          <Chip label={`errors ${validationIssueCount.errors}`} size="small" color={validationIssueCount.errors > 0 ? 'error' : 'default'} />
+                          <Chip label={`warnings ${validationIssueCount.warnings}`} size="small" color={validationIssueCount.warnings > 0 ? 'warning' : 'default'} />
+                        </Stack>
+                        <Typography variant="body2">
+                          runtime rows: {Object.entries(staticPreview.runtimeRowCounts).map(([key, value]) => `${key} ${value}`).join(', ') || '-'}
+                        </Typography>
+                        <Typography variant="body2">
+                          bundles: {Object.entries(staticPreview.bundleCounts).map(([key, value]) => `${key} ${value}`).join(', ') || '-'}
+                        </Typography>
+                        <Box
+                          component="pre"
+                          sx={{
+                            m: 0,
+                            p: 1.5,
+                            maxHeight: 260,
+                            overflow: 'auto',
+                            bgcolor: 'grey.100',
+                            borderRadius: 1,
+                            fontSize: 12,
+                            whiteSpace: 'pre-wrap',
+                          }}
+                        >
+                          {JSON.stringify({
+                            sourceFiles: staticPreview.sourceFiles,
+                            validation: staticPreview.validation,
+                            bundles: staticPreview.bundles,
+                          }, null, 2)}
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  )}
+
+                  <Divider />
+
+                  <Typography variant="subtitle2">Import history</Typography>
+                  <Box sx={{ overflowX: 'auto' }}>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>batch</TableCell>
+                          <TableCell>status</TableCell>
+                          <TableCell>version</TableCell>
+                          <TableCell>files</TableCell>
+                          <TableCell>updated</TableCell>
+                          <TableCell>activate</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {staticImports.slice(0, 20).map((item) => (
+                          <TableRow key={item.importBatchId}>
+                            <TableCell sx={{ minWidth: 220 }}>{item.importBatchId}</TableCell>
+                            <TableCell>
+                              <Chip
+                                size="small"
+                                label={item.status}
+                                color={item.status === 'activated' ? 'success' : item.status === 'failed' ? 'error' : 'default'}
+                              />
+                            </TableCell>
+                            <TableCell>{item.version}</TableCell>
+                            <TableCell>{item.sourceFiles.length}</TableCell>
+                            <TableCell>{formatDate(item.updatedAt)}</TableCell>
+                            <TableCell>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                disabled={!canActivateStaticImport || staticBusy || item.status === 'activated' || item.status === 'failed'}
+                                onClick={() => {
+                                  if (!confirm(`${item.importBatchId} import를 active 처리할까요?`)) return
+                                  void runStaticAction(async () => {
+                                    await api.adminStaticTableActivate(item.importBatchId)
+                                  })
+                                }}
+                              >
+                                activate
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                  {staticImports.length === 0 && (
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      import 이력이 없습니다.
+                    </Typography>
+                  )}
+                </Stack>
+              )}
             </Paper>
 
             {detail && canManageAdmins && (

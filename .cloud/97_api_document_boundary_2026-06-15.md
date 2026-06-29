@@ -1667,7 +1667,150 @@ frontend client:
 - 화면의 debug 전체 리셋 버튼에서만 사용한다.
 - 항해 session state는 frontend에서 별도로 제거한다.
 
-## 21. Frontend Client 위치
+## 21. Static Data API
+
+정적 데이터 API는 activate된 정적 table import batch를 런타임 화면/서비스에 제공한다.
+
+Base path:
+
+```text
+/api/static
+```
+
+소유 document:
+
+- `staticDataImportBatches`
+- `staticTableRows`
+- `staticAidongMasters`
+- `staticItemCatalogs`
+- `staticAidongPediaItemMasters`
+- `staticIslandZones`
+- `staticCurrencyMasters`
+- `staticModuleCurrencyPolicies`
+- `staticBoardSets`
+- `staticSooksoRuleSets`
+- `staticStringPacks`
+- `staticAidongIslandBundles`
+- `staticStoryBundles`
+- `staticDialoguePacks`
+- `staticCosmeticRuleSets`
+
+주의:
+
+- 이 API는 유저 진행 상태를 만들거나 수정하지 않는다.
+- activate된 import batch가 없으면 `404 active_static_import_not_found`를 반환한다.
+- disabled row 또는 disabled bundle은 응답에서 제외한다.
+
+### `GET /api/static/aidongs`
+
+역할:
+
+- activate된 Aidong master row를 조회한다.
+- 기준 테이블은 `G-CHR-01`, `X-CHR-00`, `X-CHR-02`, `X-CHR-04`, `X-CHR-05`, `X-CHR-06`이다.
+
+### `GET /api/static/items`
+
+역할:
+
+- activate된 item catalog와 Aidong pedia item master row를 조회한다.
+- 기준 테이블은 `G-ITM-01`, `X-ITM-00`, `X-ITM-01`이다.
+
+### `GET /api/static/currencies`
+
+역할:
+
+- activate된 currency master와 module currency policy row를 조회한다.
+- 기준 테이블은 `X-ECO-00`, `X-ECO-01`이다.
+
+### `GET /api/static/board-sets/:boardSetId`
+
+역할:
+
+- board set bundle을 조회한다.
+- `X-CFG-01`, `M05-MAP-02`를 조합한 런타임 JSON 구조를 반환한다.
+
+### `GET /api/static/sookso-rule-set`
+
+역할:
+
+- 숙소/방/가구 배치 규칙 bundle을 조회한다.
+- `M04-MAP-02`, `M04-MAP-03`을 조합한 런타임 JSON 구조를 반환한다.
+- `houseId` query를 넘기면 해당 house 기준으로 좁혀 조회할 수 있다.
+
+## 22. Admin Static Table API
+
+Admin static table API는 `resources/table/*.csv`를 검증하고 MongoDB 정적 collection으로 반영하는 운영용 API다.
+
+Base path:
+
+```text
+/api/admin/static-tables
+```
+
+권한:
+
+- 조회, validation, dry-run은 관리자 권한을 가진 계정만 허용한다.
+- commit과 activate는 운영상 위험도가 있으므로 owner/admin 권한을 기준으로 다룬다.
+- 동적 유저 데이터 테이블은 API에 파일이 보여도 commit 대상이 아니다.
+
+### `GET /registry`
+
+역할:
+
+- backend static table registry를 반환한다.
+- 각 tableCode의 importKind, requiredColumns, primaryKey, dependencyKeys, targetCollection, bundleCollection을 확인한다.
+
+### `GET /files`
+
+역할:
+
+- `resources/table` 또는 `STATIC_TABLE_SOURCE_DIR` 아래 CSV 파일을 스캔한다.
+- 파일명에서 tableCode를 파싱하고 registry 매칭 여부를 반환한다.
+- `excluded` 또는 unknown 파일은 commit 기본 선택에서 제외한다.
+
+### `POST /validate`
+
+역할:
+
+- 선택한 CSV 파일을 파싱하고 컬럼, primary key, dependency, 중복, 정적/동적 구분을 검증한다.
+- DB에는 쓰지 않는다.
+
+### `POST /dry-run`
+
+역할:
+
+- commit 시 생성될 import batch, static row, runtime row, runtime bundle preview를 반환한다.
+- DB에는 쓰지 않는다.
+
+### `POST /commit`
+
+역할:
+
+- 검증을 통과한 정적 CSV를 `staticDataImportBatches`, `staticTableRows`, runtime row/bundle collection에 저장한다.
+- activate는 별도 단계다. commit 직후 런타임 API가 자동으로 새 batch를 읽는 구조가 아니다.
+
+### `GET /imports`
+
+역할:
+
+- import batch 목록과 상태를 반환한다.
+- 운영자는 여기서 이전 batch를 찾아 rollback activate 대상으로 삼을 수 있다.
+
+### `GET /imports/:importBatchId`
+
+역할:
+
+- 특정 import batch의 상세, table별 row count, issue summary, preview metadata를 조회한다.
+
+### `POST /imports/:importBatchId/activate`
+
+역할:
+
+- commit된 batch를 런타임 활성 버전으로 전환한다.
+- rollback도 이전 batch를 다시 activate하는 방식으로 처리한다.
+- document 삭제나 collection drop은 이 API의 책임이 아니다.
+
+## 23. Frontend Client 위치
 
 현재 frontend API client는 다음 파일에 모여 있다.
 
@@ -1684,7 +1827,7 @@ frontend client:
 3. `api.ts`에 typed client 추가
 4. 화면 담당자에게 client 함수명과 request/response shape 전달
 
-## 22. 항해 Session State 경계
+## 24. 항해 Session State 경계
 
 항해 중 다음 값은 DB에 저장하지 않는다.
 
@@ -1707,7 +1850,7 @@ DB에 저장되는 항해 관련 값은 다음에 한정한다.
 - 영입/만남 수락 결과: `mydongList`, `myAidongStates` mirror, `myIslandStates`, `routeNeighborStates.progress`
 - 항해 중 얻은 실제 보상: 해당 모듈, `userInventoryItems`, `userCurrencyBalances`, `diceResources`
 
-## 23. 새 API를 만들 때 체크리스트
+## 25. 새 API를 만들 때 체크리스트
 
 새 API가 필요하면 다음을 먼저 확인한다.
 
@@ -1721,9 +1864,10 @@ DB에 저장되는 항해 관련 값은 다음에 한정한다.
 - `api.ts`에 client를 추가했는가?
 - 문서와 modelSpecs가 맞는가?
 
-## 24. 변경 이력
+## 26. 변경 이력
 
 - 2026-06-15: 현재 backend route와 frontend API client 기준으로 API/document 경계 문서 작성.
+- 2026-06-29: 정적 CSV import admin API와 runtime static data API 경계를 추가했다. 정적 기준 데이터는 `resources/table`에서 import하고, 동적 유저 데이터는 import 대상에서 제외한다.
 - 2026-06-15: 닉네임 검사와 가입 프로필 저장 API를 추가했다. `users.nicknameNormalized`, `users.signupProfileCompleted`, `users.profileImageSource` 경계와 frontend client 이름을 명시했다.
 - 2026-06-15: 시간대 저장 API를 추가했다. `users.timeZone`, `users.detectedTimeZone`, `users.utcOffsetMinutes`, `users.timezoneCompleted` 경계와 frontend `saveAccountTimeZone()` client 이름을 명시했다.
 - 2026-06-15: 현재 약관 조회와 약관 동의 저장 API를 추가했다. `users.termsAgreements`, `users.termsCompleted` 경계와 frontend `getCurrentTerms()`/`agreeTerms()` client 이름을 명시했다.

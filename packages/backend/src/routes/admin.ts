@@ -5,6 +5,7 @@
  * 연결: authMiddleware 이후 admin middleware로 보호되며, adminUsers 권한 문서를 기준으로 접근을 판단한다.
  * 주의: 응답에는 passwordHash/providerUid 같은 민감 인증 정보를 포함하지 않는다.
  */
+import path from 'node:path'
 import { Router } from 'express'
 import type { HostStateDoc } from '../models/HostStateModel.js'
 import type { AdminRole, AdminUserDoc } from '../models/AdminUserModel.js'
@@ -20,10 +21,24 @@ import {
   getMydongCosmeticRepository,
   getMydongPediaInventoryRepository,
   getSooksoRepository,
+  getStaticTableRepository,
   getUserInventoryRepository,
   getUserRepository,
   getUserSettingsRepository,
 } from '../repositories/index.js'
+import {
+  isStaticTableImportable,
+  listImportableStaticTableDefinitions,
+  listStaticTableDefinitions,
+} from '../staticTables/registry.js'
+import {
+  commitStaticTableImport,
+  previewStaticTableImport,
+  scanTableFiles,
+  validateStaticTableFiles,
+  type TableFile,
+  type TableFileScanResult,
+} from '../staticTables/service.js'
 import type { HostResource } from '../repositories/hostStateRepository.js'
 import { userSettingsPatchFromUserPatch, type UserSettingsDoc } from '../repositories/userSettingsRepository.js'
 import type { SooksoStateDoc } from '../repositories/sooksoRepository.js'
@@ -399,6 +414,64 @@ function permissionsForRole(role: AdminRole): string[] {
   return [...ROLE_PERMISSION_PRESETS[role]]
 }
 
+function readOptionalString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined
+}
+
+function readOptionalStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const values = value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean)
+  return values.length > 0 ? [...new Set(values)] : undefined
+}
+
+function resolveStaticTableSourceDir(): string {
+  const configured = readOptionalString(process.env.STATIC_TABLE_SOURCE_DIR)
+  if (configured) return path.resolve(configured)
+  const cwd = process.cwd().replace(/\\/g, '/')
+  if (cwd.endsWith('/packages/backend')) return path.resolve(process.cwd(), '../../resources/table')
+  return path.resolve(process.cwd(), 'resources/table')
+}
+
+function summarizeStaticTableFile(file: TableFile) {
+  return {
+    fileName: file.fileName,
+    tableCode: file.tableCode,
+    sourceHash: file.sourceHash,
+    rowCount: file.rowCount,
+    importable: isStaticTableImportable(file.tableCode),
+    importKind: file.parsed.tableDefinition?.importKind,
+    targetCollection: file.parsed.tableDefinition?.targetCollection,
+    bundleCollection: file.parsed.tableDefinition?.bundleCollection,
+  }
+}
+
+function selectStaticTableFiles(scan: TableFileScanResult, tableCodes?: string[]): TableFile[] {
+  const selectedCodes = tableCodes ? new Set(tableCodes) : undefined
+  return scan.files.filter((file) => {
+    if (selectedCodes) return selectedCodes.has(file.tableCode)
+    return isStaticTableImportable(file.tableCode)
+  })
+}
+
+async function scanAdminStaticTableFiles() {
+  const sourceDir = resolveStaticTableSourceDir()
+  return scanTableFiles(sourceDir)
+}
+
+function readStaticImportOptions(body: unknown) {
+  const source = body && typeof body === 'object' && !Array.isArray(body)
+    ? body as Record<string, unknown>
+    : {}
+  return {
+    version: readOptionalString(source.version),
+    importBatchId: readOptionalString(source.importBatchId),
+    tableCodes: readOptionalStringArray(source.tableCodes),
+  }
+}
+
 adminRouter.get('/me', adminMiddleware, (req, res) => {
   const adminUser = getRequestAdminUser(req)
   if (!adminUser) {
@@ -664,4 +737,201 @@ adminRouter.patch('/admin-users/:uid', requireAdminPermission('adminUsers.write'
     ok: true,
     adminUser: toAdminUserResponse(adminUser),
   })
+})
+
+adminRouter.get('/static-tables/registry', requireAdminPermission('db.read'), (_req, res) => {
+  res.json({
+    definitions: listStaticTableDefinitions(),
+    importableDefinitions: listImportableStaticTableDefinitions(),
+  })
+})
+
+adminRouter.get('/static-tables/files', requireAdminPermission('db.read'), async (_req, res) => {
+  try {
+    const scan = await scanAdminStaticTableFiles()
+    res.json({
+      sourceDir: scan.sourceDir,
+      files: scan.files.map(summarizeStaticTableFile),
+      errors: scan.errors,
+    })
+  } catch (error) {
+    res.status(404).json({
+      error: 'static_table_source_dir_unavailable',
+      message: error instanceof Error ? error.message : String(error),
+    })
+  }
+})
+
+adminRouter.post('/static-tables/validate', requireAdminPermission('db.write'), async (req, res) => {
+  const options = readStaticImportOptions(req.body)
+  try {
+    const scan = await scanAdminStaticTableFiles()
+    const files = selectStaticTableFiles(scan, options.tableCodes)
+    if (files.length === 0) {
+      res.status(400).json({ error: 'static_table_files_empty', sourceDir: scan.sourceDir, scanErrors: scan.errors })
+      return
+    }
+    const validation = await validateStaticTableFiles(files)
+    const now = Date.now()
+    const importBatchId = options.importBatchId ?? `validated-${now}`
+    const version = options.version ?? `validated-${now}`
+    await getStaticTableRepository().upsertImportBatch({
+      importBatchId,
+      status: validation.ok ? 'validated' : 'failed',
+      version,
+      sourceDir: scan.sourceDir,
+      sourceFiles: files.map((file) => ({
+        fileName: file.fileName,
+        tableCode: file.tableCode,
+        sourceHash: file.sourceHash,
+        rowCount: file.rowCount,
+      })),
+      actorUid: getRequestAdminUser(req)?.uid,
+      validationSummary: validation,
+      errorMessage: validation.ok ? undefined : 'static_import_validation_failed',
+      createdAt: now,
+      updatedAt: now,
+      failedAt: validation.ok ? undefined : now,
+    })
+    res.status(validation.ok ? 200 : 422).json({
+      ok: validation.ok,
+      importBatchId,
+      version,
+      sourceDir: scan.sourceDir,
+      files: files.map(summarizeStaticTableFile),
+      scanErrors: scan.errors,
+      validation,
+    })
+  } catch (error) {
+    res.status(500).json({ error: 'static_table_validate_failed', message: error instanceof Error ? error.message : String(error) })
+  }
+})
+
+adminRouter.post('/static-tables/dry-run', requireAdminPermission('db.write'), async (req, res) => {
+  const options = readStaticImportOptions(req.body)
+  try {
+    const scan = await scanAdminStaticTableFiles()
+    const files = selectStaticTableFiles(scan, options.tableCodes)
+    if (files.length === 0) {
+      res.status(400).json({ error: 'static_table_files_empty', sourceDir: scan.sourceDir, scanErrors: scan.errors })
+      return
+    }
+    const preview = await previewStaticTableImport(files, {
+      version: options.version,
+      importBatchId: options.importBatchId,
+    })
+    const now = Date.now()
+    await getStaticTableRepository().upsertImportBatch({
+      importBatchId: preview.importBatchId,
+      status: preview.ok ? 'dryRun' : 'failed',
+      version: preview.version,
+      sourceDir: scan.sourceDir,
+      sourceFiles: preview.sourceFiles,
+      actorUid: getRequestAdminUser(req)?.uid,
+      validationSummary: preview.validation,
+      dryRunSummary: {
+        tableRowCount: preview.tableRowCount,
+        runtimeRowCounts: preview.runtimeRowCounts,
+        bundleCounts: preview.bundleCounts,
+      },
+      errorMessage: preview.ok ? undefined : 'static_import_validation_failed',
+      createdAt: now,
+      updatedAt: now,
+      failedAt: preview.ok ? undefined : now,
+    })
+    res.status(preview.ok ? 200 : 422).json({
+      ...preview,
+      sourceDir: scan.sourceDir,
+      scanErrors: scan.errors,
+    })
+  } catch (error) {
+    res.status(500).json({ error: 'static_table_dry_run_failed', message: error instanceof Error ? error.message : String(error) })
+  }
+})
+
+adminRouter.post('/static-tables/commit', requireAdminPermission('db.write'), async (req, res) => {
+  const options = readStaticImportOptions(req.body)
+  const adminUser = getRequestAdminUser(req)
+  try {
+    const scan = await scanAdminStaticTableFiles()
+    const files = selectStaticTableFiles(scan, options.tableCodes)
+    if (files.length === 0) {
+      res.status(400).json({ error: 'static_table_files_empty', sourceDir: scan.sourceDir, scanErrors: scan.errors })
+      return
+    }
+    const result = await commitStaticTableImport(files, adminUser?.uid ?? 'unknown-admin', {
+      repository: getStaticTableRepository(),
+      version: options.version,
+      importBatchId: options.importBatchId,
+    })
+    await writeAudit(req, 'staticTables.commit', 'static-tables', {
+      importBatchId: result.importBatchId,
+      version: result.version,
+      tableCount: result.sourceFiles.length,
+      tableRowCount: result.tableRowCount,
+      bundleCounts: result.bundleCounts,
+    })
+    res.json({
+      ...result,
+      sourceDir: scan.sourceDir,
+      scanErrors: scan.errors,
+    })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'static_import_validation_failed') {
+      res.status(422).json({ error: 'static_import_validation_failed' })
+      return
+    }
+    res.status(500).json({ error: 'static_table_commit_failed', message: error instanceof Error ? error.message : String(error) })
+  }
+})
+
+adminRouter.get('/static-tables/imports', requireAdminPermission('db.read'), async (_req, res) => {
+  const imports = await getStaticTableRepository().listImportBatches()
+  res.json({ imports })
+})
+
+adminRouter.get('/static-tables/imports/:importBatchId', requireAdminPermission('db.read'), async (req, res) => {
+  const importBatchId = readOptionalString(req.params.importBatchId)
+  if (!importBatchId) {
+    res.status(400).json({ error: 'import_batch_id_required' })
+    return
+  }
+  const batch = (await getStaticTableRepository().listImportBatches())
+    .find((item) => item.importBatchId === importBatchId)
+  if (!batch) {
+    res.status(404).json({ error: 'static_import_not_found' })
+    return
+  }
+  res.json({ import: batch })
+})
+
+adminRouter.post('/static-tables/imports/:importBatchId/activate', requireAdminRole('admin'), async (req, res) => {
+  const importBatchId = readOptionalString(req.params.importBatchId)
+  if (!importBatchId) {
+    res.status(400).json({ error: 'import_batch_id_required' })
+    return
+  }
+  const batch = (await getStaticTableRepository().listImportBatches())
+    .find((item) => item.importBatchId === importBatchId)
+  if (!batch) {
+    res.status(404).json({ error: 'static_import_not_found' })
+    return
+  }
+  if (batch.status !== 'committed' && batch.status !== 'activated') {
+    res.status(409).json({ error: 'static_import_not_committed', status: batch.status })
+    return
+  }
+
+  const now = Date.now()
+  const activated = await getStaticTableRepository().upsertImportBatch({
+    ...batch,
+    status: 'activated',
+    updatedAt: now,
+    activatedAt: batch.activatedAt ?? now,
+  })
+  await writeAudit(req, 'staticTables.activate', 'static-tables', {
+    importBatchId,
+    version: activated.version,
+  })
+  res.json({ ok: true, import: activated })
 })

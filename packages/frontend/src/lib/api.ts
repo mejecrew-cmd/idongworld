@@ -289,6 +289,106 @@ export interface AdminSplitSummary {
   }
 }
 
+export interface AdminStaticTableDefinition {
+  tableCode: string
+  tableName: string
+  category: string
+  importKind: 'row' | 'bundle' | 'excluded'
+  requiredColumns: string[]
+  primaryKey: string[]
+  targetCollection: string
+  bundleCollection?: string
+  notes?: string
+}
+
+export interface AdminStaticTableFileSummary {
+  fileName: string
+  tableCode: string
+  sourceHash: string
+  rowCount: number
+  importable: boolean
+  importKind?: 'row' | 'bundle' | 'excluded'
+  targetCollection?: string
+  bundleCollection?: string
+}
+
+export interface AdminStaticTableScanError {
+  fileName: string
+  code: string
+  message: string
+}
+
+export interface AdminStaticTableValidationIssue {
+  level: 'error' | 'warning'
+  tableCode?: string
+  rowNo?: number
+  column?: string
+  code: string
+  message: string
+}
+
+export interface AdminStaticTableValidation {
+  ok: boolean
+  summaries?: Array<{
+    tableCode: string
+    rowCount: number
+    errors?: AdminStaticTableValidationIssue[]
+    warnings?: AdminStaticTableValidationIssue[]
+  }>
+  issues?: AdminStaticTableValidationIssue[]
+  errors?: AdminStaticTableValidationIssue[]
+  warnings?: AdminStaticTableValidationIssue[]
+}
+
+export interface AdminStaticTableImportRequest {
+  version?: string
+  importBatchId?: string
+  tableCodes?: string[]
+}
+
+export interface AdminStaticTableImportPreview {
+  ok: boolean
+  version: string
+  importBatchId: string
+  sourceDir?: string
+  sourceFiles: Array<{
+    fileName: string
+    tableCode: string
+    sourceHash: string
+    rowCount: number
+  }>
+  validation: AdminStaticTableValidation
+  tableRowCount: number
+  runtimeRowCounts: Record<string, number>
+  bundleCounts: Record<string, number>
+  bundles?: Array<Record<string, unknown>>
+  scanErrors?: AdminStaticTableScanError[]
+  committed?: boolean
+}
+
+export interface AdminStaticTableImportBatch {
+  importBatchId: string
+  status: 'validated' | 'dryRun' | 'committed' | 'activated' | 'failed'
+  version: string
+  sourceDir?: string
+  sourceFiles: Array<{
+    fileName: string
+    tableCode: string
+    sourceHash: string
+    rowCount: number
+  }>
+  actorUid?: string
+  validationSummary?: unknown
+  dryRunSummary?: unknown
+  commitSummary?: unknown
+  errorMessage?: string
+  createdAt: number
+  updatedAt: number
+  committedAt?: number
+  activatedAt?: number
+  failedAt?: number
+}
+
 function getPasswordSessionToken(): string | null {
   try {
     return window.localStorage.getItem(PASSWORD_SESSION_TOKEN_KEY)
@@ -436,6 +536,61 @@ export const api = {
       {
         method: 'PATCH',
         body: JSON.stringify(request),
+      },
+    ),
+
+  adminStaticTableRegistry: () =>
+    apiFetch<{
+      definitions: AdminStaticTableDefinition[]
+      importableDefinitions: AdminStaticTableDefinition[]
+    }>('/api/admin/static-tables/registry'),
+
+  adminStaticTableFiles: () =>
+    apiFetch<{
+      sourceDir: string
+      files: AdminStaticTableFileSummary[]
+      errors: AdminStaticTableScanError[]
+    }>('/api/admin/static-tables/files'),
+
+  adminStaticTableValidate: (request: AdminStaticTableImportRequest = {}) =>
+    apiFetch<{
+      ok: boolean
+      importBatchId: string
+      version: string
+      sourceDir: string
+      files: AdminStaticTableFileSummary[]
+      scanErrors: AdminStaticTableScanError[]
+      validation: AdminStaticTableValidation
+    }>('/api/admin/static-tables/validate', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  adminStaticTableDryRun: (request: AdminStaticTableImportRequest = {}) =>
+    apiFetch<AdminStaticTableImportPreview>('/api/admin/static-tables/dry-run', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  adminStaticTableCommit: (request: AdminStaticTableImportRequest = {}) =>
+    apiFetch<AdminStaticTableImportPreview>('/api/admin/static-tables/commit', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  adminStaticTableImports: () =>
+    apiFetch<{ imports: AdminStaticTableImportBatch[] }>('/api/admin/static-tables/imports'),
+
+  adminStaticTableImportDetail: (importBatchId: string) =>
+    apiFetch<{ import: AdminStaticTableImportBatch }>(
+      `/api/admin/static-tables/imports/${encodeURIComponent(importBatchId)}`,
+    ),
+
+  adminStaticTableActivate: (importBatchId: string) =>
+    apiFetch<{ ok: boolean; import: AdminStaticTableImportBatch }>(
+      `/api/admin/static-tables/imports/${encodeURIComponent(importBatchId)}/activate`,
+      {
+        method: 'POST',
       },
     ),
 

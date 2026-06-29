@@ -115,6 +115,21 @@ shipStates
 zoneStates
 moduleStates
 customsLogs
+staticDataImportBatches
+staticTableRows
+staticAidongMasters
+staticItemCatalogs
+staticAidongPediaItemMasters
+staticIslandZones
+staticCurrencyMasters
+staticModuleCurrencyPolicies
+staticBoardSets
+staticSooksoRuleSets
+staticStringPacks
+staticAidongIslandBundles
+staticStoryBundles
+staticDialoguePacks
+staticCosmeticRuleSets
 ```
 
 역할:
@@ -143,6 +158,10 @@ customsLogs
 - `zoneStates`: `zone-garden`, `zone-oasis`, `zone-memory`, `zone-mine` local state.
 - `moduleStates`: 아직 dedicated model이 없는 module의 fallback state.
 - `customsLogs`: customs 처리 결과, 실패 사유, idempotency 기록.
+- `staticDataImportBatches`: 정적 CSV import batch의 dry-run/commit/activate 이력.
+- `staticTableRows`: CSV 원본 row snapshot. diff, audit, rollback 판단용 원장이다.
+- `staticAidongMasters`, `staticItemCatalogs`, `staticAidongPediaItemMasters`, `staticIslandZones`, `staticCurrencyMasters`, `staticModuleCurrencyPolicies`: 런타임에서 row 단위로 조회하기 좋은 정적 기준 데이터.
+- `staticBoardSets`, `staticSooksoRuleSets`, `staticStringPacks`, `staticAidongIslandBundles`, `staticStoryBundles`, `staticDialoguePacks`, `staticCosmeticRuleSets`: 여러 CSV를 조합해 런타임 JSON bundle로 읽는 정적 기준 데이터.
 
 ## 5. Backend 구조
 
@@ -200,6 +219,19 @@ pnpm migrate:dynamic-schema -- --commit
 - 운영 적용 전에는 `.cloud/105_dynamic_schema_migration_runbook_2026-06-29.md`를 먼저 따른다.
 - rollback은 target collection 삭제가 아니라 이전 build rollback과 선별 수정이 기본이다.
 
+정적 table import:
+
+- CSV 원본 위치는 기본적으로 `resources/table/*.csv`다.
+- 운영에서 다른 위치를 쓰려면 backend env `STATIC_TABLE_SOURCE_DIR`로 override한다.
+- 파일명은 `{tableCode}_{tableName}.csv`와 `{tableCode}__{tableName}.csv`를 모두 허용한다.
+- `G-STR-01_*_string_table.csv`, `X-DLG-AIDONG-*`처럼 하나의 registry pattern에 여러 CSV가 매칭될 수 있다.
+- import 대상은 정적 기준 데이터만이다. `G-USR-01`, `M01-USR-01`, `M05-ECO-01`, `M17-ECO-01`, `M19-USR-01`, `M21-USR-01`, `M22-USR-*`, `M23-ITM-01`처럼 유저별로 바뀌는 동적 데이터는 registry에서 `excluded`이며 commit 대상이 아니다.
+- commit 전에는 항상 validation과 dry-run을 먼저 본다. Admin DB 관리 화면에서는 `파일 스캔 -> 검증 -> dry-run -> commit -> activate` 순서로 진행한다.
+- CLI script는 아직 별도로 두지 않았다. 자동화가 필요하면 `/api/admin/static-tables/*`를 감싸는 운영 script를 후속 작업으로 추가한다.
+- commit은 원본 row snapshot, runtime row, runtime bundle을 저장한다. 실제 런타임 API가 읽는 버전은 activate된 batch다.
+- rollback은 document 삭제가 아니라 이전에 commit된 batch를 다시 activate하는 방식이 기본이다. 삭제는 백업과 영향 확인 후 별도 운영 작업으로만 한다.
+- 동적 유저 데이터 schema 변경은 정적 table import가 아니라 dynamic schema migration과 전용 API/repository 수정으로 처리한다.
+
 ## 6. 주요 API
 
 공통:
@@ -210,6 +242,29 @@ POST /api/auth/guest
 GET  /api/auth/me
 GET  /api/account/state
 PATCH /api/account/state
+```
+
+정적 데이터:
+
+```txt
+GET  /api/static/aidongs
+GET  /api/static/items
+GET  /api/static/currencies
+GET  /api/static/board-sets/:boardSetId
+GET  /api/static/sookso-rule-set
+```
+
+Admin 정적 table import:
+
+```txt
+GET  /api/admin/static-tables/registry
+GET  /api/admin/static-tables/files
+POST /api/admin/static-tables/validate
+POST /api/admin/static-tables/dry-run
+POST /api/admin/static-tables/commit
+GET  /api/admin/static-tables/imports
+GET  /api/admin/static-tables/imports/:importBatchId
+POST /api/admin/static-tables/imports/:importBatchId/activate
 ```
 
 host:
