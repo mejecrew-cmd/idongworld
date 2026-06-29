@@ -116,6 +116,8 @@ export const HUD = () => {
   }, [gameStartedAt, firebaseUid])
 
   const displayName = nickname || hostName || '게스트'
+  // 내 정보 화면에선 화면 자체가 프로필을 보여주므로 상단 프로필은 숨긴다(통화는 유지).
+  const hideProfile = location.pathname === '/island/lodge/myroom/info'
   const dayCount = getDayCount(gameStartedAt)
   const levelName = getProfileLevelName(recruitedAidongs.length, onboardingComplete)
   const levelShort = levelName.split(' ')[0]
@@ -150,6 +152,7 @@ export const HUD = () => {
           boxShadow: 'none',
         }}
       >
+        {!hideProfile && (
         <Box
           sx={{
             minWidth: 0,
@@ -228,6 +231,7 @@ export const HUD = () => {
             {levelShort}
           </Typography>
         </Box>
+        )}
 
         <Box
           sx={{

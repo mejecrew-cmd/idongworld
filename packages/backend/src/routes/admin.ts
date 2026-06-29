@@ -878,7 +878,18 @@ adminRouter.post('/static-tables/commit', requireAdminPermission('db.write'), as
     })
   } catch (error) {
     if (error instanceof Error && error.message === 'static_import_validation_failed') {
-      res.status(422).json({ error: 'static_import_validation_failed' })
+      const scan = await scanAdminStaticTableFiles()
+      const files = selectStaticTableFiles(scan, options.tableCodes)
+      const preview = await previewStaticTableImport(files, {
+        version: options.version,
+        importBatchId: options.importBatchId,
+      })
+      res.status(422).json({
+        error: 'static_import_validation_failed',
+        ...preview,
+        sourceDir: scan.sourceDir,
+        scanErrors: scan.errors,
+      })
       return
     }
     res.status(500).json({ error: 'static_table_commit_failed', message: error instanceof Error ? error.message : String(error) })

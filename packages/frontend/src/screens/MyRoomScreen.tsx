@@ -1,112 +1,84 @@
-import { useEffect, useState } from 'react'
-import { Alert, Box, LinearProgress, Stack, Typography } from '@mui/material'
+import { useState } from 'react'
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Snackbar,
+  TextField,
+  Typography,
+} from '@mui/material'
 import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
 import { api } from '@/lib/api'
-import {
-  accountStoreFacade,
-  hostStoreFacade,
-  myAidongStoreFacade,
-} from '@/lib/storeFacades'
+import { accountStoreFacade } from '@/lib/storeFacades'
+import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
+const MY_INFO_UI = '/assets/ui/myinfo'
 const HOME_UI = '/assets/ui/home'
-const MAIN_UI = '/assets/ui/main'
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
-function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : {}
-}
+// ── 백엔드 연동 예정 (현재는 프론트 더미값) ──────────────────────────
+const PROFILE_LEVEL = 99
+const PROFILE_XP = 1234
+const PROFILE_XP_MAX = 5678
+const BADGE_COUNT = { owned: 9, total: 99 }
+const PHOTOCARD_COUNT = { owned: 10, total: 99 }
+// 마이 아이템: 백엔드 구현 예정. 지금은 임시 3개.
+const TEMP_ITEMS = [
+  { id: 'temp-1', name: '아이템이름' },
+  { id: 'temp-2', name: '아이템이름' },
+  { id: 'temp-3', name: '아이템이름' },
+]
 
-// 디버그 패널·일정표·HUD와 동일 기준(gameStartedAt)으로 현재 Day를 계산한다.
 function getDayCount(startedAt?: number): number {
   if (!startedAt) return 1
   return Math.max(1, Math.floor((Date.now() - startedAt) / MS_PER_DAY) + 1)
 }
 
-// HUD의 레벨 산정과 동일한 규칙.
-function getLevelLabel(recruitedCount: number, onboardingComplete: boolean): string {
-  if (recruitedCount >= 5) return 'Lv.4'
-  if (recruitedCount >= 3) return 'Lv.3'
-  if (recruitedCount >= 1) return 'Lv.2'
-  if (onboardingComplete) return 'Lv.1'
-  return 'Lv.0'
-}
-
-/** 핑크 레벨 태그 */
-const LevelTag = ({ label }: { label: string }) => (
+/** 뱃지 / 포토카드 카운트 카드 (BtnBadge / BtnPhoto 위에 라벨·개수 오버레이) */
+const CountCard = ({ asset, label, owned, total }: { asset: string; label: string; owned: number; total: number }) => (
   <Box
     sx={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minWidth: 44,
-      height: 24,
-      px: 1.25,
-      borderRadius: 1.5,
-      bgcolor: '#f08a90',
-      color: '#fffefa',
-      fontWeight: 900,
-      fontSize: 12,
-      lineHeight: 1,
+      position: 'relative',
+      width: '100%',
+      aspectRatio: '394 / 204',
+      backgroundImage: `url(${asset})`,
+      backgroundSize: '100% 100%',
+      backgroundRepeat: 'no-repeat',
     }}
   >
-    {label}
-  </Box>
-)
-
-/** 섹션 헤더 바 */
-const SectionBar = ({ title }: { title: string }) => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 1,
-      minHeight: 40,
-      px: 2,
-      mb: 1.25,
-      borderRadius: 2,
-      bgcolor: '#4a3b35',
-      boxShadow: '0 4px 10px rgba(74,59,53,0.18)',
-    }}
-  >
-    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: '#f3c35c' }} />
-    <Typography sx={{ fontWeight: 900, fontSize: 15, color: '#fffefa', letterSpacing: 0.5 }}>
-      {title}
-    </Typography>
-  </Box>
-)
-
-/** 정보 행 (베이지 알약) */
-const InfoRow = ({
-  label,
-  value,
-  iconSrc,
-}: {
-  label: string
-  value: string | number
-  iconSrc?: string
-}) => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 1.25,
-      minHeight: 48,
-      px: 2,
-      borderRadius: 999,
-      bgcolor: '#e7dccd',
-    }}
-  >
-    {iconSrc && (
-      <Box component="img" src={iconSrc} alt="" aria-hidden sx={{ width: 24, height: 24, objectFit: 'contain' }} />
-    )}
-    <Typography sx={{ flex: 1, fontWeight: 800, fontSize: 14, color: '#6b5440' }}>
+    <Typography
+      sx={{
+        position: 'absolute',
+        left: '67%',
+        top: '33%',
+        transform: 'translate(-50%, -50%)',
+        color: '#5b4636',
+        fontSize: { xs: 16, sm: 18 },
+        fontWeight: 900,
+        whiteSpace: 'nowrap',
+      }}
+    >
       {label}
     </Typography>
-    <Typography sx={{ fontWeight: 900, fontSize: 15, color: '#5b4636', fontVariantNumeric: 'tabular-nums' }}>
-      {value}
+    <Typography
+      sx={{
+        position: 'absolute',
+        left: '67%',
+        top: '63%',
+        transform: 'translate(-50%, -50%)',
+        color: '#a99a88',
+        fontSize: { xs: 13, sm: 15 },
+        fontWeight: 900,
+        whiteSpace: 'nowrap',
+        fontVariantNumeric: 'tabular-nums',
+      }}
+    >
+      <Box component="span" sx={{ color: '#5b4636' }}>{owned}</Box> /{total}
     </Typography>
   </Box>
 )
@@ -115,176 +87,280 @@ export const MyRoomScreen = () => {
   const uid = accountStoreFacade.useFirebaseUid()
   const nickname = accountStoreFacade.useNickname()
   const hostName = accountStoreFacade.useHostName()
-  const onboardingComplete = accountStoreFacade.useOnboardingComplete()
   const gameStartedAt = accountStoreFacade.useGameStartedAt()
-  const coins = hostStoreFacade.useCoins()
-  const diamonds = hostStoreFacade.useDiamonds()
-  const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
-  const affinities = myAidongStoreFacade.useAffinities()
-  const [summary, setSummary] = useState<Record<string, unknown> | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!uid) return
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-    void api.getMyRoomSummary(uid)
-      .then((response) => {
-        if (!cancelled) setSummary(response)
-      })
-      .catch((err) => {
-        console.warn('[myroom] failed to load summary', err)
-        if (!cancelled) setError('서버 정보를 불러오지 못해 로컬 정보로 표시합니다.')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [uid])
-
-  const account = asRecord(summary?.account)
-  const host = asRecord(summary?.host)
-  const aidongs = asRecord(summary?.aidongs)
-  const displayName = String(account.nickname ?? nickname ?? account.hostName ?? hostName ?? '내 정보')
-  const displayCoins = Number(host.coins ?? coins)
-  const displayDiamonds = Number(host.diamonds ?? diamonds)
-  const displayAidongs = Array.isArray(aidongs.recruitedAidongs)
-    ? aidongs.recruitedAidongs as string[]
-    : recruitedAidongs
+  const displayName = nickname || hostName || '게스트'
   const dayCount = getDayCount(gameStartedAt)
-  const levelLabel = getLevelLabel(displayAidongs.length, onboardingComplete)
+  const xpPercent = Math.max(0, Math.min(100, (PROFILE_XP / PROFILE_XP_MAX) * 100))
+
+  const [editOpen, setEditOpen] = useState(false)
+  const [draftName, setDraftName] = useState('')
+  const [toast, setToast] = useState<string | null>(null)
+
+  const openEdit = () => {
+    setDraftName(displayName === '게스트' ? '' : displayName)
+    setEditOpen(true)
+  }
+
+  const trimmed = draftName.trim()
+  const nameValid = trimmed.length >= 2 && trimmed.length <= 12
+
+  const saveName = async () => {
+    if (!nameValid) return
+    accountStoreFacade.setNickname(trimmed)
+    setEditOpen(false)
+    if (uid) {
+      try {
+        await api.patchAccountState(uid, { nickname: trimmed })
+      } catch (error) {
+        console.warn('[myroom] failed to persist nickname', error)
+      }
+    }
+  }
+
+  // 프로필 이미지 변경 / 더보기 — 구현 예정 (팝업으로 구현 예정)
+  const notImplemented = () => setToast('준비 중입니다.')
 
   return (
-    <Box sx={{ p: 0, pb: 12 }}>
-      <ScreenHeader category="마이룸" title="내 정보" subtitle={displayName} showBack />
+    <Box sx={{ position: 'relative', p: 0, pb: 6, minHeight: 'calc(100dvh - 176px)' }}>
+      {/* 배경 프레임(레이아웃 폭) 전체를 크림으로 감쌈 — 전역 배경과 동일 영역 */}
+      <Box
+        aria-hidden
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: `min(100vw, ${GAME_STAGE_WIDTH}px)`,
+          height: '100dvh',
+          bgcolor: '#f6ecda',
+          zIndex: -1,
+          pointerEvents: 'none',
+        }}
+      />
+      <ScreenHeader category="숙소" title="내 정보" showBack />
 
       <GameStage
+        sx={{ mt: { xs: '32px', sm: '50px', md: '58px' } }}
         stageSx={{
           px: { xs: 2, sm: 2.5 },
-          py: 3,
-          backgroundImage: `url(${HOME_UI}/BgDeco.png)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center top',
-          backgroundRepeat: 'no-repeat',
+          pt: 3,
+          pb: 5,
         }}
       >
-        {loading && <LinearProgress sx={{ mb: 2 }} />}
-        {error && <Alert severity="warning" sx={{ mb: 2 }}>{error}</Alert>}
-
-        {/* 프로필 헤더 (ProfileBg) */}
-        <Box
-          sx={{
-            position: 'relative',
-            width: '100%',
-            maxWidth: 460,
-            mx: 'auto',
-            aspectRatio: '498 / 188',
-            mb: 2.5,
-            backgroundImage: `url(${MAIN_UI}/ProfileBg.png)`,
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-          }}
-        >
-          <Typography
-            sx={{
-              position: 'absolute',
-              left: '38%',
-              top: '34%',
-              width: '56%',
-              transform: 'translateY(-50%)',
-              color: '#5c3f3f',
-              fontSize: { xs: 15, sm: 18 },
-              fontWeight: 900,
-              lineHeight: 1,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {displayName}
-          </Typography>
-          <Typography
-            sx={{
-              position: 'absolute',
-              left: '38%',
-              top: '58%',
-              width: '56%',
-              transform: 'translateY(-50%)',
-              color: '#9a7b6b',
-              fontSize: { xs: 11, sm: 13 },
-              fontWeight: 800,
-              lineHeight: 1,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Day {dayCount}
-          </Typography>
-          <Typography
-            sx={{
-              position: 'absolute',
-              left: '19%',
-              top: '85%',
-              transform: 'translate(-50%, -50%)',
-              display: 'inline-block',
-              maxWidth: '32%',
-              color: '#fffefa',
-              fontSize: { xs: 11, sm: 13 },
-              fontWeight: 900,
-              lineHeight: 1,
-              textAlign: 'center',
-              textShadow: '0 1px 1px rgba(84,54,54,0.35)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {levelLabel}
-          </Typography>
-        </Box>
-
-        {/* 보유 재화 */}
-        <SectionBar title="보유 재화" />
-        <Stack spacing={1} sx={{ mb: 3 }}>
-          <InfoRow label="코인" value={displayCoins} iconSrc={`${MAIN_UI}/IconGold.png`} />
-          <InfoRow label="다이아" value={displayDiamonds} iconSrc={`${MAIN_UI}/IconDia.png`} />
-        </Stack>
-
-        {/* 함께하는 아이동 */}
-        <SectionBar title={`함께하는 아이동 (${displayAidongs.length})`} />
-        {displayAidongs.length === 0 ? (
-          <Typography variant="body2" sx={{ color: 'text.secondary', px: 1 }}>
-            아직 함께하는 아이동이 없습니다.
-          </Typography>
-        ) : (
-          <Stack spacing={1}>
-            {displayAidongs.map((id) => {
-              const affinity = affinities[id]
-              return (
+        <Box sx={{ width: 'min(100%, 520px)', mx: 'auto' }}>
+          {/* ── 프로필 ── */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2.5 }}>
+            {/* 아바타 + 변경 버튼 + DAY 리본 */}
+            <Box sx={{ position: 'relative', width: { xs: 150, sm: 168 }, aspectRatio: '1 / 1', mb: 3 }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundImage: `url(${MY_INFO_UI}/ProfileBox.png)`,
+                  backgroundSize: 'contain',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center',
+                }}
+              />
+              <Box
+                sx={{
+                  position: 'absolute',
+                  inset: '10%',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                }}
+              >
+                {/* 프로필 사진 미구현 → 상단 프로필(ProfileBg)의 기본 캐릭터를 디폴트로 사용 */}
                 <Box
-                  key={id}
+                  component="img"
+                  src="/assets/ui/main/ProfileBg.png"
+                  alt=""
+                  aria-hidden
+                  sx={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'left center', transform: 'scale(1.2)' }}
+                />
+              </Box>
+
+              {/* 프로필 이미지 변경 (구현 예정) */}
+              <Box
+                component="button"
+                type="button"
+                aria-label="프로필 이미지 변경"
+                onClick={notImplemented}
+                sx={{
+                  position: 'absolute',
+                  top: '2%',
+                  right: '2%',
+                  width: { xs: 30, sm: 34 },
+                  height: { xs: 30, sm: 34 },
+                  p: 0,
+                  border: 0,
+                  bgcolor: 'transparent',
+                  cursor: 'pointer',
+                  backgroundImage: `url(${MY_INFO_UI}/BtnProfileImgChange.png)`,
+                  backgroundSize: 'contain',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center',
+                }}
+              />
+
+              {/* DAY 리본 */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: '-7%',
+                  transform: 'translateX(-50%)',
+                  width: '74%',
+                  aspectRatio: '269 / 82',
+                  backgroundImage: `url(${MY_INFO_UI}/DayCountBg.png)`,
+                  backgroundSize: '100% 100%',
+                  backgroundRepeat: 'no-repeat',
+                }}
+              >
+                <Typography
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.25,
-                    minHeight: 48,
-                    px: 2,
-                    borderRadius: 999,
-                    bgcolor: '#e7dccd',
+                    position: 'absolute',
+                    left: '72%',
+                    top: '44%',
+                    transform: 'translate(-50%, -50%)',
+                    color: '#fffefa',
+                    fontSize: { xs: 15, sm: 17 },
+                    fontWeight: 900,
+                    lineHeight: 1,
+                    textShadow: '0 1px 2px rgba(150,70,75,0.4)',
+                    fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  <Typography sx={{ flex: 1, fontWeight: 800, fontSize: 14, color: '#6b5440' }}>
-                    {id}
-                  </Typography>
-                  {affinity && <LevelTag label={`Lv.${affinity.level}`} />}
+                  {dayCount}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* 닉네임 + 편집 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.25 }}>
+              <Typography sx={{ fontSize: { xs: 20, sm: 23 }, fontWeight: 900, color: '#5b4636', letterSpacing: 0.3 }}>
+                {displayName}
+              </Typography>
+              <Box
+                component="button"
+                type="button"
+                aria-label="닉네임 변경"
+                onClick={openEdit}
+                sx={{
+                  width: 24,
+                  height: 24,
+                  p: 0,
+                  border: 0,
+                  bgcolor: 'transparent',
+                  cursor: 'pointer',
+                  flex: '0 0 auto',
+                  backgroundImage: `url(${MY_INFO_UI}/BtnNicknameEdit.png)`,
+                  backgroundSize: 'contain',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center',
+                }}
+              />
+            </Box>
+
+            {/* 레벨 바 */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '92%' }}>
+              <Typography sx={{ color: '#f08a90', fontWeight: 900, fontSize: { xs: 13, sm: 15 }, flex: '0 0 auto' }}>
+                Lv.{PROFILE_LEVEL}
+              </Typography>
+              <Box sx={{ flex: 1, height: { xs: 9, sm: 11 }, borderRadius: 999, bgcolor: '#e7dccd', overflow: 'hidden' }}>
+                <Box sx={{ width: `${xpPercent}%`, height: '100%', borderRadius: 999, bgcolor: '#f08a90' }} />
+              </Box>
+              <Typography sx={{ color: '#a18876', fontSize: { xs: 11, sm: 12.5 }, fontWeight: 800, flex: '0 0 auto', fontVariantNumeric: 'tabular-nums' }}>
+                {PROFILE_XP.toLocaleString()} /{PROFILE_XP_MAX.toLocaleString()}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* ── 뱃지 / 포토카드 ── */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 3 }}>
+            <CountCard asset={`${MY_INFO_UI}/BtnBadge.png`} label="뱃지" owned={BADGE_COUNT.owned} total={BADGE_COUNT.total} />
+            <CountCard asset={`${MY_INFO_UI}/BtnPhoto.png`} label="포토카드" owned={PHOTOCARD_COUNT.owned} total={PHOTOCARD_COUNT.total} />
+          </Box>
+
+          {/* ── 마이 아이템 ── */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+            <Box component="img" src={`${MY_INFO_UI}/IconMyItem.png`} alt="" aria-hidden sx={{ width: 22, height: 22, mr: 1, objectFit: 'contain' }} />
+            <Typography sx={{ flex: 1, fontWeight: 900, fontSize: { xs: 16, sm: 18 }, color: '#5b4636' }}>
+              마이 아이템
+            </Typography>
+            {/* 더보기 — 팝업으로 구현 예정 */}
+            <Box
+              component="button"
+              type="button"
+              onClick={notImplemented}
+              sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25, border: 0, bgcolor: 'transparent', cursor: 'pointer', p: 0 }}
+            >
+              <Typography sx={{ color: '#a18876', fontSize: { xs: 13, sm: 14 }, fontWeight: 800 }}>더보기</Typography>
+              <Typography sx={{ color: '#a18876', fontSize: 16, fontWeight: 900, lineHeight: 1 }}>›</Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5 }}>
+            {TEMP_ITEMS.map((item) => (
+              <Box key={item.id} sx={{ textAlign: 'center' }}>
+                <Box
+                  sx={{
+                    position: 'relative',
+                    width: '100%',
+                    aspectRatio: '1 / 1',
+                    backgroundImage: `url(${HOME_UI}/ItemSlotList.png)`,
+                    backgroundSize: '100% 100%',
+                    backgroundRepeat: 'no-repeat',
+                    display: 'grid',
+                    placeItems: 'center',
+                  }}
+                >
+                  {/* 아이템 이미지 — 백엔드 구현 예정 (현재 placeholder) */}
+                  <Box sx={{ width: '54%', height: '54%', borderRadius: 2, bgcolor: 'rgba(120,95,75,0.07)' }} />
                 </Box>
-              )
-            })}
-          </Stack>
-        )}
+                <Typography sx={{ mt: 0.75, fontSize: { xs: 11.5, sm: 13 }, fontWeight: 800, color: '#6b5440' }}>
+                  {item.name}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
       </GameStage>
+
+      {/* 닉네임 변경 다이얼로그 */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="xs" fullWidth disableScrollLock>
+        <DialogTitle>닉네임 변경</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            fullWidth
+            value={draftName}
+            onChange={(e) => setDraftName(e.target.value)}
+            placeholder="2~12자"
+            inputProps={{ maxLength: 12 }}
+            error={draftName.length > 0 && !nameValid}
+            helperText={draftName.length > 0 && !nameValid ? '2~12자로 입력해 주세요.' : ' '}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)}>취소</Button>
+          <Button variant="contained" disabled={!nameValid} onClick={() => { void saveName() }}>저장</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={Boolean(toast)}
+        autoHideDuration={1600}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        sx={{ mb: { xs: 9, sm: 10 } }}
+      >
+        <Alert severity="info" variant="filled" sx={{ borderRadius: 1.5 }}>
+          {toast}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
