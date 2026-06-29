@@ -1,7 +1,8 @@
 import { Box } from '@mui/material'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { HUD } from './HUD'
 import { BottomNav } from './BottomNav'
+import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
 
 const appBackgroundSx = {
   bgcolor: 'background.default',
@@ -11,18 +12,15 @@ const appBackgroundSx = {
   '&::before': {
     content: '""',
     position: 'fixed',
-    top: '50%',
+    top: 0,
     left: '50%',
-    width: 'max(100vw, calc(100dvh * 16 / 9))',
-    height: 'max(100dvh, calc(100vw * 9 / 16))',
-    transform: 'translate(-50%, -50%)',
+    width: `min(100vw, ${GAME_STAGE_WIDTH}px)`,
+    height: '100dvh',
+    transform: 'translateX(-50%)',
     zIndex: 0,
-    background: [
-      'linear-gradient(180deg, rgba(255,254,250,0.7) 0%, rgba(255,254,250,0.42) 45%, rgba(255,245,221,0.72) 100%)',
-      'url(/assets/backgrounds/02_MainBG.png)',
-    ].join(', '),
-    backgroundSize: 'auto, 100% 100%',
-    backgroundPosition: 'center, center',
+    background: 'url(/assets/backgrounds/02_MainBG.png)',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center center',
     backgroundRepeat: 'no-repeat',
     pointerEvents: 'none',
   },
@@ -32,9 +30,9 @@ const appBackgroundSx = {
     left: 0,
     right: 0,
     bottom: 0,
-    height: '34vh',
+    height: '28vh',
     zIndex: 0,
-    background: 'linear-gradient(180deg, rgba(255,254,250,0) 0%, rgba(243,195,92,0.16) 100%)',
+    background: 'linear-gradient(180deg, rgba(255,254,250,0) 0%, rgba(255,246,224,0.34) 100%)',
     pointerEvents: 'none',
   },
 } as const
@@ -42,6 +40,14 @@ const appBackgroundSx = {
 const contentLayerSx = {
   position: 'relative',
   zIndex: 1,
+} as const
+
+const mutedBackgroundOverlaySx = {
+  position: 'fixed',
+  inset: 0,
+  zIndex: 0,
+  background: 'rgba(230, 232, 232, 0.42)',
+  pointerEvents: 'none',
 } as const
 
 const fullScreenShellSx = {
@@ -56,15 +62,23 @@ const mainShellSx = {
   pb: { xs: '104px', sm: '122px' },
 } as const
 
-const MainTabLayout = () => (
-  <Box sx={mainShellSx}>
-    <HUD />
-    <Box sx={contentLayerSx}>
-      <Outlet />
+const MainTabLayout = () => {
+  const { pathname } = useLocation()
+  const isMyIslandHub = pathname === '/island'
+  // 내 정보는 상단 프로필을 숨기므로 헤더(뒤로가기+제목)를 적당히 위로 올린다.
+  const isMyInfo = pathname === '/island/lodge/myroom/info'
+
+  return (
+    <Box sx={{ ...mainShellSx, ...(isMyInfo ? { pt: { xs: '40px', sm: '52px', md: '60px' } } : {}) }}>
+      {!isMyIslandHub && <Box aria-hidden sx={mutedBackgroundOverlaySx} />}
+      <HUD />
+      <Box sx={contentLayerSx}>
+        <Outlet />
+      </Box>
+      <BottomNav />
     </Box>
-    <BottomNav />
-  </Box>
-)
+  )
+}
 
 export const MyIslandLayout = MainTabLayout
 

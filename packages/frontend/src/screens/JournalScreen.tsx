@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Box, Chip, LinearProgress, Stack, Typography } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
-import { accountStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
+import { GAME_STAGE_WIDTH } from '@/theme/gameStage'
+import { accountStoreFacade, hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
 import {
   DAILY_SCHEDULE,
   REWARD_DAYS,
@@ -16,30 +17,62 @@ import {
   type DailyJournalState,
 } from '@/modules/dailyJournal'
 
+const DIARY_UI = '/assets/ui/diary'
+const COMMON_UI = '/assets/ui/common'
 const JOURNAL_DAYS = 28
-const MILESTONE_SIZE = 32
-const MARKER_PADDING = MILESTONE_SIZE / 2
+const CATCH_UP_DIAMOND_COST = 3
 
-function getTrackPosition(day: number): string {
-  return `${((day - 1) / (JOURNAL_DAYS - 1)) * 100}%`
-}
+const SCHEDULE_LABELS = ['아이동 깨우기', '아침밥', '점심밥', '저녁밥', '재우기'] as const
+const SCHEDULE_TIMES = ['AM 5 ~ 8', 'AM 8 ~ 11', 'PM 1 ~ 3', 'PM 5 ~ 7', 'PM 9 ~ 10'] as const
+const SCHEDULE_END_HOURS = [8, 11, 15, 19, 22] as const
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+function dayActAsset(index: number, complete: boolean): string {
+  const assetNo = Math.min(index + 1, 5).toString().padStart(2, '0')
+  return `${DIARY_UI}/DayAct${assetNo}${complete ? 'On' : 'Off'}.png`
+}
+
+function timelineX(day: number): string {
+  return `${4 + (Math.max(0, Math.min(28, day)) / 28) * 92}%`
+}
+
+function isActivityUnlocked(journal: DailyJournalState, day: number, scheduleId: string): boolean {
+  return isScheduleComplete(journal, day, scheduleId)
+}
+
+function getDayStatusLabel(day: number, currentDay: number): string {
+  if (day === currentDay) return '오늘'
+  if (day < currentDay) return '지난 기록'
+  return '예정'
+}
+
+function isCatchUpAvailable(day: number, scheduleIndex: number, currentDay: number, now: number): boolean {
+  if (day < currentDay) return true
+  if (day > currentDay) return false
+  return new Date(now).getHours() >= SCHEDULE_END_HOURS[scheduleIndex]
+}
+
 export const JournalScreen = () => {
   const uid = accountStoreFacade.useFirebaseUid()
   const gameStartedAt = accountStoreFacade.useGameStartedAt()
+  const diamonds = hostStoreFacade.useDiamonds()
   const careLog = myAidongStoreFacade.useCareLog()
+  const [now, setNow] = useState(() => Date.now())
   const [journal, setJournal] = useState<DailyJournalState>(() => readDailyJournalState(uid))
 
   useEffect(() => {
     setJournal(readDailyJournalState(uid))
   }, [uid])
 
-  // 디버그 패널 Day와 동일하게 gameStartedAt 기준으로 현재 day를 계산한다.
-  const progress = getDailyJournalProgress(journal, Date.now(), gameStartedAt)
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  const progress = getDailyJournalProgress(journal, now, gameStartedAt)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -88,217 +121,440 @@ export const JournalScreen = () => {
     persist(claimReward(journal, rewardDay))
   }
 
+  const handleCatchUp = (day: number, scheduleId: string) => {
+    if (diamonds < CATCH_UP_DIAMOND_COST) return
+    const key = getScheduleKey(day, scheduleId)
+    if (journal.completedScheduleKeys.includes(key)) return
+
+    hostStoreFacade.mutateDiamonds(-CATCH_UP_DIAMOND_COST)
+    persist({
+      ...journal,
+      completedScheduleKeys: [...journal.completedScheduleKeys, key].sort(),
+    })
+  }
+
+  const filledX = timelineX(progress.completedStars)
+
   return (
-    <Box sx={{ p: 0, pb: 12 }}>
-      <ScreenHeader category="일지" title="활동 일지" subtitle="28일 사이클" showBack />
-      <GameStage stageSx={{ px: { xs: 2.5, sm: 3 }, py: 3 }}>
-        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1, flexWrap: 'wrap', gap: 1 }}>
-          <Typography variant="h1" sx={{ fontSize: 22, flex: 1, minWidth: 180 }}>
-            28일 일정표
-          </Typography>
-          <Chip label={`★ ${progress.completedStars} / ${progress.totalStars}`} color="primary" variant="outlined" />
-        </Stack>
+    <Box sx={{ position: 'relative', p: 0, pb: 0, minHeight: 'calc(100dvh - 176px)' }}>
+      {/* 화면 최하단까지 크림 캔버스가 깔리도록 고정 레이어 (스크롤 영향 없음) */}
+      <Box
+        aria-hidden
+        sx={{
+          position: 'fixed',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bottom: 0,
+          width: `min(100%, ${GAME_STAGE_WIDTH}px)`,
+          height: { xs: 170, sm: 200 },
+          background: 'linear-gradient(180deg, rgba(246,236,218,0) 0%, rgba(246,236,218,0.96) 42%, rgba(246,236,218,0.96) 100%)',
+          zIndex: 0,
+          pointerEvents: 'none',
+        }}
+      />
+      <ScreenHeader category="숙소" title="일기" showBack />
 
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-          하루 5개 일정을 모두 완료하면 별 하나를 얻습니다. 완료 상태는 아이동 케어 기록에 따라 자동으로 반영됩니다.
-        </Typography>
-
-        <Box sx={{ mb: 2.5 }}>
+      <GameStage
+        stageSx={{
+          px: { xs: 0.75, sm: 2.5 },
+          pt: 2,
+          pb: 2,
+          background: 'linear-gradient(180deg, rgba(246,236,218,0) 0px, rgba(246,236,218,0.96) 150px, rgba(246,236,218,0.96) 300px)',
+        }}
+      >
+        <Box sx={{ width: 'min(100%, 860px)', mx: 'auto' }}>
           <Box
             sx={{
               position: 'relative',
-              height: 56,
-              px: `${MARKER_PADDING}px`,
+              height: { xs: 112, sm: 132 },
+              mb: 1.2,
+              borderBottom: '1px solid rgba(91,70,54,0.08)',
             }}
           >
             <Box
               sx={{
                 position: 'absolute',
-                left: `${MARKER_PADDING}px`,
-                right: `${MARKER_PADDING}px`,
-                top: 32,
-                zIndex: 1,
+                left: { xs: 8, sm: 12 },
+                top: { xs: 10, sm: 14 },
+                width: { xs: 64, sm: 74 },
+                height: { xs: 34, sm: 38 },
+                backgroundImage: `url(${DIARY_UI}/BoxStarRewardCount1.png)`,
+                backgroundSize: '100% 100%',
+                backgroundRepeat: 'no-repeat',
               }}
             >
-              <LinearProgress
-                variant="determinate"
-                value={progress.percent}
-                sx={{ height: 8, borderRadius: 4 }}
-              />
+              <Typography
+                sx={{
+                  position: 'absolute',
+                  left: '66%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  color: '#fff7d5',
+                  fontSize: { xs: 15, sm: 17 },
+                  fontWeight: 900,
+                  textShadow: '0 1px 2px rgba(65,43,35,0.45)',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {progress.completedStars}
+              </Typography>
             </Box>
 
             <Box
               sx={{
                 position: 'absolute',
-                left: `${MARKER_PADDING}px`,
-                right: `${MARKER_PADDING}px`,
-                top: 0,
-                height: 56,
-                zIndex: 3,
+                left: '4%',
+                right: '4%',
+                top: { xs: 56, sm: 66 },
+                height: { xs: 7, sm: 8 },
+                borderRadius: 999,
+                bgcolor: 'rgba(198,184,166,0.56)',
               }}
-            >
-              {REWARD_DAYS.map((rewardDay) => {
-                const available = progress.completedStars >= rewardDay
-                const claimed = journal.claimedRewardDays.includes(rewardDay)
-                return (
-                  <Box
-                    component="button"
-                    key={rewardDay}
+            />
+            <Box
+              sx={{
+                position: 'absolute',
+                left: '4%',
+                top: { xs: 56, sm: 66 },
+                width: `calc(${filledX} - 4%)`,
+                height: { xs: 7, sm: 8 },
+                borderRadius: 999,
+                bgcolor: '#f38f98',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.55)',
+              }}
+            />
+
+            <Box
+              sx={{
+                position: 'absolute',
+                left: '4%',
+                top: { xs: 59.5, sm: 70 },
+                transform: 'translate(-50%, -50%)',
+                width: { xs: 18, sm: 22 },
+                height: { xs: 18, sm: 22 },
+                borderRadius: '50%',
+                bgcolor: '#fff',
+                border: '2px solid rgba(198,184,166,0.72)',
+              }}
+            />
+
+            {REWARD_DAYS.map((rewardDay) => {
+              const available = progress.completedStars >= rewardDay
+              const claimed = journal.claimedRewardDays.includes(rewardDay)
+              const x = timelineX(rewardDay)
+              return (
+                <Box
+                  key={rewardDay}
+                  sx={{
+                    position: 'absolute',
+                    left: x,
+                    top: { xs: 38, sm: 47 },
+                    transform: 'translateX(-50%)',
+                    width: { xs: 58, sm: 70 },
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    textAlign: 'center',
+                    zIndex: 2,
+                  }}
+                >
+                  <Button
+                    size="small"
                     disabled={!available || claimed}
                     onClick={() => handleClaimReward(rewardDay)}
                     sx={{
-                      position: 'absolute',
-                      left: getTrackPosition(rewardDay),
-                      top: 36,
-                      minWidth: MILESTONE_SIZE,
-                      width: MILESTONE_SIZE,
-                      height: MILESTONE_SIZE,
-                      maxWidth: MILESTONE_SIZE,
-                      maxHeight: MILESTONE_SIZE,
+                      minWidth: 0,
+                      width: { xs: 42, sm: 50 },
+                      height: { xs: 42, sm: 50 },
                       p: 0,
-                      transform: 'translate(-50%, -50%)',
                       borderRadius: '50%',
-                      border: '1px solid',
-                      borderColor: available && !claimed ? 'primary.main' : 'divider',
-                      fontSize: 12,
-                      fontWeight: 900,
-                      lineHeight: 1,
-                      bgcolor: available && !claimed ? 'primary.main' : 'background.paper',
-                      color: available && !claimed ? 'primary.contrastText' : 'text.secondary',
-                      boxShadow: '0 4px 10px rgba(39,51,51,0.16)',
-                      cursor: available && !claimed ? 'pointer' : 'default',
-                      display: 'grid',
-                      placeItems: 'center',
-                      appearance: 'none',
-                      boxSizing: 'border-box',
-                      zIndex: 5,
-                      '&:disabled': {
-                        opacity: 1,
-                      },
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      top: '1px',
+                      bgcolor: claimed ? 'rgba(255,252,241,0.92)' : 'transparent',
+                      boxShadow: claimed ? '0 3px 8px rgba(91,70,54,0.16)' : 'none',
+                      '&:hover': { bgcolor: claimed ? 'rgba(255,252,241,0.96)' : 'transparent' },
                     }}
                   >
-                    {claimed ? '★' : rewardDay}
+                    {/* 받은 보상은 체크, 그 외엔 선물(받기 가능 On / 잠김 Off) — 원형 배경 안 상하좌우 중앙 */}
+                    {claimed ? (
+                      <Box
+                        component="img"
+                        src={`${COMMON_UI}/IconCheck.png`}
+                        alt=""
+                        aria-hidden
+                        sx={{ width: '52%', height: '52%', objectFit: 'contain', display: 'block' }}
+                      />
+                    ) : (
+                      <Box
+                        component="img"
+                        src={`${DIARY_UI}/${available ? 'BtnRewardGetOn' : 'BtnRewardGetOff'}.png`}
+                        alt=""
+                        aria-hidden
+                        sx={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                      />
+                    )}
+                  </Button>
+                  <Box
+                    sx={{
+                      position: 'relative',
+                      width: { xs: 48, sm: 58 },
+                      height: { xs: 22, sm: 26 },
+                      mx: 'auto',
+                      mt: 0.3,
+                      backgroundImage: `url(${DIARY_UI}/BoxStarRewardCount2.png)`,
+                      backgroundSize: '100% 100%',
+                      backgroundRepeat: 'no-repeat',
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        position: 'absolute',
+                        left: '66%',
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        color: '#7a5649',
+                        fontSize: { xs: 10, sm: 12 },
+                        fontWeight: 900,
+                        fontVariantNumeric: 'tabular-nums',
+                      }}
+                    >
+                      {rewardDay}
+                    </Typography>
                   </Box>
-                )
-              })}
-
-              <Box
-                sx={{
-                  position: 'absolute',
-                  left: getTrackPosition(progress.cycleDay),
-                  top: 36,
-                  width: 22,
-                  height: 22,
-                  transform: 'translate(-50%, -50%)',
-                  borderRadius: '50%',
-                  display: 'grid',
-                  placeItems: 'center',
-                  zIndex: 4,
-                  bgcolor: 'secondary.main',
-                  color: 'secondary.contrastText',
-                  border: '2px solid #fffefa',
-                  boxShadow: '0 4px 10px rgba(39,51,51,0.2)',
-                  fontSize: 12,
-                  fontWeight: 900,
-                }}
-              >
-                ★
-              </Box>
-            </Box>
+                </Box>
+              )
+            })}
           </Box>
 
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            sx={{
-              mt: 0.75,
-            }}
-          >
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              현재 위치: Day {progress.cycleDay}
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              남은 기간 {progress.remainingDays}일
-            </Typography>
-          </Stack>
-        </Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: { xs: 0.8, sm: 1 } }}>
+            {Array.from({ length: JOURNAL_DAYS }, (_, index) => {
+              const day = index + 1
+              const dayComplete = isDayComplete(journal, day)
+              const currentDay = day === progress.cycleDay
+              const visibleSchedule = DAILY_SCHEDULE.slice(0, 5)
+              const completedCount = visibleSchedule.filter((item) => isActivityUnlocked(journal, day, item.id)).length
+              const statusLabel = getDayStatusLabel(day, progress.cycleDay)
 
-        <Stack spacing={1.25}>
-          {Array.from({ length: JOURNAL_DAYS }, (_, index) => {
-            const day = index + 1
-            const dayComplete = isDayComplete(journal, day)
-            const currentDay = day === progress.cycleDay
-            return (
-              <Box
-                key={day}
-                id={`journal-day-${day}`}
-                sx={{
-                  bgcolor: 'background.paper',
-                  border: '1px solid',
-                  borderColor: dayComplete ? 'primary.main' : currentDay ? 'secondary.main' : 'divider',
-                  borderRadius: 2,
-                  p: 1.5,
-                }}
-              >
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                  <Typography sx={{ fontWeight: 900, flex: 1 }}>
-                    Day {day}
-                  </Typography>
-                  {currentDay && <Chip size="small" label="진행 중" color="secondary" variant="outlined" />}
-                  {dayComplete && <Chip size="small" label="★ 완료" color="primary" />}
-                </Stack>
-
+              return (
                 <Box
+                  key={day}
+                  id={`journal-day-${day}`}
                   sx={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
-                    gap: 0.75,
+                    position: 'relative',
+                    width: '100%',
+                    aspectRatio: '1016 / 295',
+                    backgroundImage: `url(${DIARY_UI}/DiarylistSlot.png)`,
+                    backgroundSize: 'contain',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                    filter: currentDay ? 'drop-shadow(0 8px 18px rgba(242,127,117,0.18))' : 'none',
+                    overflow: 'hidden',
                   }}
                 >
-                  {DAILY_SCHEDULE.map((item) => {
-                    const complete = isScheduleComplete(journal, day, item.id)
-                    return (
-                      <Box
-                        key={item.id}
-                        sx={{
-                          minHeight: 48,
-                          borderRadius: 1.25,
-                          border: '1px solid',
-                          borderColor: complete ? 'primary.main' : 'divider',
-                          bgcolor: complete ? 'rgba(62,155,143,0.1)' : 'background.default',
-                          p: 0.75,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 0.25,
-                          cursor: 'default',
-                          textAlign: 'center',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <Typography
+                  <Typography
+                    sx={{
+                      position: 'absolute',
+                      left: { xs: '20.1%', sm: '19.4%' },
+                      top: '15%',
+                      transform: 'translate(-50%, -50%)',
+                      minWidth: 34,
+                      color: '#6b3f43',
+                      fontSize: { xs: 19, sm: 27 },
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      textAlign: 'center',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {day}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      position: 'absolute',
+                      left: { xs: '29.5%', sm: '28.5%' },
+                      top: '15%',
+                      transform: 'translateY(-50%)',
+                      color: currentDay ? '#f08a90' : day < progress.cycleDay ? '#8a796a' : '#b7aa9b',
+                      fontSize: { xs: 8.5, sm: 12 },
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {statusLabel}
+                  </Typography>
+
+                  <Typography
+                    sx={{
+                      position: 'absolute',
+                      top: '15%',
+                      left: '94.5%',
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 1,
+                      color: '#fff7d5',
+                      fontSize: { xs: 15, sm: 20 },
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      textAlign: 'center',
+                      textShadow: '0 1px 2px rgba(65,43,35,0.45)',
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {dayComplete ? 5 : completedCount}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      position: 'absolute',
+                      top: '15%',
+                      right: { xs: '14.5%', sm: '13.5%' },
+                      transform: 'translateY(-50%)',
+                      zIndex: 1,
+                      color: '#5c4038',
+                      fontSize: { xs: 12, sm: 17 },
+                      fontWeight: 900,
+                      lineHeight: 1,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    기록 완료 보상
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: '3%',
+                      right: '2.5%',
+                      top: '30%',
+                      bottom: '8%',
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',
+                      columnGap: { xs: 0.35, sm: 0.75 },
+                    }}
+                  >
+                    {visibleSchedule.map((item, scheduleIndex) => {
+                      const complete = isActivityUnlocked(journal, day, item.id)
+                      const canCatchUp = !complete && isCatchUpAvailable(day, scheduleIndex, progress.cycleDay, now)
+                      return (
+                        <Box
+                          key={item.id}
                           sx={{
-                            width: '100%',
+                            position: 'relative',
                             minWidth: 0,
-                            fontWeight: 800,
-                            fontSize: 12,
-                            lineHeight: 1.15,
+                            textAlign: 'center',
+                            overflow: 'hidden',
                           }}
                         >
-                          {item.label}
-                        </Typography>
-                        <Typography sx={{ color: complete ? 'primary.main' : 'transparent', fontWeight: 900, lineHeight: 1 }}>
-                          ✓
-                        </Typography>
-                      </Box>
-                    )
-                  })}
+                          <Typography
+                            sx={{
+                              position: 'absolute',
+                              left: '8%',
+                              right: '8%',
+                              top: '7%',
+                              transform: 'translateY(-50%)',
+                              color: '#a18876',
+                              fontSize: { xs: 7.4, sm: 10 },
+                              fontWeight: 900,
+                              lineHeight: 1.05,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              textAlign: 'center',
+                            }}
+                          >
+                            {SCHEDULE_TIMES[scheduleIndex]}
+                          </Typography>
+                          <Box
+                            component="img"
+                            src={dayActAsset(scheduleIndex, complete)}
+                            alt=""
+                            aria-hidden
+                            sx={{
+                              position: 'absolute',
+                              left: '50%',
+                              top: '60%',
+                              transform: 'translate(-50%, -50%)',
+                              width: { xs: 'min(12vw, 54px)', sm: 72 },
+                              height: { xs: 'min(12vw, 54px)', sm: 72 },
+                              objectFit: 'contain',
+                            }}
+                          />
+                          {complete ? (
+                            <Box
+                              component="img"
+                              src={`${COMMON_UI}/IconCheck.png`}
+                              alt=""
+                              aria-hidden
+                              sx={{
+                                position: 'absolute',
+                                left: '50%',
+                                bottom: { xs: '3%', sm: '4%' },
+                                transform: 'translateX(-50%)',
+                                width: { xs: 17, sm: 23 },
+                                height: { xs: 17, sm: 23 },
+                                objectFit: 'contain',
+                                filter: 'drop-shadow(0 2px 3px rgba(79,54,45,0.22))',
+                              }}
+                            />
+                          ) : canCatchUp ? (
+                            <Box
+                              component="button"
+                              type="button"
+                              onClick={() => handleCatchUp(day, item.id)}
+                              aria-label={`${SCHEDULE_LABELS[scheduleIndex] ?? item.label} 다이아로 완료`}
+                              sx={{
+                                position: 'absolute',
+                                left: '50%',
+                                top: '82%',
+                                transform: 'translate(-50%, -50%)',
+                                zIndex: 2,
+                                width: { xs: 'min(18vw, 86px)', sm: 106 },
+                                height: { xs: 'min(9vw, 43px)', sm: 52 },
+                                display: 'block',
+                                border: 0,
+                                backgroundImage: `url(${DIARY_UI}/BtnDayActOn.png)`,
+                                backgroundSize: '100% 100%',
+                                backgroundPosition: 'center',
+                                backgroundRepeat: 'no-repeat',
+                                bgcolor: 'transparent',
+                                filter: 'none',
+                                cursor: 'pointer',
+                                p: 0,
+                                '&:hover': {
+                                  bgcolor: 'transparent',
+                                  filter: 'brightness(1.03)',
+                                },
+                              }}
+                            >
+                              <Typography
+                                sx={{
+                                  position: 'absolute',
+                                  left: '68.5%',
+                                  top: '38%',
+                                  transform: 'translate(-50%, -50%)',
+                                  color: '#fffefa',
+                                  fontSize: { xs: 18, sm: 24 },
+                                  fontWeight: 900,
+                                  lineHeight: 1,
+                                  textShadow: '0 1px 2px rgba(129,59,76,0.45)',
+                                  fontVariantNumeric: 'tabular-nums',
+                                }}
+                              >
+                                {CATCH_UP_DIAMOND_COST}
+                              </Typography>
+                            </Box>
+                          ) : null}
+                        </Box>
+                      )
+                    })}
+                  </Box>
                 </Box>
-              </Box>
-            )
-          })}
-        </Stack>
+              )
+            })}
+          </Box>
+        </Box>
       </GameStage>
     </Box>
   )
