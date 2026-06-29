@@ -254,20 +254,21 @@ export const App = () => {
       <Route path="lodge" element={<LodgeScene />} />               {/* /island/lodge */}
       <Route path="lodge/myroom" element={<Navigate to="/island/lodge/myroom/info" replace />} />
       <Route path="lodge/myroom/info" element={<MyRoomScreen />} />
-      <Route path="lodge/myroom/aidong" element={<MyRoomScreen />} />
-      <Route path="lodge/myroom/aidong/:id" element={<MyRoomScreen />} />
-      <Route path="lodge/myroom/codex" element={<MyRoomScreen />} />
+      <Route path="lodge/myroom/journal" element={<JournalScreen />} />
+      <Route path="lodge/myroom/aidong" element={<CodexScreen />} />
+      <Route path="lodge/myroom/aidong/:id" element={<CodexScreen />} />
+      <Route path="lodge/myroom/codex" element={<Navigate to="/island/lodge/myroom/aidong" replace />} />
       <Route path="lodge/myroom/collection" element={<MyRoomScreen />} />
       <Route path="lodge/myroom/ledger" element={<MyRoomScreen />} />
     </Route>
 
     {/* 도감 — HUD + 하단 네비 (마이섬 레이아웃 재사용) */}
     <Route path="/codex" element={<IslandHydrationGate />}>
-      <Route index element={<CodexScreen />} />
+      <Route index element={<Navigate to="/island/lodge/myroom/aidong" replace />} />
     </Route>
 
     <Route path="/journal" element={<IslandHydrationGate />}>
-      <Route index element={<JournalScreen />} />
+      <Route index element={<Navigate to="/island/lodge/myroom/journal" replace />} />
     </Route>
 
     {/* 상점/설정 — 기능 연결 전 placeholder */}
