@@ -174,12 +174,11 @@ export async function bootstrapAuth() {
     try {
       await hydrateSplitState(state.firebaseUid)
     } catch {
-      try {
-        const r = await api.authGuest()
-        userStoreRuntimeFacade.setState({ firebaseUid: r.uid, isGuest: true, nickname: 'guest' })
-      } catch {
-        // local-only mode
-      }
+      userStoreRuntimeFacade.setState({
+        firebaseUid: undefined,
+        isGuest: false,
+        nickname: undefined,
+      })
     }
   }
 }

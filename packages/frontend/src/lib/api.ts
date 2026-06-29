@@ -318,8 +318,8 @@ export function clearPasswordSessionToken(): void {
 }
 
 async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T> {
-  const idToken = await getCurrentIdToken()
-  const passwordToken = idToken ? null : getPasswordSessionToken()
+  const passwordToken = getPasswordSessionToken()
+  const idToken = passwordToken ? null : await getCurrentIdToken()
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(idToken || passwordToken ? { Authorization: `Bearer ${idToken ?? passwordToken}` } : {}),
