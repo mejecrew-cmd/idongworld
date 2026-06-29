@@ -75,6 +75,35 @@ describe('static table CSV parser', () => {
     ])
   })
 
+  it('accepts planner metadata columns with a leading underscore', () => {
+    const result = parseStaticTableCsvText('currency_id,_planner_note,_updated_at\ncoin,,2026-06-29\n', {
+      fileName: 'X-ECO-00_currency_master.csv',
+    })
+
+    expect(result.headers).toEqual(['currencyId', '_plannerNote', '_updatedAt'])
+    expect(result.issues).toEqual([])
+  })
+
+  it('repairs X-CHR-00 rows exported as quoted comma chunks', () => {
+    const csv = [
+      '"aidong_no,aidong_id,source_key,source_index_","ile,release_status,is_enabled",_source_csv',
+      '"1,AIDONG-0001,key,/root/","detail.md,active,Y",X-CHR-00_aidong_index.csv',
+    ].join('\n')
+
+    const result = parseStaticTableCsvText(csv, {
+      fileName: 'X-CHR-00_aidong_index.csv',
+    })
+
+    expect(result.headers).toEqual(['aidongNo', 'aidongId', 'sourceKey', 'sourceIndexFile', 'releaseStatus', 'isEnabled', '_sourceCsv'])
+    expect(result.rows[0].values).toMatchObject({
+      aidongNo: 1,
+      aidongId: 'AIDONG-0001',
+      sourceIndexFile: '/root/detail.md',
+      releaseStatus: 'active',
+      isEnabled: true,
+    })
+  })
+
   it('warns when a row has extra cells', () => {
     const result = parseStaticTableCsvText('currency_id,amount\ncoin,100,extra\n', {
       fileName: 'X-ECO-00_currency_master.csv',

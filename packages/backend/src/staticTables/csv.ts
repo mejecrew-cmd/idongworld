@@ -55,10 +55,13 @@ export function calculateStaticTableFileHash(text: string): string {
 export function toCamelCaseColumnName(columnName: string): string {
   const trimmed = columnName.trim()
   if (!trimmed) throw new Error('column_name_empty')
-  if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(trimmed)) throw new Error(`invalid_column_name:${columnName}`)
+  if (!/^_?[A-Za-z][A-Za-z0-9_]*$/.test(trimmed)) throw new Error(`invalid_column_name:${columnName}`)
   if (!trimmed.includes('_')) return trimmed
 
-  return trimmed
+  const privatePrefix = trimmed.startsWith('_') ? '_' : ''
+  const body = privatePrefix ? trimmed.slice(1) : trimmed
+
+  return privatePrefix + body
     .toLowerCase()
     .replace(/_([a-z0-9])/g, (_, char: string) => char.toUpperCase())
 }
@@ -141,11 +144,11 @@ export function parseStaticTableCsvText(
 ): StaticTableCsvParseResult {
   const sourceHash = calculateStaticTableFileHash(csvText)
   const issues: StaticTableCsvParseIssue[] = []
-  const records = parseCsvRecords(csvText)
-  const [headerRecord, ...bodyRecords] = records
-
   const tableCode = options.tableCode ?? (options.fileName ? parseStaticTableCodeFromFileName(options.fileName) : undefined)
   if (!tableCode) throw new Error('static_table_code_not_found')
+
+  const records = repairStaticTableRecords(parseCsvRecords(csvText), tableCode)
+  const [headerRecord, ...bodyRecords] = records
 
   if (!headerRecord) throw new Error('csv_header_required')
 
@@ -214,6 +217,18 @@ export function parseStaticTableCsvText(
 export async function parseStaticTableCsvFile(filePath: string): Promise<StaticTableCsvParseResult> {
   const csvText = await fs.readFile(filePath, 'utf8')
   return parseStaticTableCsvText(csvText, { fileName: filePath })
+}
+
+function repairStaticTableRecords(records: string[][], tableCode: string): string[][] {
+  if (tableCode !== 'X-CHR-00') return records
+
+  return records.map((record) => {
+    if (record.length < 2) return record
+    if (!record[0].includes(',') || !record[1].includes(',')) return record
+
+    const stitched = `${record[0]}${record[1]}`.replace(/\bsource_index_ile\b/g, 'source_index_file')
+    return [...stitched.split(','), ...record.slice(2)]
+  })
 }
 
 function dropTrailingCarriageReturn(value: string): string {
