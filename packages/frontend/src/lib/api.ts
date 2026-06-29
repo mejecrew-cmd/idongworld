@@ -5,6 +5,7 @@ const PASSWORD_SESSION_TOKEN_KEY = 'idongworld-password-session-token'
 
 interface FetchOpts extends RequestInit {
   uid?: string
+  okStatuses?: number[]
 }
 
 export interface ResourceRef {
@@ -427,7 +428,8 @@ async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T> {
     ...opts.headers,
   }
   const res = await fetch(`${API_URL}${path}`, { ...opts, headers })
-  if (!res.ok) {
+  const okStatuses = opts.okStatuses ?? []
+  if (!res.ok && !okStatuses.includes(res.status)) {
     const text = await res.text().catch(() => '')
     throw new Error(`API ${res.status}: ${text}`)
   }
@@ -563,18 +565,21 @@ export const api = {
       validation: AdminStaticTableValidation
     }>('/api/admin/static-tables/validate', {
       method: 'POST',
+      okStatuses: [422],
       body: JSON.stringify(request),
     }),
 
   adminStaticTableDryRun: (request: AdminStaticTableImportRequest = {}) =>
     apiFetch<AdminStaticTableImportPreview>('/api/admin/static-tables/dry-run', {
       method: 'POST',
+      okStatuses: [422],
       body: JSON.stringify(request),
     }),
 
   adminStaticTableCommit: (request: AdminStaticTableImportRequest = {}) =>
     apiFetch<AdminStaticTableImportPreview>('/api/admin/static-tables/commit', {
       method: 'POST',
+      okStatuses: [422],
       body: JSON.stringify(request),
     }),
 

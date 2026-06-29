@@ -129,6 +129,14 @@ describe('admin static table APIs', () => {
         }),
       })
       expect(dynamicCommit.status).toBe(422)
+      await expect(dynamicCommit.json()).resolves.toMatchObject({
+        error: 'static_import_validation_failed',
+        ok: false,
+        validation: {
+          errors: [expect.objectContaining({ code: 'excluded_table_commit_blocked' })],
+          summaries: [expect.objectContaining({ tableCode: 'G-USR-01' })],
+        },
+      })
 
       const dryRun = await fetch(`${baseUrl}/static-tables/dry-run`, {
         method: 'POST',
