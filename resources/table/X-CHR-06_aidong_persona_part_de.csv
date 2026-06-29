@@ -1,0 +1,37 @@
+persona_part_default_id,aidong_id,part_slot_id,slot_key,default_option_id,default_value,value_label,is_identity_locked,sort_order,is_enabled,_planner_note,_check_status,_source_csv,_updated_at
+PRS-DEF-AIDONG-0019-01,AIDONG-0019,PRS-SLOT-SILHOUETTE,silhouette_type,,SD 강아지 마스코트. 둥근 완구감과 읽기 쉬운 강아지 실루엣,SD 강아지 마스코트. 둥근 완구감과 읽기 쉬운 강아지 실루엣,Y,1,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-02,AIDONG-0019,PRS-SLOT-FACE-RHYTHM,face_rhythm,,"직접 얼굴 재현이 아니라 눈빛, 귀 각도, 입꼬리의 리듬으로 표현","직접 얼굴 재현이 아니라 눈빛, 귀 각도, 입꼬리의 리듬으로 표현",Y,2,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-03,AIDONG-0019,PRS-SLOT-EAR-SHAPE,ear_shape,,작게 반응하는 강아지 귀,작게 반응하는 강아지 귀,Y,3,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-04,AIDONG-0019,PRS-SLOT-TAIL-SHAPE,tail_shape,,리듬에 맞춰 흔들리는 강아지 꼬리,리듬에 맞춰 흔들리는 강아지 꼬리,Y,4,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-05,AIDONG-0019,PRS-SLOT-PAW-MARK,paw_mark,,갭댄스멍발자국,갭댄스멍발자국,Y,5,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-06,AIDONG-0019,PRS-SLOT-MOVEMENT,movement_style,,갭댄스멍등을 들고 강아지리본 쪽으로 움직이며 작은 장난으로 장면을 푼다,갭댄스멍등을 들고 강아지리본 쪽으로 움직이며 작은 장난으로 장면을 푼다,Y,6,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-07,AIDONG-0019,PRS-SLOT-COLOR-MOOD,color_mood,,"AB6IX 음반 메타포의 빛, 갭의 대비감, 강아지 기본색","AB6IX 음반 메타포의 빛, 갭의 대비감, 강아지 기본색",Y,7,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-08,AIDONG-0019,PRS-SLOT-ATTITUDE,attitude_part,,"과시보다 준비, 관찰, 반응의 리듬","과시보다 준비, 관찰, 반응의 리듬",Y,8,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-09,AIDONG-0019,PRS-SLOT-STAGE,stage_part,,갭댄스멍등과 강아지리본으로 옮긴 무대감,갭댄스멍등과 강아지리본으로 옮긴 무대감,Y,9,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-10,AIDONG-0019,PRS-SLOT-RELATION,relation_part,,갭댄스멍발자국과 박우진마이크에 보관한 친밀도 감각,갭댄스멍발자국과 박우진마이크에 보관한 친밀도 감각,Y,10,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-11,AIDONG-0019,PRS-SLOT-MISCHIEF,mischief_part,,"실수, 들킴, 작은 오작동, 괜히 모른 척하는 말투","실수, 들킴, 작은 오작동, 괜히 모른 척하는 말투",Y,11,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0019-12,AIDONG-0019,PRS-SLOT-SIGNATURE-PROPS,signature_props,,"갭댄스멍등, 강아지리본, 갭댄스멍발자국, 박우진마이크, AB6IX편지함, 강아지시계, 비밀열쇠, 기억스티커","갭댄스멍등, 강아지리본, 갭댄스멍발자국, 박우진마이크, AB6IX편지함, 강아지시계, 비밀열쇠, 기억스티커",Y,12,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-01,AIDONG-0119,PRS-SLOT-SILHOUETTE,silhouette_type,,SD 고양이 마스코트. 둥근 완구감과 읽기 쉬운 고양이 실루엣,SD 고양이 마스코트. 둥근 완구감과 읽기 쉬운 고양이 실루엣,Y,1,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-02,AIDONG-0119,PRS-SLOT-FACE-RHYTHM,face_rhythm,,"눈빛, 귀 각도, 입꼬리의 리듬으로 낮춘 산울림 같은 표정","눈빛, 귀 각도, 입꼬리의 리듬으로 낮춘 산울림 같은 표정",Y,2,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-03,AIDONG-0119,PRS-SLOT-EAR-SHAPE,ear_shape,,소리에 반응하는 고양이 귀,소리에 반응하는 고양이 귀,Y,3,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-04,AIDONG-0119,PRS-SLOT-TAIL-SHAPE,tail_shape,,울림을 따라 천천히 휘는 고양이 꼬리,울림을 따라 천천히 휘는 고양이 꼬리,Y,4,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-05,AIDONG-0119,PRS-SLOT-PAW-MARK,paw_mark,,산울림냥발자국,산울림냥발자국,Y,5,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-06,AIDONG-0119,PRS-SLOT-MOVEMENT,movement_style,,산울림냥등을 들고 고양이리본 쪽으로 움직이며 고양이다운 작은 장난으로 장면을 푼다,산울림냥등을 들고 고양이리본 쪽으로 움직이며 고양이다운 작은 장난으로 장면을 푼다,Y,6,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-07,AIDONG-0119,PRS-SLOT-COLOR-MOOD,color_mood,,"BOYNEXTDOOR 음반 메타포의 빛, 골목의 울림, 고양이 기본색","BOYNEXTDOOR 음반 메타포의 빛, 골목의 울림, 고양이 기본색",Y,7,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-08,AIDONG-0119,PRS-SLOT-ATTITUDE,attitude_part,,"과시보다 준비, 관찰, 반응의 리듬","과시보다 준비, 관찰, 반응의 리듬",Y,8,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-09,AIDONG-0119,PRS-SLOT-STAGE,stage_part,,산울림냥등과 고양이리본으로 옮긴 무대감,산울림냥등과 고양이리본으로 옮긴 무대감,Y,9,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-10,AIDONG-0119,PRS-SLOT-RELATION,relation_part,,산울림냥발자국과 태산마이크에 보관한 친밀도 감각,산울림냥발자국과 태산마이크에 보관한 친밀도 감각,Y,10,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-11,AIDONG-0119,PRS-SLOT-MISCHIEF,mischief_part,,"실수, 들킴, 작은 오작동, 괜히 모른 척하는 말투","실수, 들킴, 작은 오작동, 괜히 모른 척하는 말투",Y,11,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0119-12,AIDONG-0119,PRS-SLOT-SIGNATURE-PROPS,signature_props,,"산울림냥등, 고양이리본, 산울림냥발자국, 태산마이크, BOYNEXTDOOR편지함, 고양이시계, 비밀열쇠, 한동민스티커","산울림냥등, 고양이리본, 산울림냥발자국, 태산마이크, BOYNEXTDOOR편지함, 고양이시계, 비밀열쇠, 한동민스티커",Y,12,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-01,AIDONG-0172,PRS-SLOT-SILHOUETTE,silhouette_type,,SD 고양이 마스코트. 둥근 완구감과 읽기 쉬운 고양이 실루엣,SD 고양이 마스코트. 둥근 완구감과 읽기 쉬운 고양이 실루엣,Y,1,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-02,AIDONG-0172,PRS-SLOT-FACE-RHYTHM,face_rhythm,,"별빛을 보는 듯한 눈빛과 귀 각도, 입꼬리의 리듬","별빛을 보는 듯한 눈빛과 귀 각도, 입꼬리의 리듬",Y,2,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-03,AIDONG-0172,PRS-SLOT-EAR-SHAPE,ear_shape,,별빛 쪽으로 살짝 기울어진 고양이 귀,별빛 쪽으로 살짝 기울어진 고양이 귀,Y,3,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-04,AIDONG-0172,PRS-SLOT-TAIL-SHAPE,tail_shape,,작은 별빛 곡선을 그리는 고양이 꼬리,작은 별빛 곡선을 그리는 고양이 꼬리,Y,4,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-05,AIDONG-0172,PRS-SLOT-PAW-MARK,paw_mark,,별빛냥발자국,별빛냥발자국,Y,5,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-06,AIDONG-0172,PRS-SLOT-MOVEMENT,movement_style,,별빛냥등을 들고 고양이리본 쪽으로 움직이며 고양이다운 작은 장난으로 장면을 푼다,별빛냥등을 들고 고양이리본 쪽으로 움직이며 고양이다운 작은 장난으로 장면을 푼다,Y,6,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-07,AIDONG-0172,PRS-SLOT-COLOR-MOOD,color_mood,,"DKZ 음반 메타포의 빛, 별빛 키워드, 고양이 기본색","DKZ 음반 메타포의 빛, 별빛 키워드, 고양이 기본색",Y,7,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-08,AIDONG-0172,PRS-SLOT-ATTITUDE,attitude_part,,"과시보다 준비, 관찰, 반응의 리듬","과시보다 준비, 관찰, 반응의 리듬",Y,8,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-09,AIDONG-0172,PRS-SLOT-STAGE,stage_part,,별빛냥등과 고양이리본으로 옮긴 무대감,별빛냥등과 고양이리본으로 옮긴 무대감,Y,9,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-10,AIDONG-0172,PRS-SLOT-RELATION,relation_part,,별빛냥발자국과 재찬냥마이크에 보관한 친밀도 감각,별빛냥발자국과 재찬냥마이크에 보관한 친밀도 감각,Y,10,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-11,AIDONG-0172,PRS-SLOT-MISCHIEF,mischief_part,,"실수, 들킴, 작은 오작동, 괜히 모른 척하는 말투","실수, 들킴, 작은 오작동, 괜히 모른 척하는 말투",Y,11,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29
+PRS-DEF-AIDONG-0172-12,AIDONG-0172,PRS-SLOT-SIGNATURE-PROPS,signature_props,,"별빛냥등, 고양이리본, 별빛냥발자국, 재찬냥마이크, 재찬편지함, DKZ시계, 고양이열쇠, 기억스티커","별빛냥등, 고양이리본, 별빛냥발자국, 재찬냥마이크, 재찬편지함, DKZ시계, 고양이열쇠, 기억스티커",Y,12,Y,,,X-CHR-06_aidong_persona_part_default.csv,2026-06-29

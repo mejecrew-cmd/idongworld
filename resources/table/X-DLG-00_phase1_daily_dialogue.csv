@@ -1,0 +1,301 @@
+dialogue_id,aidong_id,seq_no,dialogue_text,dialogue_string_id,situation_tag,time_band,mood_tag,affection_min,affection_max,need_condition_tag,priority,weight,cooldown_group,is_once_per_day,release_status,is_enabled,_planner_note,_check_status,_source_csv,_updated_at
+AIDONG-0019_DLG001,AIDONG-0019,1,아이동은 새벽빛을 닦아 뒀어. 불빛처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG002,AIDONG-0019,2,살짝 놀랐지? 친구의 편지함이 먼저 반응했어. 등불처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG003,AIDONG-0019,3,이 섬에서는 작은잔이 길을 알려 줘. 물결처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG004,AIDONG-0019,4,네가 웃으면 발자국이 제일 먼저 밝아져. 산책처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG005,AIDONG-0019,5,아이동은 리본을 맞춰 뒀어. 사뿐함처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG006,AIDONG-0019,6,살짝 놀랐지? 친구의 온기가 먼저 반응했어. 물감처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG007,AIDONG-0019,7,이 섬에서는 박자가 길을 알려 줘. 숨결처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG008,AIDONG-0019,8,네가 웃으면 손끝이 제일 먼저 밝아져. 향기처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG009,AIDONG-0019,9,아이동은 기억을 접어 뒀어. 입구처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG010,AIDONG-0019,10,살짝 놀랐지? 친구의 불빛이 먼저 반응했어. 사이처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG011,AIDONG-0019,11,이 섬에서는 창가가 길을 알려 줘. 마중처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG012,AIDONG-0019,12,네가 웃으면 숨결이 제일 먼저 밝아져. 문패처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG013,AIDONG-0019,13,아이동은 우표를 감싸 뒀어. 열쇠처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG014,AIDONG-0019,14,살짝 놀랐지? 친구의 열쇠가 먼저 반응했어. 눈빛처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG015,AIDONG-0019,15,이 섬에서는 표식이 길을 알려 줘. 카드처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG016,AIDONG-0019,16,네가 웃으면 장면이 제일 먼저 밝아져. 신호처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG017,AIDONG-0019,17,아이동은 웃음을 켜 뒀어. 기다림처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG018,AIDONG-0019,18,살짝 놀랐지? 친구의 기분이 먼저 반응했어. 작은길처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG019,AIDONG-0019,19,이 섬에서는 그늘이 길을 알려 줘. 장면처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG020,AIDONG-0019,20,네가 웃으면 햇살이 제일 먼저 밝아져. 바람처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG021,AIDONG-0019,21,아이동은 노트를 닦아 뒀어. 빛무늬처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG022,AIDONG-0019,22,살짝 놀랐지? 친구의 문턱이 먼저 반응했어. 커튼처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG023,AIDONG-0019,23,이 섬에서는 종소리가 길을 알려 줘. 친밀감처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG024,AIDONG-0019,24,네가 웃으면 벤치가 제일 먼저 밝아져. 새벽빛처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG025,AIDONG-0019,25,아이동은 발소리를 맞춰 뒀어. 기분처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG026,AIDONG-0019,26,살짝 놀랐지? 친구의 실루엣이 먼저 반응했어. 마음처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG027,AIDONG-0019,27,이 섬에서는 등불이 길을 알려 줘. 무대처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG028,AIDONG-0019,28,네가 웃으면 모서리가 제일 먼저 밝아져. 잔향처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG029,AIDONG-0019,29,아이동은 향기를 접어 뒀어. 장난처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG030,AIDONG-0019,30,살짝 놀랐지? 친구의 리듬이 먼저 반응했어. 작은잔처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG031,AIDONG-0019,31,이 섬에서는 눈빛이 길을 알려 줘. 햇살처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG032,AIDONG-0019,32,네가 웃으면 약속이 제일 먼저 밝아져. 지도처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG033,AIDONG-0019,33,아이동은 바람을 감싸 뒀어. 대답처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG034,AIDONG-0019,34,살짝 놀랐지? 친구의 자리가 먼저 반응했어. 틈새처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG035,AIDONG-0019,35,이 섬에서는 마음이 길을 알려 줘. 집중처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG036,AIDONG-0019,36,네가 웃으면 시계가 제일 먼저 밝아져. 리본처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG037,AIDONG-0019,37,아이동은 지도를 켜 뒀어. 문턱처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG038,AIDONG-0019,38,살짝 놀랐지? 친구의 손짓이 먼저 반응했어. 고요처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG039,AIDONG-0019,39,이 섬에서는 고요가 길을 알려 줘. 선물처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG040,AIDONG-0019,40,네가 웃으면 속도가 제일 먼저 밝아져. 소리처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG041,AIDONG-0019,41,아이동은 조각을 닦아 뒀어. 여운처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG042,AIDONG-0019,42,살짝 놀랐지? 친구의 문장이 먼저 반응했어. 박자처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG043,AIDONG-0019,43,이 섬에서는 표정이 길을 알려 줘. 벤치처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG044,AIDONG-0019,44,네가 웃으면 물결이 제일 먼저 밝아져. 조각처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG045,AIDONG-0019,45,아이동은 계단을 맞춰 뒀어. 멜로디처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG046,AIDONG-0019,46,살짝 놀랐지? 친구의 입구가 먼저 반응했어. 낮잠처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG047,AIDONG-0019,47,이 섬에서는 소품이 길을 알려 줘. 균형처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG048,AIDONG-0019,48,네가 웃으면 카드가 제일 먼저 밝아져. 기억처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG049,AIDONG-0019,49,아이동은 상자를 접어 뒀어. 실루엣처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG050,AIDONG-0019,50,살짝 놀랐지? 친구의 빛무늬가 먼저 반응했어. 표정처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG051,AIDONG-0019,51,이 섬에서는 연습이 길을 알려 줘. 쉼표처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG052,AIDONG-0019,52,네가 웃으면 무대가 제일 먼저 밝아져. 반짝임처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG053,AIDONG-0019,53,아이동은 호흡을 감싸 뒀어. 꽃잎처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG054,AIDONG-0019,54,살짝 놀랐지? 친구의 대답이 먼저 반응했어. 창가처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG055,AIDONG-0019,55,이 섬에서는 쪽지가 길을 알려 줘. 모서리처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG056,AIDONG-0019,56,네가 웃으면 선물이 제일 먼저 밝아져. 계단처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG057,AIDONG-0019,57,아이동은 기척을 켜 뒀어. 온도처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG058,AIDONG-0019,58,살짝 놀랐지? 친구의 멜로디가 먼저 반응했어. 동그라미처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG059,AIDONG-0019,59,이 섬에서는 발끝이 길을 알려 줘. 바구니처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG060,AIDONG-0019,60,네가 웃으면 쉼표가 제일 먼저 밝아져. 우표처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG061,AIDONG-0019,61,아이동은 산책을 닦아 뒀어. 리듬처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG062,AIDONG-0019,62,살짝 놀랐지? 친구의 온도가 먼저 반응했어. 소품처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG063,AIDONG-0019,63,이 섬에서는 사이가 길을 알려 줘. 울림처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG064,AIDONG-0019,64,네가 웃으면 울림이 제일 먼저 밝아져. 여백처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG065,AIDONG-0019,65,아이동은 신호를 맞춰 뒀어. 온실처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG066,AIDONG-0019,66,살짝 놀랐지? 친구의 먼지가 먼저 반응했어. 표식처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG067,AIDONG-0019,67,이 섬에서는 커튼이 길을 알려 줘. 약속처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG068,AIDONG-0019,68,네가 웃으면 별빛이 제일 먼저 밝아져. 상자처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG069,AIDONG-0019,69,아이동은 잔향을 접어 뒀어. 먼지처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG070,AIDONG-0019,70,살짝 놀랐지? 친구의 미소가 먼저 반응했어. 첫인사처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG071,AIDONG-0019,71,이 섬에서는 틈새가 길을 알려 줘. 낮은등처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG072,AIDONG-0019,72,네가 웃으면 구름이 제일 먼저 밝아져. 웃음처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG073,AIDONG-0019,73,아이동은 소리를 감싸 뒀어. 자리처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG074,AIDONG-0019,74,살짝 놀랐지? 친구의 감각이 먼저 반응했어. 연습처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG075,AIDONG-0019,75,이 섬에서는 낮잠이 길을 알려 줘. 별빛처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG076,AIDONG-0019,76,네가 웃으면 방향이 제일 먼저 밝아져. 차분함처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG077,AIDONG-0019,77,아이동은 반짝임을 켜 뒀어. 편지함처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG078,AIDONG-0019,78,살짝 놀랐지? 친구의 사뿐함이 먼저 반응했어. 그늘처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG079,AIDONG-0019,79,이 섬에서는 동그라미가 길을 알려 줘. 시계처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG080,AIDONG-0019,80,네가 웃으면 마중이 제일 먼저 밝아져. 호흡처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG081,AIDONG-0019,81,아이동은 여백을 닦아 뒀어. 미소처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG082,AIDONG-0019,82,살짝 놀랐지? 친구의 기다림이 먼저 반응했어. 다정함처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG083,AIDONG-0019,83,이 섬에서는 첫인사가 길을 알려 줘. 발자국처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG084,AIDONG-0019,84,네가 웃으면 친밀감이 제일 먼저 밝아져. 노트처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG085,AIDONG-0019,85,아이동은 차분함을 맞춰 뒀어. 손짓처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG086,AIDONG-0019,86,살짝 놀랐지? 친구의 장난이 먼저 반응했어. 쪽지처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG087,AIDONG-0019,87,이 섬에서는 다정함이 길을 알려 줘. 구름처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG088,AIDONG-0019,88,네가 웃으면 집중이 제일 먼저 밝아져. 포근함처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG089,AIDONG-0019,89,아이동은 포근함을 접어 뒀어. 온기처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG090,AIDONG-0019,90,살짝 놀랐지? 친구의 여운이 먼저 반응했어. 종소리처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG091,AIDONG-0019,91,이 섬에서는 느림이 길을 알려 줘. 속도처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG092,AIDONG-0019,92,네가 웃으면 균형이 제일 먼저 밝아져. 기척처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG093,AIDONG-0019,93,아이동은 마디를 감싸 뒀어. 감각처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG094,AIDONG-0019,94,살짝 놀랐지? 친구의 꽃잎이 먼저 반응했어. 느림처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG095,AIDONG-0019,95,이 섬에서는 물감이 길을 알려 줘. 손끝처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG096,AIDONG-0019,96,네가 웃으면 바구니가 제일 먼저 밝아져. 발소리처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG097,AIDONG-0019,97,아이동은 문패를 켜 뒀어. 문장처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG098,AIDONG-0019,98,살짝 놀랐지? 친구의 온실이 먼저 반응했어. 발끝처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG099,AIDONG-0019,99,이 섬에서는 작은길이 길을 알려 줘. 방향처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0019_DLG100,AIDONG-0019,100,네가 웃으면 낮은등이 제일 먼저 밝아져. 마디처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0019_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG001,AIDONG-0119,1,아이동은 새벽빛을 닦아 뒀어. 불빛처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG002,AIDONG-0119,2,살짝 놀랐지? 친구의 편지함이 먼저 반응했어. 등불처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG003,AIDONG-0119,3,이 섬에서는 작은잔이 길을 알려 줘. 물결처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG004,AIDONG-0119,4,네가 웃으면 발자국이 제일 먼저 밝아져. 산책처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG005,AIDONG-0119,5,아이동은 리본을 맞춰 뒀어. 사뿐함처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG006,AIDONG-0119,6,살짝 놀랐지? 친구의 온기가 먼저 반응했어. 물감처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG007,AIDONG-0119,7,이 섬에서는 박자가 길을 알려 줘. 숨결처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG008,AIDONG-0119,8,네가 웃으면 손끝이 제일 먼저 밝아져. 향기처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG009,AIDONG-0119,9,아이동은 기억을 접어 뒀어. 입구처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG010,AIDONG-0119,10,살짝 놀랐지? 친구의 불빛이 먼저 반응했어. 사이처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG011,AIDONG-0119,11,이 섬에서는 창가가 길을 알려 줘. 마중처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG012,AIDONG-0119,12,네가 웃으면 숨결이 제일 먼저 밝아져. 문패처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG013,AIDONG-0119,13,아이동은 우표를 감싸 뒀어. 열쇠처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG014,AIDONG-0119,14,살짝 놀랐지? 친구의 열쇠가 먼저 반응했어. 눈빛처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG015,AIDONG-0119,15,이 섬에서는 표식이 길을 알려 줘. 카드처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG016,AIDONG-0119,16,네가 웃으면 장면이 제일 먼저 밝아져. 신호처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG017,AIDONG-0119,17,아이동은 웃음을 켜 뒀어. 기다림처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG018,AIDONG-0119,18,살짝 놀랐지? 친구의 기분이 먼저 반응했어. 작은길처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG019,AIDONG-0119,19,이 섬에서는 그늘이 길을 알려 줘. 장면처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG020,AIDONG-0119,20,네가 웃으면 햇살이 제일 먼저 밝아져. 바람처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG021,AIDONG-0119,21,아이동은 노트를 닦아 뒀어. 빛무늬처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG022,AIDONG-0119,22,살짝 놀랐지? 친구의 문턱이 먼저 반응했어. 커튼처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG023,AIDONG-0119,23,이 섬에서는 종소리가 길을 알려 줘. 친밀감처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG024,AIDONG-0119,24,네가 웃으면 벤치가 제일 먼저 밝아져. 새벽빛처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG025,AIDONG-0119,25,아이동은 발소리를 맞춰 뒀어. 기분처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG026,AIDONG-0119,26,살짝 놀랐지? 친구의 실루엣이 먼저 반응했어. 마음처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG027,AIDONG-0119,27,이 섬에서는 등불이 길을 알려 줘. 무대처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG028,AIDONG-0119,28,네가 웃으면 모서리가 제일 먼저 밝아져. 잔향처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG029,AIDONG-0119,29,아이동은 향기를 접어 뒀어. 장난처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG030,AIDONG-0119,30,살짝 놀랐지? 친구의 리듬이 먼저 반응했어. 작은잔처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG031,AIDONG-0119,31,이 섬에서는 눈빛이 길을 알려 줘. 햇살처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG032,AIDONG-0119,32,네가 웃으면 약속이 제일 먼저 밝아져. 지도처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG033,AIDONG-0119,33,아이동은 바람을 감싸 뒀어. 대답처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG034,AIDONG-0119,34,살짝 놀랐지? 친구의 자리가 먼저 반응했어. 틈새처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG035,AIDONG-0119,35,이 섬에서는 마음이 길을 알려 줘. 집중처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG036,AIDONG-0119,36,네가 웃으면 시계가 제일 먼저 밝아져. 리본처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG037,AIDONG-0119,37,아이동은 지도를 켜 뒀어. 문턱처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG038,AIDONG-0119,38,살짝 놀랐지? 친구의 손짓이 먼저 반응했어. 고요처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG039,AIDONG-0119,39,이 섬에서는 고요가 길을 알려 줘. 선물처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG040,AIDONG-0119,40,네가 웃으면 속도가 제일 먼저 밝아져. 소리처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG041,AIDONG-0119,41,아이동은 조각을 닦아 뒀어. 여운처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG042,AIDONG-0119,42,살짝 놀랐지? 친구의 문장이 먼저 반응했어. 박자처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG043,AIDONG-0119,43,이 섬에서는 표정이 길을 알려 줘. 벤치처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG044,AIDONG-0119,44,네가 웃으면 물결이 제일 먼저 밝아져. 조각처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG045,AIDONG-0119,45,아이동은 계단을 맞춰 뒀어. 멜로디처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG046,AIDONG-0119,46,살짝 놀랐지? 친구의 입구가 먼저 반응했어. 낮잠처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG047,AIDONG-0119,47,이 섬에서는 소품이 길을 알려 줘. 균형처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG048,AIDONG-0119,48,네가 웃으면 카드가 제일 먼저 밝아져. 기억처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG049,AIDONG-0119,49,아이동은 상자를 접어 뒀어. 실루엣처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG050,AIDONG-0119,50,살짝 놀랐지? 친구의 빛무늬가 먼저 반응했어. 표정처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG051,AIDONG-0119,51,이 섬에서는 연습이 길을 알려 줘. 쉼표처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG052,AIDONG-0119,52,네가 웃으면 무대가 제일 먼저 밝아져. 반짝임처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG053,AIDONG-0119,53,아이동은 호흡을 감싸 뒀어. 꽃잎처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG054,AIDONG-0119,54,살짝 놀랐지? 친구의 대답이 먼저 반응했어. 창가처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG055,AIDONG-0119,55,이 섬에서는 쪽지가 길을 알려 줘. 모서리처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG056,AIDONG-0119,56,네가 웃으면 선물이 제일 먼저 밝아져. 계단처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG057,AIDONG-0119,57,아이동은 기척을 켜 뒀어. 온도처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG058,AIDONG-0119,58,살짝 놀랐지? 친구의 멜로디가 먼저 반응했어. 동그라미처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG059,AIDONG-0119,59,이 섬에서는 발끝이 길을 알려 줘. 바구니처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG060,AIDONG-0119,60,네가 웃으면 쉼표가 제일 먼저 밝아져. 우표처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG061,AIDONG-0119,61,아이동은 산책을 닦아 뒀어. 리듬처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG062,AIDONG-0119,62,살짝 놀랐지? 친구의 온도가 먼저 반응했어. 소품처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG063,AIDONG-0119,63,이 섬에서는 사이가 길을 알려 줘. 울림처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG064,AIDONG-0119,64,네가 웃으면 울림이 제일 먼저 밝아져. 여백처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG065,AIDONG-0119,65,아이동은 신호를 맞춰 뒀어. 온실처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG066,AIDONG-0119,66,살짝 놀랐지? 친구의 먼지가 먼저 반응했어. 표식처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG067,AIDONG-0119,67,이 섬에서는 커튼이 길을 알려 줘. 약속처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG068,AIDONG-0119,68,네가 웃으면 별빛이 제일 먼저 밝아져. 상자처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG069,AIDONG-0119,69,아이동은 잔향을 접어 뒀어. 먼지처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG070,AIDONG-0119,70,살짝 놀랐지? 친구의 미소가 먼저 반응했어. 첫인사처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG071,AIDONG-0119,71,이 섬에서는 틈새가 길을 알려 줘. 낮은등처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG072,AIDONG-0119,72,네가 웃으면 구름이 제일 먼저 밝아져. 웃음처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG073,AIDONG-0119,73,아이동은 소리를 감싸 뒀어. 자리처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG074,AIDONG-0119,74,살짝 놀랐지? 친구의 감각이 먼저 반응했어. 연습처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG075,AIDONG-0119,75,이 섬에서는 낮잠이 길을 알려 줘. 별빛처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG076,AIDONG-0119,76,네가 웃으면 방향이 제일 먼저 밝아져. 차분함처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG077,AIDONG-0119,77,아이동은 반짝임을 켜 뒀어. 편지함처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG078,AIDONG-0119,78,살짝 놀랐지? 친구의 사뿐함이 먼저 반응했어. 그늘처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG079,AIDONG-0119,79,이 섬에서는 동그라미가 길을 알려 줘. 시계처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG080,AIDONG-0119,80,네가 웃으면 마중이 제일 먼저 밝아져. 호흡처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG081,AIDONG-0119,81,아이동은 여백을 닦아 뒀어. 미소처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG082,AIDONG-0119,82,살짝 놀랐지? 친구의 기다림이 먼저 반응했어. 다정함처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG083,AIDONG-0119,83,이 섬에서는 첫인사가 길을 알려 줘. 발자국처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG084,AIDONG-0119,84,네가 웃으면 친밀감이 제일 먼저 밝아져. 노트처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG085,AIDONG-0119,85,아이동은 차분함을 맞춰 뒀어. 손짓처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG086,AIDONG-0119,86,살짝 놀랐지? 친구의 장난이 먼저 반응했어. 쪽지처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG087,AIDONG-0119,87,이 섬에서는 다정함이 길을 알려 줘. 구름처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG088,AIDONG-0119,88,네가 웃으면 집중이 제일 먼저 밝아져. 포근함처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG089,AIDONG-0119,89,아이동은 포근함을 접어 뒀어. 온기처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG090,AIDONG-0119,90,살짝 놀랐지? 친구의 여운이 먼저 반응했어. 종소리처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG091,AIDONG-0119,91,이 섬에서는 느림이 길을 알려 줘. 속도처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG092,AIDONG-0119,92,네가 웃으면 균형이 제일 먼저 밝아져. 기척처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG093,AIDONG-0119,93,아이동은 마디를 감싸 뒀어. 감각처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG094,AIDONG-0119,94,살짝 놀랐지? 친구의 꽃잎이 먼저 반응했어. 느림처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG095,AIDONG-0119,95,이 섬에서는 물감이 길을 알려 줘. 손끝처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG096,AIDONG-0119,96,네가 웃으면 바구니가 제일 먼저 밝아져. 발소리처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG097,AIDONG-0119,97,아이동은 문패를 켜 뒀어. 문장처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG098,AIDONG-0119,98,살짝 놀랐지? 친구의 온실이 먼저 반응했어. 발끝처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG099,AIDONG-0119,99,이 섬에서는 작은길이 길을 알려 줘. 방향처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0119_DLG100,AIDONG-0119,100,네가 웃으면 낮은등이 제일 먼저 밝아져. 마디처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0119_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG001,AIDONG-0172,1,아이동은 새벽빛을 닦아 뒀어. 불빛처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG002,AIDONG-0172,2,살짝 놀랐지? 친구의 편지함이 먼저 반응했어. 등불처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG003,AIDONG-0172,3,이 섬에서는 작은잔이 길을 알려 줘. 물결처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG004,AIDONG-0172,4,네가 웃으면 발자국이 제일 먼저 밝아져. 산책처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG005,AIDONG-0172,5,아이동은 리본을 맞춰 뒀어. 사뿐함처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG006,AIDONG-0172,6,살짝 놀랐지? 친구의 온기가 먼저 반응했어. 물감처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG007,AIDONG-0172,7,이 섬에서는 박자가 길을 알려 줘. 숨결처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG008,AIDONG-0172,8,네가 웃으면 손끝이 제일 먼저 밝아져. 향기처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG009,AIDONG-0172,9,아이동은 기억을 접어 뒀어. 입구처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG010,AIDONG-0172,10,살짝 놀랐지? 친구의 불빛이 먼저 반응했어. 사이처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG011,AIDONG-0172,11,이 섬에서는 창가가 길을 알려 줘. 마중처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG012,AIDONG-0172,12,네가 웃으면 숨결이 제일 먼저 밝아져. 문패처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG013,AIDONG-0172,13,아이동은 우표를 감싸 뒀어. 열쇠처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG014,AIDONG-0172,14,살짝 놀랐지? 친구의 열쇠가 먼저 반응했어. 눈빛처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG015,AIDONG-0172,15,이 섬에서는 표식이 길을 알려 줘. 카드처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG016,AIDONG-0172,16,네가 웃으면 장면이 제일 먼저 밝아져. 신호처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG017,AIDONG-0172,17,아이동은 웃음을 켜 뒀어. 기다림처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG018,AIDONG-0172,18,살짝 놀랐지? 친구의 기분이 먼저 반응했어. 작은길처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG019,AIDONG-0172,19,이 섬에서는 그늘이 길을 알려 줘. 장면처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG020,AIDONG-0172,20,네가 웃으면 햇살이 제일 먼저 밝아져. 바람처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG021,AIDONG-0172,21,아이동은 노트를 닦아 뒀어. 빛무늬처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG022,AIDONG-0172,22,살짝 놀랐지? 친구의 문턱이 먼저 반응했어. 커튼처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG023,AIDONG-0172,23,이 섬에서는 종소리가 길을 알려 줘. 친밀감처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG024,AIDONG-0172,24,네가 웃으면 벤치가 제일 먼저 밝아져. 새벽빛처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG025,AIDONG-0172,25,아이동은 발소리를 맞춰 뒀어. 기분처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG026,AIDONG-0172,26,살짝 놀랐지? 친구의 실루엣이 먼저 반응했어. 마음처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG027,AIDONG-0172,27,이 섬에서는 등불이 길을 알려 줘. 무대처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG028,AIDONG-0172,28,네가 웃으면 모서리가 제일 먼저 밝아져. 잔향처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG029,AIDONG-0172,29,아이동은 향기를 접어 뒀어. 장난처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG030,AIDONG-0172,30,살짝 놀랐지? 친구의 리듬이 먼저 반응했어. 작은잔처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG031,AIDONG-0172,31,이 섬에서는 눈빛이 길을 알려 줘. 햇살처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG032,AIDONG-0172,32,네가 웃으면 약속이 제일 먼저 밝아져. 지도처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG033,AIDONG-0172,33,아이동은 바람을 감싸 뒀어. 대답처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG034,AIDONG-0172,34,살짝 놀랐지? 친구의 자리가 먼저 반응했어. 틈새처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG035,AIDONG-0172,35,이 섬에서는 마음이 길을 알려 줘. 집중처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG036,AIDONG-0172,36,네가 웃으면 시계가 제일 먼저 밝아져. 리본처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG037,AIDONG-0172,37,아이동은 지도를 켜 뒀어. 문턱처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG038,AIDONG-0172,38,살짝 놀랐지? 친구의 손짓이 먼저 반응했어. 고요처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG039,AIDONG-0172,39,이 섬에서는 고요가 길을 알려 줘. 선물처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG040,AIDONG-0172,40,네가 웃으면 속도가 제일 먼저 밝아져. 소리처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG041,AIDONG-0172,41,아이동은 조각을 닦아 뒀어. 여운처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG042,AIDONG-0172,42,살짝 놀랐지? 친구의 문장이 먼저 반응했어. 박자처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG043,AIDONG-0172,43,이 섬에서는 표정이 길을 알려 줘. 벤치처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG044,AIDONG-0172,44,네가 웃으면 물결이 제일 먼저 밝아져. 조각처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG045,AIDONG-0172,45,아이동은 계단을 맞춰 뒀어. 멜로디처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG046,AIDONG-0172,46,살짝 놀랐지? 친구의 입구가 먼저 반응했어. 낮잠처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG047,AIDONG-0172,47,이 섬에서는 소품이 길을 알려 줘. 균형처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG048,AIDONG-0172,48,네가 웃으면 카드가 제일 먼저 밝아져. 기억처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG049,AIDONG-0172,49,아이동은 상자를 접어 뒀어. 실루엣처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG050,AIDONG-0172,50,살짝 놀랐지? 친구의 빛무늬가 먼저 반응했어. 표정처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG051,AIDONG-0172,51,이 섬에서는 연습이 길을 알려 줘. 쉼표처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG052,AIDONG-0172,52,네가 웃으면 무대가 제일 먼저 밝아져. 반짝임처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG053,AIDONG-0172,53,아이동은 호흡을 감싸 뒀어. 꽃잎처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG054,AIDONG-0172,54,살짝 놀랐지? 친구의 대답이 먼저 반응했어. 창가처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG055,AIDONG-0172,55,이 섬에서는 쪽지가 길을 알려 줘. 모서리처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG056,AIDONG-0172,56,네가 웃으면 선물이 제일 먼저 밝아져. 계단처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG057,AIDONG-0172,57,아이동은 기척을 켜 뒀어. 온도처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG058,AIDONG-0172,58,살짝 놀랐지? 친구의 멜로디가 먼저 반응했어. 동그라미처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG059,AIDONG-0172,59,이 섬에서는 발끝이 길을 알려 줘. 바구니처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG060,AIDONG-0172,60,네가 웃으면 쉼표가 제일 먼저 밝아져. 우표처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG061,AIDONG-0172,61,아이동은 산책을 닦아 뒀어. 리듬처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG062,AIDONG-0172,62,살짝 놀랐지? 친구의 온도가 먼저 반응했어. 소품처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG063,AIDONG-0172,63,이 섬에서는 사이가 길을 알려 줘. 울림처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG064,AIDONG-0172,64,네가 웃으면 울림이 제일 먼저 밝아져. 여백처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG065,AIDONG-0172,65,아이동은 신호를 맞춰 뒀어. 온실처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG066,AIDONG-0172,66,살짝 놀랐지? 친구의 먼지가 먼저 반응했어. 표식처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG067,AIDONG-0172,67,이 섬에서는 커튼이 길을 알려 줘. 약속처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG068,AIDONG-0172,68,네가 웃으면 별빛이 제일 먼저 밝아져. 상자처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG069,AIDONG-0172,69,아이동은 잔향을 접어 뒀어. 먼지처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG070,AIDONG-0172,70,살짝 놀랐지? 친구의 미소가 먼저 반응했어. 첫인사처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG071,AIDONG-0172,71,이 섬에서는 틈새가 길을 알려 줘. 낮은등처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG072,AIDONG-0172,72,네가 웃으면 구름이 제일 먼저 밝아져. 웃음처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG073,AIDONG-0172,73,아이동은 소리를 감싸 뒀어. 자리처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG074,AIDONG-0172,74,살짝 놀랐지? 친구의 감각이 먼저 반응했어. 연습처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG075,AIDONG-0172,75,이 섬에서는 낮잠이 길을 알려 줘. 별빛처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG076,AIDONG-0172,76,네가 웃으면 방향이 제일 먼저 밝아져. 차분함처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG077,AIDONG-0172,77,아이동은 반짝임을 켜 뒀어. 편지함처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG078,AIDONG-0172,78,살짝 놀랐지? 친구의 사뿐함이 먼저 반응했어. 그늘처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG079,AIDONG-0172,79,이 섬에서는 동그라미가 길을 알려 줘. 시계처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG080,AIDONG-0172,80,네가 웃으면 마중이 제일 먼저 밝아져. 호흡처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG081,AIDONG-0172,81,아이동은 여백을 닦아 뒀어. 미소처럼 천천히 보여 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG082,AIDONG-0172,82,살짝 놀랐지? 친구의 기다림이 먼저 반응했어. 다정함처럼 차분하게 맞춰 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG083,AIDONG-0172,83,이 섬에서는 첫인사가 길을 알려 줘. 발자국처럼 천천히 데워 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG084,AIDONG-0172,84,네가 웃으면 친밀감이 제일 먼저 밝아져. 노트처럼 조용히 남겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG085,AIDONG-0172,85,아이동은 차분함을 맞춰 뒀어. 손짓처럼 오래 기억해 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG086,AIDONG-0172,86,살짝 놀랐지? 친구의 장난이 먼저 반응했어. 쪽지처럼 서두르지 않을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG087,AIDONG-0172,87,이 섬에서는 다정함이 길을 알려 줘. 구름처럼 다정하게 반겨 줄게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG088,AIDONG-0172,88,네가 웃으면 집중이 제일 먼저 밝아져. 포근함처럼 먼저 알아볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG089,AIDONG-0172,89,아이동은 포근함을 접어 뒀어. 온기처럼 작게 접어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG090,AIDONG-0172,90,살짝 놀랐지? 친구의 여운이 먼저 반응했어. 종소리처럼 조금 더 기다릴게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG091,AIDONG-0172,91,이 섬에서는 느림이 길을 알려 줘. 속도처럼 편하게 열어 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG092,AIDONG-0172,92,네가 웃으면 균형이 제일 먼저 밝아져. 기척처럼 밝게 켜 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG093,AIDONG-0172,93,아이동은 마디를 감싸 뒀어. 감각처럼 부드럽게 대답할게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG094,AIDONG-0172,94,살짝 놀랐지? 친구의 꽃잎이 먼저 반응했어. 느림처럼 작게 숨겨 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG095,AIDONG-0172,95,이 섬에서는 물감이 길을 알려 줘. 손끝처럼 한 걸음 다가갈게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG096,AIDONG-0172,96,네가 웃으면 바구니가 제일 먼저 밝아져. 발소리처럼 가까이 머물러 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG097,AIDONG-0172,97,아이동은 문패를 켜 뒀어. 문장처럼 따뜻하게 맡아 둘게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG098,AIDONG-0172,98,살짝 놀랐지? 친구의 온실이 먼저 반응했어. 발끝처럼 오늘은 여기 있을게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG099,AIDONG-0172,99,이 섬에서는 작은길이 길을 알려 줘. 방향처럼 살짝 웃어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29
+AIDONG-0172_DLG100,AIDONG-0172,100,네가 웃으면 낮은등이 제일 먼저 밝아져. 마디처럼 가볍게 흔들어 볼게.,,idle,any,any,0,,any,100,100,AIDONG-0172_daily_idle,N,active,Y,,,X-DLG-00_phase1_daily_dialogue.csv,2026-06-29

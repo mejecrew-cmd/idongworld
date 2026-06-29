@@ -1,0 +1,5 @@
+currency_id,currency_code,currency_name,name_string_id,display_group_key,currency_group,is_paid_currency,can_display_combined,spend_priority,max_balance,icon_id,release_status,is_enabled,_planner_note,_check_status,_source_csv,_updated_at
+CUR-GOLD,gold,금화,STR-X-ECO-CUR-GOLD-NAME,gold,soft,N,Y,100,,ICON-1354,active,Y,,,X-ECO-00_currency_master.csv,2026-06-29
+CUR-SHELL,shell,조개,STR-X-ECO-CUR-SHELL-NAME,shell,area,N,Y,100,,ICON-1277,active,Y,,,X-ECO-00_currency_master.csv,2026-06-29
+CUR-DIA-FREE,diamond_free,무료 다이아,STR-X-ECO-CUR-DIA-FREE-NAME,diamond,premium,N,Y,10,,,active,Y,,,X-ECO-00_currency_master.csv,2026-06-29
+CUR-DIA-PAID,diamond_paid,유료 다이아,STR-X-ECO-CUR-DIA-PAID-NAME,diamond,premium,Y,Y,20,,,active,Y,,,X-ECO-00_currency_master.csv,2026-06-29

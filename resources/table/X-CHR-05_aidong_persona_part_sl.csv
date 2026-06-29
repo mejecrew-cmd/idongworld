@@ -1,0 +1,13 @@
+part_slot_id,slot_key,slot_name,name_string_id,slot_scope,animal_id,part_category,value_format,is_required_default,is_modifiable,sort_order,is_enabled,_planner_note,_check_status,_source_csv,_updated_at
+PRS-SLOT-SILHOUETTE,silhouette_type,실루엣,,common,,fur,text,Y,Y,1,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-FACE-RHYTHM,face_rhythm,얼굴 리듬,,common,,eye,text,Y,Y,2,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-EAR-SHAPE,ear_shape,귀 모양,,common,,ear,text,Y,Y,3,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-TAIL-SHAPE,tail_shape,꼬리 모양,,common,,tail,text,Y,Y,4,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-PAW-MARK,paw_mark,발자국 표식,,common,,body_mark,text,Y,Y,5,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-MOVEMENT,movement_style,몸짓,,common,,accent,text,Y,Y,6,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-COLOR-MOOD,color_mood,색감,,common,,fur,text,Y,Y,7,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-ATTITUDE,attitude_part,태도 파츠,,common,,accent,text,Y,Y,8,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-STAGE,stage_part,무대 파츠,,common,,accent,text,Y,Y,9,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-RELATION,relation_part,관계 파츠,,common,,accent,text,Y,Y,10,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-MISCHIEF,mischief_part,잔망 파츠,,common,,accent,text,Y,Y,11,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
+PRS-SLOT-SIGNATURE-PROPS,signature_props,시그니처 소품,,common,,accent,text,Y,Y,12,Y,,,X-CHR-05_aidong_persona_part_slot_master.csv,2026-06-29
