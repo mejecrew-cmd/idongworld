@@ -10,7 +10,8 @@
 - 모듈 독립성은 서버 분리가 아니라 route, service, repository, model spec 분리로 유지한다.
 - 각 모듈은 자기 document와 자기 API만 직접 수정한다.
 - host/global 자원은 host API나 customs를 통해 수정한다.
-- 모듈 간 자원 이동은 반드시 customs와 resource adapter를 통과한다.
+- 단일 권위 저장소로 바로 지급하는 gameplay 보상은 domain action API를 우선한다.
+- 모듈 간 실제 debit/credit 이동은 customs와 resource adapter를 통과한다.
 - 개발 초기에는 local MongoDB를 사용한다.
 - Atlas는 현재 사용하지 않는다. 추후 사용할 수도 있는 선택지로만 보류하고, 결정 전까지는 local MongoDB 기준으로 개발과 검증을 진행한다.
 - Atlas 사용을 확정한 경우에도 repository/service 코드를 바꾸지 않고 `MONGO_URI`와 transaction 설정만 바꾸는 것을 목표로 한다.
@@ -91,8 +92,22 @@ Atlas 사용 검토를 시작하는 조건:
 
 ```txt
 users
+providerAccounts
+userSettings
 hostStates
+userCurrencyBalances
+userCurrencyLedger
+diceResources
+userInventoryItems
 myAidongStates
+mydongList
+mydongPediaInventory
+userCosmeticInventory
+mydongCosmeticLoadouts
+mydongPersonaPartStates
+sooksoStates
+roomSlots
+roomFurniturePlacements
 myIslandStates
 codexStates
 routeNeighborStates
@@ -104,9 +119,23 @@ customsLogs
 
 역할:
 
-- `users`: 계정, guest, auth 연결용 user document.
-- `hostStates`: host 이름, 광역 재화, 주사위, inventory.
-- `myAidongStates`: Aidong 영입, 호감도, needs, 케어 로그, 착용 상태.
+- `users`: 계정, guest, 진행 플래그, auth 호환 user document.
+- `providerAccounts`: provider별 인증 연결.
+- `userSettings`: 약관, 마케팅, 푸시, 시간대, 사운드 설정.
+- `hostStates`: host 이름과 기존 API 호환 projection.
+- `userCurrencyBalances`: coin/diamond 잔액.
+- `userCurrencyLedger`: 재화 변경 이력.
+- `diceResources`: 주사위 수량과 충전 메타.
+- `userInventoryItems`: 전역 인벤토리 item row.
+- `myAidongStates`: Aidong 호감도, needs, 케어 로그 등 호환 상태.
+- `mydongList`: 유저가 보유한 개별 Aidong row.
+- `mydongPediaInventory`: Aidong별 도감템 수량 row.
+- `userCosmeticInventory`: 코스메틱 보유 row.
+- `mydongCosmeticLoadouts`: Aidong별 코스메틱 장착.
+- `mydongPersonaPartStates`: persona part 상태.
+- `sooksoStates`: 숙소 청소/이름.
+- `roomSlots`: 숙소 방 배정.
+- `roomFurniturePlacements`: 숙소 방별 가구 배치.
 - `myIslandStates`: island unlock, zone progress.
 - `codexStates`: diary, codex entry, full registration.
 - `routeNeighborStates`: 항해 route catalog, landing/encounter 결과 호환 기록, route-neighbor local resource. 현재 route/current cell/출항 여부는 저장하지 않는다.
@@ -151,12 +180,25 @@ route 작성 원칙:
 
 Aidong item 저장 원칙:
 
-- Aidong 소지/착용 아이템의 소유권은 `hostStates.inventory`에 둔다.
-- Aidong 착용 상태는 `myAidongStates.equippedItems`에 둔다.
+- Aidong 소지/착용 아이템의 소유권은 `userInventoryItems`에 둔다.
+- 코스메틱 아이템이면 `userCosmeticInventory`에 둔다.
+- Aidong 착용 상태는 `mydongCosmeticLoadouts`를 기준으로 한다.
+- `hostStates.inventory`, `myAidongStates.equippedItems`는 기존 화면/API 호환 projection으로만 본다.
 - `equippedOutfit`은 Phase 1 화면 외형 프리셋으로 유지하고, 실제 소유 아이템 착용 계약으로 쓰지 않는다.
 - 착용 가능 item catalog는 `packages/modules/my-aidong/items.csv`에 둔다.
-- module-local inventory에서 Aidong item을 얻으면 customs를 통해 `hostStates.inventory`로 이동한 뒤 착용한다.
-- 착용 API는 host inventory의 가용 수량을 확인하고, 수량보다 많은 Aidong에게 중복 착용시키지 않는다.
+- module-local inventory에서 Aidong item을 얻으면 customs 또는 domain action을 통해 `userInventoryItems`로 이동한 뒤 착용한다.
+- 착용 API는 전역 인벤토리/코스메틱 인벤토리의 가용 수량을 확인하고, 수량보다 많은 Aidong에게 중복 착용시키지 않는다.
+
+동적 schema migration:
+
+```bash
+pnpm migrate:dynamic-schema
+pnpm migrate:dynamic-schema -- --commit
+```
+
+- 기본은 dry-run이다.
+- 운영 적용 전에는 `.cloud/105_dynamic_schema_migration_runbook_2026-06-29.md`를 먼저 따른다.
+- rollback은 target collection 삭제가 아니라 이전 build rollback과 선별 수정이 기본이다.
 
 ## 6. 주요 API
 
@@ -272,7 +314,8 @@ POST /api/customs/apply
 
 1. 소유권을 정한다.
    - 계정/session 성격은 account.
-   - 광역 재화와 inventory는 host.
+   - coin/diamond는 `userCurrencyBalances`, 주사위는 `diceResources`, 전역 inventory는 `userInventoryItems`.
+   - host API는 기존 화면 호환 facade 역할을 할 수 있지만 `hostStates`만 권위로 보지 않는다.
    - 모듈 내부 진행 상태는 해당 module.
    - 모듈 간 자원 이동은 customs.
 
@@ -654,9 +697,9 @@ pnpm check:frontend:state-route-runtime
 수동 QA 체크리스트:
 
 - guest login 또는 Firebase login 이후 uid가 잡히는지 확인한다.
-- onboarding 완료 후 account state와 host name이 유지되는지 확인한다.
-- first gacha 또는 Aidong recruit 이후 `myAidongStates`에 영입 상태가 반영되는지 확인한다.
-- zone clear 이후 zone document와 host reward가 backend 응답 기준으로 반영되는지 확인한다.
+- onboarding 완료 후 account state, `userSettings`, host name이 유지되는지 확인한다.
+- first gacha 또는 Aidong recruit 이후 `mydongList`와 `myAidongStates` mirror에 영입 상태가 반영되는지 확인한다.
+- zone clear 이후 zone document와 `userInventoryItems`/`userCurrencyBalances`/`diceResources` reward가 backend 응답 기준으로 반영되는지 확인한다.
 - codex unlock/register가 codex document에 반영되는지 확인한다.
 - route-neighbor roll/clear가 주사위 소모와 보상 지급 같은 영속 결과만 DB에 반영하는지 확인한다. 현재 route/current cell/출항 여부 저장을 기대하지 않는다.
 - 화면 흐름 중 `/api/state` 호출이나 직접 legacy state sync가 다시 나타나지 않는지 확인한다.
@@ -682,6 +725,7 @@ pnpm check:frontend:state-route-runtime
 
 ## 변경 기록
 
+- **2026-06-29**: xlsx 기반 동적 schema migration 기준을 반영했다. `providerAccounts`, `userSettings`, `userCurrencyBalances`, `diceResources`, `userInventoryItems`, `sooksoStates`, `roomSlots`, `roomFurniturePlacements`, `mydongList`, `mydongPediaInventory`, `userCosmeticInventory`, `mydongCosmeticLoadouts`, `mydongPersonaPartStates`를 권위 collection으로 정리하고, `hostStates`, `myAidongStates`, `lodgeStates`의 기존 필드는 projection/mirror로 격하했다. 실행 절차는 `.cloud/105_dynamic_schema_migration_runbook_2026-06-29.md`를 따른다.
 - **2026-05-29**: 최소 플레이 플로우 smoke 기준을 추가했다. `check:state-route-static`, `check:module-actions-smoke`, 필요 시 frontend runtime check와 수동 QA 체크리스트로 E2E 전 단계의 최소 검증을 수행한다.
 - **2026-06-01**: Ship/Lodge customs rule 1차 구현 상태를 반영했다. `ship/customs.csv`, `lodge/customs.csv` registered rule과 module action smoke의 ship -> lodge, ship -> host, lodge -> host 검증을 추가했다.
 - **2026-06-01**: Route landing mission flow 1차 구현 상태를 반영했다. `roll` landing 후보, current/clear API, 임시 deck-cargo reward 적립, module action smoke 검증 기준을 추가했다.

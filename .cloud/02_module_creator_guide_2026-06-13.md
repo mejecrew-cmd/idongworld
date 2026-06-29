@@ -33,7 +33,13 @@ packages/modules/BACKEND_GUIDE.md
 - 나머지 13개 구역은 Aidong을 편입할 수 있는 fillable slot이다.
 - Aidong 영입은 `my-aidong`, 마이섬 편입은 `my-island`가 담당한다.
 - `codexStates`는 수량 원장이 아니다.
-- Aidong별 25개 도감템 수량은 `myAidongStates.aidongCodexItems` 쪽이 기준이다.
+- Aidong별 25개 도감템 수량은 `mydongPediaInventory`가 기준이다.
+- 유저가 보유한 개별 Aidong은 `mydongList`가 기준이다.
+- `aidongId`는 캐릭터 원형 ID, `mydongUid`는 유저가 실제 보유한 개별 Aidong ID다.
+- 전역 인벤토리는 `userInventoryItems`가 기준이다. 기존 `hostStates.inventory`는 호환 projection이다.
+- coin/diamond는 `userCurrencyBalances`, 주사위는 `diceResources`, 설정은 `userSettings`가 기준이다.
+- 숙소 청소/이름은 `sooksoStates`, 방 배정은 `roomSlots`, 방별 가구 배치는 `roomFurniturePlacements`가 기준이다.
+- 코스메틱 보유/장착은 `userCosmeticInventory`, `mydongCosmeticLoadouts`, `mydongPersonaPartStates`가 기준이다.
 - customs backend는 유지하지만 Phase 1 core UX에서 필수 gate로 강제하지 않는다.
 - PixiJS와 Rive는 일부 scene/연출에만 부분 적용한다.
 - 항해 중/정박 중 여부, 현재 route, 현재 칸, 세션 내 landing 후보는 DB에 저장하지 않는다. 이 값들은 브라우저 탭/창별 세션 상태다.
@@ -71,7 +77,7 @@ worldScope: home-island
 backend state 필요 여부: 있음
 이 모듈이 소유하는 상태: zoneStates 안의 localResources, progress.production
 다른 모듈과 주고받는 자원: 직접 수정하지 않음. 필요 시 host 보상은 action API, cross-module 이동은 customs.
-보상 지급 위치: 일반 재료는 hostStates.inventory, Aidong 도감템은 myAidongStates.aidongCodexItems
+보상 지급 위치: 일반 재료는 userInventoryItems, Aidong 도감템은 mydongPediaInventory
 필요한 CSV: balance.csv, items.csv, i18n
 필요한 asset: 배경 이미지, hotspot 이미지 후보
 세션 상태 여부: 없음 | 브라우저 세션 전용 | DB 영속
@@ -176,6 +182,27 @@ DB에 저장하는 값:
 따라서 항해 module API를 만들 때 `start`, `roll`, `land`, `return`이 있더라도 이 API들이 현재 칸이나 출항 여부를 DB에 영속 저장하면 안 된다. 필요하다면 API는 검증과 보상 확정만 담당하고, 진행 상태는 frontend 세션이 들고 간다.
 
 모듈에 backend state가 있는지 먼저 판단한다.
+
+### 4.0.1 동적 유저 데이터의 현재 권위 collection
+
+모듈이 유저 데이터에 영향을 주면 아래 기준을 먼저 확인한다.
+
+| 데이터 | 권위 collection/repository | 비고 |
+|---|---|---|
+| 계정/진행 플래그 | `users` | auth와 onboarding 호환 필드 유지 |
+| provider 연결 | `providerAccounts` | 한 유저 여러 provider 연결 가능 |
+| 설정/약관/마케팅/푸시/사운드 | `userSettings` | `users`의 설정 필드는 mirror |
+| coin/diamond | `userCurrencyBalances`, `userCurrencyLedger` | `hostStates` 숫자는 projection |
+| 주사위 | `diceResources` | 항해 위치는 저장하지 않음 |
+| 전역 인벤토리 | `userInventoryItems` | map 응답은 adapter가 만든다 |
+| 숙소 청소/이름 | `sooksoStates` | |
+| 방 배정 | `roomSlots` | `mydongUid` 기준 확장 가능 |
+| 방 가구 배치 | `roomFurniturePlacements` | |
+| 보유 Aidong | `mydongList` | `mydongUid`와 `aidongId`를 구분 |
+| Aidong 도감템 | `mydongPediaInventory` | `myAidongStates.aidongCodexItems`는 mirror |
+| 코스메틱 보유/장착 | `userCosmeticInventory`, `mydongCosmeticLoadouts`, `mydongPersonaPartStates` | |
+
+새 모듈은 `hostStates`, `myAidongStates`, `lodgeStates`의 호환 필드를 직접 권위로 삼지 않는다. 기존 API가 map 형태를 반환하더라도 내부 저장소는 row 구조일 수 있다.
 
 ### 4.1 backend state가 필요 없는 경우
 
@@ -371,9 +398,11 @@ i18n/index.ts
 
 주의:
 
-- Aidong 착용 item의 소유권은 `hostStates.inventory`다.
-- Aidong별 25개 도감템은 `myAidongStates.aidongCodexItems` 쪽이다.
+- Aidong 착용 item의 소유권은 `userInventoryItems`다.
+- Aidong 착용 상태는 `mydongCosmeticLoadouts`를 기준으로 한다.
+- Aidong별 25개 도감템은 `mydongPediaInventory` 쪽이다.
 - 모듈 local item인지, 전역 item인지, Aidong 귀속 item인지 먼저 구분한다.
+- 기존 API가 `hostStates.inventory`나 `myAidongStates.aidongCodexItems` map으로 보여주더라도 새 저장 권위는 normalized row 구조다.
 
 ### 9.3 decor.csv
 
@@ -605,11 +634,12 @@ POST /api/modules/zone-river/production/claim
 
 | 보상 종류 | 권장 소유 위치 |
 |---|---|
-| 일반 재료/소모품 | `hostStates.inventory` |
-| coins/gems/dice 같은 전역 자원 | `hostStates` |
-| Aidong 착용 item 소유권 | `hostStates.inventory` |
-| Aidong 착용 상태 | `myAidongStates.equippedItems` |
-| Aidong별 25개 도감템 수량 | `myAidongStates.aidongCodexItems` |
+| 일반 재료/소모품 | `userInventoryItems` |
+| coin/diamond 같은 전역 재화 | `userCurrencyBalances`, `userCurrencyLedger` |
+| 주사위 | `diceResources` |
+| Aidong 착용 item 소유권 | `userInventoryItems` 또는 코스메틱이면 `userCosmeticInventory` |
+| Aidong 착용 상태 | `mydongCosmeticLoadouts` |
+| Aidong별 25개 도감템 수량 | `mydongPediaInventory` |
 | zone 내부 임시 자원 | `zoneStates.localResources` 또는 module local state |
 | ship 적재/인벤토리 호환 필드 | `shipStates.shipInventory`. 단, 현재 항해 세션 위치나 출항 여부는 저장하지 않음 |
 | cross-module debit/credit | customs |
@@ -628,8 +658,8 @@ customs가 필요한 경우:
 customs가 필요 없는 경우:
 
 - 게임 action 결과로 단일 권위 저장소에 바로 지급한다.
-- 예: production claim이 `hostStates.inventory`에 일반 재료를 바로 지급.
-- 예: Aidong minigame 결과가 `myAidongStates.aidongCodexItems`에 도감템을 바로 지급.
+- 예: production claim이 `userInventoryItems`에 일반 재료를 바로 지급.
+- 예: Aidong minigame 결과가 `mydongPediaInventory`에 도감템을 바로 지급.
 
 중요:
 
@@ -724,7 +754,7 @@ pnpm check:live-smoke:local
 
 ### 실수 3. `codexStates`에 아이템 수량을 넣는다
 
-하지 않는다. `codexStates`는 표시/등록/일지다. Aidong별 도감템 수량은 `myAidongStates.aidongCodexItems` 기준이다.
+하지 않는다. `codexStates`는 표시/등록/일지다. Aidong별 도감템 수량은 `mydongPediaInventory` 기준이다.
 
 ### 실수 4. 세관 UI를 다시 필수 gate로 만든다
 

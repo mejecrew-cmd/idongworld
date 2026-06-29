@@ -6,7 +6,7 @@
  * 주의: 숙소 인벤토리와 다른 모듈 사이의 이동은 여기서 직접 처리하지 않고 customs를 통한다.
  */
 import { assertAidongRecruited } from '../my-aidong/service.js'
-import { getHostStateRepository } from '../../repositories/index.js'
+import { getHostStateRepository, getSooksoRepository } from '../../repositories/index.js'
 import { requireModuleRepo, ServiceError, type LooseState } from '../shared.js'
 import { listDecorCatalogItems, requireDecorCatalogItem } from '../decorCatalog.js'
 
@@ -31,12 +31,6 @@ function getShipCrew(state: LooseState): string[] {
   return result
 }
 
-function asStringArray(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
-    : []
-}
-
 function getFurnitureRecord(state: LooseState): Record<string, number> {
   const value = state.furniture
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
@@ -44,21 +38,6 @@ function getFurnitureRecord(state: LooseState): Record<string, number> {
   for (const [itemId, rawAmount] of Object.entries(value as Record<string, unknown>)) {
     const amount = Number(rawAmount)
     if (Number.isFinite(amount) && amount > 0) result[itemId] = amount
-  }
-  return result
-}
-
-function getRoomsRecord(state: LooseState): Record<string, { furniture: string[] }> {
-  const value = state.rooms
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-  const result: Record<string, { furniture: string[] }> = {}
-  for (const [roomId, rawRoom] of Object.entries(value as Record<string, unknown>)) {
-    const room = rawRoom && typeof rawRoom === 'object' && !Array.isArray(rawRoom)
-      ? rawRoom as Record<string, unknown>
-      : {}
-    result[roomId] = {
-      furniture: asStringArray(room.furniture),
-    }
   }
   return result
 }
@@ -99,11 +78,15 @@ export async function toggleLodgeAidongAssign(uid: string, characterId: string) 
 
   const repo = requireModuleRepo('lodge')
   const state = await repo.getOrCreate(uid) as LooseState
-  const assigned = getAssignedAidongs(state)
+  const assigned = await getSooksoRepository().getAssignedAidongIds(uid, getAssignedAidongs(state))
 
   if (assigned.includes(characterId)) {
+    const nextAssigned = await getSooksoRepository().replaceAssignedAidongs(
+      uid,
+      assigned.filter((id) => id !== characterId),
+    )
     return await repo.patch(uid, {
-      assignedAidongs: assigned.filter((id) => id !== characterId),
+      assignedAidongs: nextAssigned,
     })
   }
 
@@ -113,9 +96,8 @@ export async function toggleLodgeAidongAssign(uid: string, characterId: string) 
     throw new ServiceError('lodge_assignment_full', 409)
   }
 
-  return await repo.patch(uid, {
-    assignedAidongs: [...assigned, characterId],
-  })
+  const nextAssigned = await getSooksoRepository().replaceAssignedAidongs(uid, [...assigned, characterId])
+  return await repo.patch(uid, { assignedAidongs: nextAssigned })
 }
 
 export function getLodgeConfig() {
@@ -159,7 +141,7 @@ export async function toggleLodgeRoomFurniture(uid: string, roomId: string, item
   const repo = requireModuleRepo('lodge')
   const state = await repo.getOrCreate(uid) as LooseState
   const furniture = getFurnitureRecord(state)
-  const rooms = getRoomsRecord(state)
+  const rooms = await getSooksoRepository().getRoomFurnitureMap(uid, state.rooms as Record<string, unknown> | undefined)
   const currentRoom = rooms[roomId] ?? { furniture: [] }
   const alreadyPlaced = currentRoom.furniture.includes(itemId)
   const nextRoomFurniture = alreadyPlaced
@@ -172,13 +154,6 @@ export async function toggleLodgeRoomFurniture(uid: string, roomId: string, item
     if (placed >= owned) throw new ServiceError('lodge_furniture_not_owned_or_available', 409)
   }
 
-  return await repo.patch(uid, {
-    rooms: {
-      ...rooms,
-      [roomId]: {
-        ...currentRoom,
-        furniture: nextRoomFurniture,
-      },
-    },
-  })
+  const nextRooms = await getSooksoRepository().setRoomFurniture(uid, roomId, nextRoomFurniture)
+  return await repo.patch(uid, { rooms: nextRooms })
 }

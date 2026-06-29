@@ -12,11 +12,21 @@ import type { UserDoc } from '../store/memoryStore.js'
 import { adminMiddleware, getRequestAdminUser, requireAdminPermission, requireAdminRole } from '../middleware/admin.js'
 import {
   getAdminRepository,
+  getCurrencyRepository,
   getDedicatedModuleRepositories,
+  getDiceResourceRepository,
   getHostStateRepository,
+  getMydongRepository,
+  getMydongCosmeticRepository,
+  getMydongPediaInventoryRepository,
+  getSooksoRepository,
+  getUserInventoryRepository,
   getUserRepository,
+  getUserSettingsRepository,
 } from '../repositories/index.js'
 import type { HostResource } from '../repositories/hostStateRepository.js'
+import { userSettingsPatchFromUserPatch, type UserSettingsDoc } from '../repositories/userSettingsRepository.js'
+import type { SooksoStateDoc } from '../repositories/sooksoRepository.js'
 import {
   createAidongIslandDefault,
   createCodexDefault,
@@ -224,7 +234,12 @@ function userMatchesSearch(user: UserDoc, query: string): boolean {
   return fields.some((field) => typeof field === 'string' && field.toLowerCase().includes(query))
 }
 
-function toUserDetail(user: UserDoc, adminUser?: AdminUserDoc) {
+function toUserDetail(
+  user: UserDoc,
+  adminUser?: AdminUserDoc,
+  userSettings?: UserSettingsDoc,
+  sookso?: SooksoStateDoc,
+) {
   return {
     ...toUserSummary(user),
     displayName: user.displayName,
@@ -236,8 +251,12 @@ function toUserDetail(user: UserDoc, adminUser?: AdminUserDoc) {
     profileImageSource: user.profileImageSource,
     gameStartedAt: user.gameStartedAt,
     hostName: user.hostName,
-    sooksoName: user.sooksoName,
-    soundSettings: user.soundSettings,
+    sooksoName: sookso?.sooksoName ?? user.sooksoName,
+    sooksoClean: sookso?.sooksoClean ?? user.sooksoClean,
+    soundSettings: userSettings
+      ? { bgmVolume: userSettings.bgmVolume, sfxVolume: userSettings.sfxVolume }
+      : user.soundSettings,
+    userSettings,
     recruitedAidongs: user.recruitedAidongs,
     firstGachaAttempts: user.firstGachaAttempts,
     adminRole: adminUser?.enabled ? adminUser.role : undefined,
@@ -266,6 +285,113 @@ function toAdminUserResponse(adminUser: AdminUserDoc) {
     enabled: adminUser.enabled,
     createdAt: adminUser.createdAt,
     updatedAt: adminUser.updatedAt,
+  }
+}
+
+function summarizeQuantityMap(map: Record<string, number>) {
+  const entries = Object.entries(map)
+    .filter(([, quantity]) => Number.isFinite(quantity) && quantity > 0)
+    .sort(([left], [right]) => left.localeCompare(right))
+  return {
+    count: entries.length,
+    totalQuantity: entries.reduce((sum, [, quantity]) => sum + quantity, 0),
+    sample: entries.slice(0, 10).map(([itemId, quantity]) => ({ itemId, quantity })),
+  }
+}
+
+function summarizePediaInventory(items: Array<{ quantity: number; aidongId: string }>) {
+  const activeItems = items.filter((item) => item.quantity > 0)
+  return {
+    rowCount: activeItems.length,
+    totalQuantity: activeItems.reduce((sum, item) => sum + item.quantity, 0),
+    aidongCount: new Set(activeItems.map((item) => item.aidongId)).size,
+  }
+}
+
+async function buildSplitSummary(user: UserDoc, host: HostStateDoc, userSettings: UserSettingsDoc, sookso: SooksoStateDoc) {
+  const uid = user.uid
+  const [
+    providerAccounts,
+    currencies,
+    diceResource,
+    inventory,
+    mydongs,
+    assignedAidongIds,
+    roomFurnitureMap,
+    pediaInventory,
+    cosmeticInventory,
+    cosmeticLoadouts,
+    personaPartStates,
+  ] = await Promise.all([
+    getUserRepository().listProviderAccounts(uid),
+    getCurrencyRepository().getBalances(uid, { coin: host.coins, diamond: host.diamonds }),
+    getDiceResourceRepository().getOrCreate(uid, { diceQuantity: host.diceCount }),
+    getUserInventoryRepository().getInventoryMap(uid, host.inventory),
+    getMydongRepository().list(uid),
+    getSooksoRepository().getAssignedAidongIds(uid, []),
+    getSooksoRepository().getRoomFurnitureMap(uid, {}),
+    getMydongPediaInventoryRepository().list(uid),
+    getMydongCosmeticRepository().listInventory(uid),
+    getMydongCosmeticRepository().listLoadouts(uid),
+    getMydongCosmeticRepository().listPersonaPartStates(uid),
+  ])
+
+  const roomEntries = Object.entries(roomFurnitureMap)
+  return {
+    providerAccounts: providerAccounts.map((account) => ({
+      providerCode: account.providerCode,
+      providerSubjectId: account.providerSubjectId,
+      email: account.email,
+      emailVerified: account.emailVerified,
+      displayName: account.displayName,
+      linkedAt: account.linkedAt,
+      lastLoginAt: account.lastLoginAt,
+      status: account.status,
+    })),
+    userSettings: {
+      locale: userSettings.locale,
+      timeZone: userSettings.timeZone,
+      marketingAccepted: userSettings.marketingAccepted,
+      pushNotificationAccepted: userSettings.pushNotificationAccepted,
+      bgmVolume: userSettings.bgmVolume,
+      sfxVolume: userSettings.sfxVolume,
+    },
+    currencies,
+    diceResource: {
+      diceQuantity: diceResource.diceQuantity,
+      maxDiceQuantity: diceResource.maxDiceQuantity,
+      chargeIntervalMinutes: diceResource.chargeIntervalMinutes,
+      nextChargeAt: diceResource.nextChargeAt,
+      dailyRollCount: diceResource.dailyRollCount,
+      dailyRollDate: diceResource.dailyRollDate,
+    },
+    inventory: summarizeQuantityMap(inventory),
+    sookso: {
+      sooksoClean: sookso.sooksoClean,
+      sooksoName: sookso.sooksoName,
+      assignedAidongCount: assignedAidongIds.length,
+      assignedAidongIds,
+      roomCount: roomEntries.length,
+      furniturePlacementCount: roomEntries.reduce((sum, [, room]) => sum + room.furniture.length, 0),
+    },
+    mydongs: {
+      count: mydongs.length,
+      activeCount: mydongs.filter((mydong) => mydong.status === 'active').length,
+      sample: mydongs.slice(0, 10).map((mydong) => ({
+        mydongUid: mydong.mydongUid,
+        aidongId: mydong.aidongId,
+        nickname: mydong.nickname,
+        acquisitionSource: mydong.acquisitionSource,
+        status: mydong.status,
+      })),
+    },
+    pediaInventory: summarizePediaInventory(pediaInventory),
+    cosmetics: {
+      inventoryRowCount: cosmeticInventory.filter((item) => item.quantity > 0).length,
+      inventoryTotalQuantity: cosmeticInventory.reduce((sum, item) => sum + item.quantity, 0),
+      loadoutCount: cosmeticLoadouts.length,
+      personaPartStateCount: personaPartStates.length,
+    },
   }
 }
 
@@ -336,10 +462,16 @@ adminRouter.get('/users/:uid', requireAdminRole('viewer'), async (req, res) => {
   })
 
   const adminUser = await getAdminRepository().getAdminUser(uid)
+  const userSettings = await getUserSettingsRepository().getOrCreate(uid, user)
+  const sookso = await getSooksoRepository().getOrCreateSookso(uid, {
+    sooksoClean: Boolean(user.sooksoClean),
+    sooksoName: user.sooksoName,
+  })
 
   res.json({
-    user: toUserDetail(user, adminUser),
+    user: toUserDetail(user, adminUser, userSettings, sookso),
     host: toHostSummary(host),
+    splitSummary: await buildSplitSummary(user, host, userSettings, sookso),
   })
 })
 
@@ -417,6 +549,14 @@ adminRouter.post('/users/:uid/reset', requireAdminPermission('users.reset'), asy
     diceCount: 6,
     inventory: {},
   })
+  const sookso = await getSooksoRepository().patchSookso(uid, {
+    sooksoClean: false,
+    sooksoName: undefined,
+  })
+  await getSooksoRepository().replaceAssignedAidongs(uid, [])
+  await getSooksoRepository().replaceRoomFurnitureMap(uid, {})
+  await getMydongPediaInventoryRepository().delete(uid)
+  await getMydongCosmeticRepository().delete(uid)
 
   const modules: Record<string, object> = {}
   const repositories = getDedicatedModuleRepositories()
@@ -430,7 +570,7 @@ adminRouter.post('/users/:uid/reset', requireAdminPermission('users.reset'), asy
 
   res.json({
     ok: true,
-    account: account ? toUserDetail(account) : undefined,
+    account: account ? toUserDetail(account, undefined, undefined, sookso) : undefined,
     host: toHostSummary(host),
     modules,
   })
@@ -461,11 +601,25 @@ adminRouter.patch('/users/:uid/account', requireAdminPermission('users.account.p
     return
   }
 
+  const settingsPatch = userSettingsPatchFromUserPatch(patch)
+  const userSettings = Object.keys(settingsPatch).length
+    ? await getUserSettingsRepository().patch(uid, settingsPatch)
+    : await getUserSettingsRepository().getOrCreate(uid, updated)
+  const sooksoPatch: { sooksoClean?: boolean; sooksoName?: string } = {}
+  if (patch.sooksoClean !== undefined) sooksoPatch.sooksoClean = Boolean(patch.sooksoClean)
+  if (patch.sooksoName !== undefined) sooksoPatch.sooksoName = patch.sooksoName
+  const sookso = Object.keys(sooksoPatch).length
+    ? await getSooksoRepository().patchSookso(uid, sooksoPatch)
+    : await getSooksoRepository().getOrCreateSookso(uid, {
+      sooksoClean: Boolean(updated.sooksoClean),
+      sooksoName: updated.sooksoName,
+    })
+
   await writeAudit(req, 'users.account.patch', uid, { fields: Object.keys(patch).sort() })
 
   res.json({
     ok: true,
-    user: toUserDetail(updated),
+    user: toUserDetail(updated, undefined, userSettings, sookso),
   })
 })
 

@@ -52,16 +52,30 @@ route/service는 uid를 request body에서 신뢰하지 않는다.
 - `ship` API는 `shipStates`를 수정한다.
 - `lodge` API는 `lodgeStates`를 수정한다.
 - `my-aidong` API는 `myAidongStates`를 수정한다.
-- `host` API는 `hostStates`를 수정한다.
+- `host` API는 기존 응답 호환을 위해 `hostStates`를 반환하지만, 내부 권위는 `userCurrencyBalances`, `diceResources`, `userInventoryItems`를 함께 사용한다.
 - `ship` API가 `lodgeStates`를 직접 수정하면 안 된다.
 
 ## 3. DB Document 색인
 
 | Document/Collection | 소유 영역 | 주요 필드 | 대표 API |
 | --- | --- | --- | --- |
-| `users` | account/auth compat | `isGuest`, `authProvider`, `providerUid`, `emailNormalized`, `nickname`, `nicknameNormalized`, `signupProfileCompleted`, `timezoneCompleted`, `termsCompleted`, `termsAgreements`, `openingSeen`, `onboardingComplete`, `hostName` | `/api/auth/*`, `/api/account/*` |
-| `hostStates` | 전역 자원 | `coins`, `gems`, `diamonds`, `diceCount`, `inventory` | `/api/host/*` |
-| `myAidongStates` | Aidong 상태 | `recruitedAidongs`, `needs`, `affinities`, `equippedOutfit`, `equippedItems`, `aidongCodexItems`, `aidongUpgradeState` | `/api/modules/my-aidong/*` |
+| `users` | account/auth compat | `isGuest`, `authProvider`, `providerUid`, `emailNormalized`, `nickname`, `nicknameNormalized`, `signupProfileCompleted`, `timezoneCompleted`, `termsCompleted`, `termsAgreements`, `openingSeen`, `onboardingComplete`, `hostName`, `status`, `lastLoginAt`, `lastLoginProvider` | `/api/auth/*`, `/api/account/*` |
+| `providerAccounts` | 인증 provider 연결 | `uid`, `providerCode`, `providerSubjectId`, `emailNormalized`, `linkedAt`, `lastLoginAt`, `status` | `/api/auth/*` |
+| `userSettings` | 유저 설정 | `timeZone`, `locale`, `termsAccepted`, `privacyAccepted`, `marketingAccepted`, `pushNotificationAccepted`, `bgmVolume`, `sfxVolume` | `/api/account/*`, `/api/settings/*` 후보 |
+| `hostStates` | host compat projection | `hostName`, `coins`, `diamonds`, `diceCount`, `inventory` mirror | `/api/host/*` |
+| `userCurrencyBalances` | 전역 재화 잔액 | `uid`, `currencyId`, `balance` | `/api/host/resources/mutate`, admin resource API |
+| `userCurrencyLedger` | 전역 재화 이력 | `uid`, `currencyId`, `delta`, `balanceAfter`, `reason`, `source` | backend repository |
+| `diceResources` | 주사위 | `diceQuantity`, `maxDiceQuantity`, `nextChargeAt`, `dailyRollCount` | `/api/host/resources/mutate`, `/api/modules/route-neighbor/*` |
+| `userInventoryItems` | 전역 인벤토리 | `uid`, `itemId`, `quantity` | `/api/host/inventory/mutate`, customs/resource adapter |
+| `myAidongStates` | Aidong compat 상태 | `needs`, `affinities`, `careLog`, `equippedOutfit`, `equippedItems`, `aidongCodexItems` mirror | `/api/modules/my-aidong/*` |
+| `mydongList` | 보유 Aidong | `mydongUid`, `aidongId`, `acquisitionSource`, `status` | `/api/modules/my-aidong/*` |
+| `mydongPediaInventory` | Aidong 도감템 | `mydongUid`, `aidongId`, `pediaItemId`, `quantity`, `slotNo` | `/api/modules/my-aidong/*`, `/api/modules/zone-*/*` |
+| `userCosmeticInventory` | 코스메틱 보유 | `cosmeticId`, `quantity`, `source` | `/api/modules/my-aidong/*` |
+| `mydongCosmeticLoadouts` | 코스메틱 장착 | `mydongUid`, `aidongId`, `outfitId`, `equippedItemIds` | `/api/modules/my-aidong/*` |
+| `mydongPersonaPartStates` | persona part 상태 | `mydongUid`, `aidongId`, `partType`, `partId`, `state` | `/api/modules/my-aidong/*` 후보 |
+| `sooksoStates` | 숙소 청소/이름 | `sooksoClean`, `sooksoName` | `/api/account/*`, `/api/modules/lodge/*` |
+| `roomSlots` | 숙소 방 배정 | `roomId`, `mydongUid`, `aidongId`, `state` | `/api/modules/lodge/*` |
+| `roomFurniturePlacements` | 숙소 가구 배치 | `roomId`, `itemId`, `placementIndex` | `/api/modules/lodge/*` |
 | `myIslandStates` | 마이섬 구역 | `unlockedZones`, `zoneSlots`, `dynamicAidongZones`, `zoneProgress` | `/api/modules/my-island/*` |
 | `codexStates` | 도감 | `unlockedDiaries`, `unlockedCodexEntries`, `codexFullyRegistered` | `/api/modules/codex/*` |
 | `lodgeStates` | 숙소 | `lodgeInventory`, `assignedAidongs`, `rooms`, `furniture` | `/api/modules/lodge/*` |
@@ -153,7 +167,9 @@ backend 경계:
 수정 document:
 
 - `users`
+- `providerAccounts`
 - `hostStates`
+- split dynamic 기본값은 account/bootstrap 또는 repository getOrCreate 경로에서 보정될 수 있음
 
 frontend client:
 
@@ -176,6 +192,7 @@ frontend client:
 수정 document:
 
 - `users`
+- `providerAccounts`
 - 필요 시 `hostStates`
 
 frontend client:
@@ -199,6 +216,7 @@ frontend client:
 수정 document:
 
 - `users`
+- `providerAccounts`
 - 필요 시 `hostStates`
 
 frontend client:
@@ -208,7 +226,8 @@ frontend client:
 backend 경계:
 
 - provider 검증은 `socialProviderAdapters.ts`를 통과해야 한다.
-- `{ authProvider, providerUid }`로 기존 계정을 조회한다.
+- `providerAccounts.providerCode + providerSubjectId`로 기존 계정을 조회한다.
+- `users.authProvider/providerUid`는 호환 mirror다.
 - provider email은 보조 정보이며 email만으로 자동 병합하지 않는다.
 - 로그인 이후 다른 소셜 아이디 연결/병합/충돌 처리는 이 API 범위가 아니다.
 
@@ -243,10 +262,26 @@ backend 경계:
 
 - 로그인 직후 또는 앱 재진입 시 다음 화면 판단에 필요한 account 진행 상태를 한 번에 조회
 - 화면은 `nextStep`을 기준으로 `signup`, `timezone`, `terms`, `title` 중 어디로 갈지 판단
+- 앱 hydrate에 필요한 split dynamic snapshot을 함께 내려준다.
 
 읽는 document:
 
 - `users`
+- `hostStates`
+- `userSettings`
+- `userCurrencyBalances`
+- `diceResources`
+- `userInventoryItems`
+- `sooksoStates`
+- `mydongList`
+- `myAidongStates`
+- `myIslandStates`
+- `codexStates`
+- `shipStates`
+- `mydongPediaInventory`
+- `userCosmeticInventory`
+- `mydongCosmeticLoadouts`
+- `mydongPersonaPartStates`
 
 frontend client:
 
@@ -259,11 +294,14 @@ frontend client:
 - `provider`: auth provider 요약
 - `account`: 공통 `AccountProgress`
 - `nextStep`: `login | signup | timezone | terms | title`
+- `state`: 기존 frontend store가 바로 병합할 수 있는 account/user state projection
+- `snapshot`: split collection 원본에 가까운 aggregate payload
 
 주의:
 
 - 화면 플로우 판단은 `GET /api/account/state`보다 이 API를 우선 사용한다.
-- 전역 자원, 모듈 상태, 인벤토리 요약은 이 API에 섞지 않는다.
+- 신규 hydrate는 이 API를 우선 사용한다.
+- 이 API가 내려주는 `snapshot`은 조회 전용 aggregate다. 수정은 각 domain API를 사용한다.
 
 #### `POST /api/account/nickname/check`
 
@@ -421,6 +459,7 @@ frontend client:
 
 - `users.termsAgreements`
 - `users.termsCompleted`
+- `userSettings`
 
 frontend client:
 
@@ -513,7 +552,14 @@ frontend client:
 
 ## 6. Host / 전역 자원 API
 
-Host API는 `hostStates`를 소유한다.
+Host API는 기존 프론트 계약을 위해 `coins`, `diamonds`, `diceCount`, `inventory` map을 반환한다.
+
+하지만 내부 권위 저장소는 다음으로 분리되어 있다.
+
+- coin/diamond: `userCurrencyBalances`, `userCurrencyLedger`
+- 주사위: `diceResources`
+- 전역 inventory: `userInventoryItems`
+- `hostStates`: `hostName`과 기존 응답 호환 projection
 
 ### `GET /api/host/state`
 
@@ -524,6 +570,9 @@ Host API는 `hostStates`를 소유한다.
 읽는 document:
 
 - `hostStates`
+- `userCurrencyBalances`
+- `diceResources`
+- `userInventoryItems`
 
 frontend client:
 
@@ -539,6 +588,7 @@ frontend client:
 수정 document:
 
 - `hostStates`
+- patch에 자원/inventory가 포함되는 기존 호환 경로는 repository adapter가 split collection mirror를 함께 맞춘다.
 
 frontend client:
 
@@ -549,11 +599,12 @@ frontend client:
 역할:
 
 - 전역 숫자 자원 증감
-- 대상: `coins`, `gems`, `diamonds`, `diceCount`
+- 대상: `coins`, `diamonds`, `diceCount`
 
 수정 document:
 
-- `hostStates`
+- `coins`, `diamonds`: `userCurrencyBalances`, `userCurrencyLedger`, `hostStates` projection
+- `diceCount`: `diceResources`, `hostStates` projection
 
 frontend client:
 
@@ -572,7 +623,8 @@ frontend client:
 
 수정 document:
 
-- `hostStates.inventory`
+- `userInventoryItems`
+- `hostStates.inventory` projection
 
 frontend client:
 
@@ -639,7 +691,13 @@ frontend client:
 
 ## 8. Aidong 관련 API
 
-Aidong 관련 API는 대부분 `myAidongStates`를 소유한다.
+Aidong 관련 API는 기존 호환 상태로 `myAidongStates`를 반환할 수 있지만, 현재 권위는 다음처럼 분리한다.
+
+- 보유 Aidong: `mydongList`
+- 케어/needs/affinity 호환 상태: `myAidongStates`
+- 전역 item 보유: `userInventoryItems`
+- Aidong 도감템: `mydongPediaInventory`
+- 코스메틱 보유/장착: `userCosmeticInventory`, `mydongCosmeticLoadouts`, `mydongPersonaPartStates`
 
 ### 8.1 My Aidong API
 
@@ -650,6 +708,7 @@ Base path:
 Document:
 
 - `myAidongStates`
+- `mydongList`
 
 #### `POST /recruit`
 
@@ -682,7 +741,7 @@ frontend client:
 수정 document:
 
 - `myAidongStates`
-- 필요 시 `hostStates` 자원
+- 필요 시 `userCurrencyBalances`, `diceResources`, `userInventoryItems`
 
 frontend client:
 
@@ -706,11 +765,13 @@ frontend client:
 
 읽는 document:
 
-- `hostStates.inventory`
+- `userInventoryItems`
+- 필요 시 `userCosmeticInventory`
 
 수정 document:
 
-- `myAidongStates.equippedItems`
+- `mydongCosmeticLoadouts`
+- `myAidongStates.equippedItems` mirror
 
 frontend client:
 
@@ -718,8 +779,9 @@ frontend client:
 
 주의:
 
-- 아이템 보유 수량은 `hostStates.inventory`가 권위다.
-- 착용 상태는 `myAidongStates.equippedItems`가 권위다.
+- 아이템 보유 수량은 `userInventoryItems` 또는 코스메틱이면 `userCosmeticInventory`가 권위다.
+- 착용 상태는 `mydongCosmeticLoadouts`가 권위다.
+- `myAidongStates.equippedItems`는 호환 mirror다.
 
 #### `GET /codex-items/progress`
 
@@ -729,7 +791,8 @@ frontend client:
 
 읽는 document:
 
-- `myAidongStates`
+- `mydongPediaInventory`
+- `myAidongStates.aidongCodexItems` mirror
 
 #### `POST /codex-items/grant`
 
@@ -739,7 +802,8 @@ frontend client:
 
 수정 document:
 
-- `myAidongStates.aidongCodexItems`
+- `mydongPediaInventory`
+- `myAidongStates.aidongCodexItems` mirror
 
 #### `POST /upgrades/request`
 
@@ -1000,7 +1064,8 @@ frontend client:
 수정 document:
 
 - `shipStates.harborLastChargedAt`
-- `hostStates.diceCount`
+- `diceResources`
+- `hostStates.diceCount` projection
 
 frontend client:
 
@@ -1015,7 +1080,9 @@ frontend client:
 수정 document:
 
 - `shipStates.cabinFurniture`
-- `hostStates.coins`
+- `userCurrencyBalances`
+- `userCurrencyLedger`
+- `hostStates.coins` projection
 
 frontend client:
 
@@ -1068,7 +1135,8 @@ frontend client:
 
 수정 document:
 
-- `lodgeStates.assignedAidongs`
+- `roomSlots`
+- `lodgeStates.assignedAidongs` mirror
 
 frontend client:
 
@@ -1083,7 +1151,9 @@ frontend client:
 수정 document:
 
 - `lodgeStates.furniture`
-- `hostStates.coins`
+- `userCurrencyBalances`
+- `userCurrencyLedger`
+- `hostStates.coins` projection
 
 frontend client:
 
@@ -1097,7 +1167,8 @@ frontend client:
 
 수정 document:
 
-- `lodgeStates.rooms`
+- `roomFurniturePlacements`
+- `lodgeStates.rooms` mirror
 
 frontend client:
 
@@ -1147,7 +1218,8 @@ frontend client:
 
 수정 document:
 
-- `hostStates.diceCount`
+- `diceResources`
+- `hostStates.diceCount` projection
 - 필요 시 `routeNeighborStates`
 
 frontend client:
@@ -1186,7 +1258,8 @@ frontend client:
 수정 document:
 
 - `routeNeighborStates.landings`
-- reward에 따라 `hostStates` 또는 target module state
+- reward에 따라 `userCurrencyBalances`, `diceResources`, `userInventoryItems` 또는 target module state
+- `hostStates`는 projection으로 함께 갱신될 수 있음
 
 frontend client:
 
@@ -1203,6 +1276,7 @@ frontend client:
 
 - `routeNeighborStates.progress`
 - `myAidongStates`
+- `mydongList`
 - `myIslandStates`
 
 frontend client:
@@ -1296,7 +1370,8 @@ frontend client:
 
 - `zoneStates.clearedCount`
 - `zoneStates.progress`
-- reward에 따라 `localResources` 또는 `hostStates`
+- reward에 따라 `localResources`, `userInventoryItems`, `userCurrencyBalances`, `diceResources`
+- `hostStates`는 projection으로 함께 갱신될 수 있음
 
 frontend client:
 
@@ -1388,9 +1463,20 @@ Base path:
 
 - `users`
 - `hostStates`
+- `userSettings`
+- `userCurrencyBalances`
+- `diceResources`
+- `userInventoryItems`
 - `myAidongStates`
+- `mydongList`
+- `mydongPediaInventory`
+- `userCosmeticInventory`
+- `mydongCosmeticLoadouts`
 - `codexStates`
 - `lodgeStates`
+- `sooksoStates`
+- `roomSlots`
+- `roomFurniturePlacements`
 
 Endpoints:
 
@@ -1450,8 +1536,9 @@ frontend client:
 
 수정 document:
 
-- source module state 또는 `hostStates`
-- target module state 또는 `hostStates`
+- source module state 또는 `userInventoryItems`/`userCurrencyBalances`/`diceResources`
+- target module state 또는 `userInventoryItems`/`userCurrencyBalances`/`diceResources`
+- `hostStates`는 projection으로 함께 갱신될 수 있음
 - `customsLogs`
 
 frontend client:
@@ -1546,8 +1633,22 @@ Base path:
 수정 document:
 
 - `users`
+- `providerAccounts`
+- `userSettings`
 - `hostStates`
+- `userCurrencyBalances`
+- `userCurrencyLedger`
+- `diceResources`
+- `userInventoryItems`
 - `myAidongStates`
+- `mydongList`
+- `mydongPediaInventory`
+- `userCosmeticInventory`
+- `mydongCosmeticLoadouts`
+- `mydongPersonaPartStates`
+- `sooksoStates`
+- `roomSlots`
+- `roomFurniturePlacements`
 - `myIslandStates`
 - `codexStates`
 - `lodgeStates`
@@ -1601,10 +1702,10 @@ frontend client:
 
 DB에 저장되는 항해 관련 값은 다음에 한정한다.
 
-- 주사위 소비 결과: `hostStates.diceCount`
+- 주사위 소비 결과: `diceResources`와 `hostStates.diceCount` projection
 - landing clear 이력: `routeNeighborStates.landings`
-- 영입/만남 수락 결과: `myAidongStates`, `myIslandStates`, `routeNeighborStates.progress`
-- 항해 중 얻은 실제 보상: 해당 모듈 또는 host document
+- 영입/만남 수락 결과: `mydongList`, `myAidongStates` mirror, `myIslandStates`, `routeNeighborStates.progress`
+- 항해 중 얻은 실제 보상: 해당 모듈, `userInventoryItems`, `userCurrencyBalances`, `diceResources`
 
 ## 23. 새 API를 만들 때 체크리스트
 
@@ -1626,3 +1727,4 @@ DB에 저장되는 항해 관련 값은 다음에 한정한다.
 - 2026-06-15: 닉네임 검사와 가입 프로필 저장 API를 추가했다. `users.nicknameNormalized`, `users.signupProfileCompleted`, `users.profileImageSource` 경계와 frontend client 이름을 명시했다.
 - 2026-06-15: 시간대 저장 API를 추가했다. `users.timeZone`, `users.detectedTimeZone`, `users.utcOffsetMinutes`, `users.timezoneCompleted` 경계와 frontend `saveAccountTimeZone()` client 이름을 명시했다.
 - 2026-06-15: 현재 약관 조회와 약관 동의 저장 API를 추가했다. `users.termsAgreements`, `users.termsCompleted` 경계와 frontend `getCurrentTerms()`/`agreeTerms()` client 이름을 명시했다.
+- 2026-06-29: xlsx 기반 동적 schema migration 기준을 반영했다. provider/settings/currency/dice/inventory/sookso/mydong/pedia/cosmetic 권위 collection을 추가하고, `hostStates`, `myAidongStates`, `lodgeStates`의 기존 필드는 projection/mirror로 격하했다.

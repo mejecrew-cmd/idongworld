@@ -7,6 +7,10 @@
  */
 import type { HostStateDoc } from '../models/HostStateModel.js'
 import type { HostResource, HostStatePatch, HostStateRepository } from './hostStateRepository.js'
+import { hostResourceToCurrencyId, type CurrencyBalances } from './currencyRepository.js'
+import { memoryCurrencyRepository } from './memoryCurrencyRepository.js'
+import { memoryDiceResourceRepository } from './memoryDiceResourceRepository.js'
+import { memoryUserInventoryRepository } from './memoryUserInventoryRepository.js'
 
 const hostStates = new Map<string, HostStateDoc>()
 
@@ -33,23 +37,93 @@ function applyPatch(current: HostStateDoc, patch: HostStatePatch): HostStateDoc 
   }
 }
 
+function currencySeedFromHostState(state: HostStateDoc): Partial<CurrencyBalances> {
+  return {
+    coin: state.coins,
+    diamond: state.diamonds,
+  }
+}
+
+function currencyPatchFromHostPatch(patch: HostStatePatch): Partial<CurrencyBalances> {
+  const balances: Partial<CurrencyBalances> = {}
+  if (patch.coins !== undefined) balances.coin = patch.coins
+  if (patch.diamonds !== undefined) balances.diamond = patch.diamonds
+  return balances
+}
+
+function hasCurrencyPatch(patch: Partial<CurrencyBalances>): boolean {
+  return patch.coin !== undefined || patch.diamond !== undefined
+}
+
+function withCurrencyMirror(state: HostStateDoc, balances: CurrencyBalances): HostStateDoc {
+  return {
+    ...state,
+    coins: balances.coin,
+    diamonds: balances.diamond,
+  }
+}
+
+function withDiceMirror(state: HostStateDoc, diceCount: number): HostStateDoc {
+  return {
+    ...state,
+    diceCount,
+  }
+}
+
 export const memoryHostStateRepository: HostStateRepository = {
   async getOrCreate(uid, seed, _session) {
     const current = hostStates.get(uid)
-    if (current) return current
+    if (current) {
+      const inventory = await memoryUserInventoryRepository.getInventoryMap(uid, current.inventory)
+      const balances = await memoryCurrencyRepository.getBalances(uid, currencySeedFromHostState(current))
+      const dice = await memoryDiceResourceRepository.getOrCreate(uid, { diceQuantity: current.diceCount })
+      return withDiceMirror(withCurrencyMirror({ ...current, inventory }, balances), dice.diceQuantity)
+    }
     const created = createHostState(uid, seed)
-    hostStates.set(uid, created)
-    return created
+    created.inventory = await memoryUserInventoryRepository.getInventoryMap(uid, created.inventory)
+    const balances = await memoryCurrencyRepository.getBalances(uid, currencySeedFromHostState(created))
+    const dice = await memoryDiceResourceRepository.getOrCreate(uid, { diceQuantity: created.diceCount })
+    const mirrored = withDiceMirror(withCurrencyMirror(created, balances), dice.diceQuantity)
+    hostStates.set(uid, mirrored)
+    return mirrored
   },
 
   async patch(uid, patch, _session) {
     const current = await this.getOrCreate(uid)
-    const updated = applyPatch(current, patch)
+    const inventory = patch.inventory !== undefined
+      ? await memoryUserInventoryRepository.replaceInventory(uid, patch.inventory)
+      : await memoryUserInventoryRepository.getInventoryMap(uid, current.inventory)
+    const currencyPatch = currencyPatchFromHostPatch(patch)
+    const balances = hasCurrencyPatch(currencyPatch)
+      ? await memoryCurrencyRepository.replaceBalances(uid, currencyPatch, {
+        source: 'system',
+        reason: 'host_state_patch',
+      })
+      : await memoryCurrencyRepository.getBalances(uid, currencySeedFromHostState(current))
+    const dice = patch.diceCount !== undefined
+      ? await memoryDiceResourceRepository.replaceDiceQuantity(uid, patch.diceCount)
+      : await memoryDiceResourceRepository.getOrCreate(uid, { diceQuantity: current.diceCount })
+    const updated = withDiceMirror(withCurrencyMirror(applyPatch(current, { ...patch, inventory }), balances), dice.diceQuantity)
     hostStates.set(uid, updated)
     return updated
   },
 
   async mutateResource(uid, resource: HostResource, delta, session) {
+    const currencyId = hostResourceToCurrencyId(resource)
+    if (currencyId) {
+      const balances = await memoryCurrencyRepository.mutateCurrency(uid, currencyId, delta, {
+        source: 'game',
+        reason: `host_resource_${resource}`,
+      })
+      return this.patch(uid, {
+        coins: balances.coin,
+        diamonds: balances.diamond,
+      }, session)
+    }
+    if (resource === 'diceCount') {
+      const dice = await memoryDiceResourceRepository.mutateDice(uid, delta)
+      return this.patch(uid, { diceCount: dice.diceQuantity }, session)
+    }
     const current = await this.getOrCreate(uid)
     const next = current[resource] + delta
     if (next < 0) throw new Error('insufficient_host_resource')
@@ -57,11 +131,10 @@ export const memoryHostStateRepository: HostStateRepository = {
   },
 
   async mutateInventory(uid, itemId, delta, session) {
-    const current = await this.getOrCreate(uid)
-    const next = (current.inventory[itemId] ?? 0) + delta
-    if (next < 0) throw new Error('insufficient_host_inventory')
+    await this.getOrCreate(uid)
+    const inventory = await memoryUserInventoryRepository.mutateInventory(uid, itemId, delta)
     return this.patch(uid, {
-      inventory: { ...current.inventory, [itemId]: next },
+      inventory,
     }, session)
   },
 }

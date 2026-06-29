@@ -7,7 +7,21 @@
  */
 import { Router } from 'express'
 import { getRequestUid } from '../middleware/auth.js'
-import { getUserRepository } from '../repositories/index.js'
+import {
+  getCurrencyRepository,
+  getDedicatedModuleRepositories,
+  getDiceResourceRepository,
+  getHostStateRepository,
+  getMydongCosmeticRepository,
+  getMydongPediaInventoryRepository,
+  getMydongRepository,
+  getSooksoRepository,
+  getUserInventoryRepository,
+  getUserRepository,
+  getUserSettingsRepository,
+} from '../repositories/index.js'
+import { userSettingsPatchFromUserPatch } from '../repositories/userSettingsRepository.js'
+import { getAidongCodexItemMap, getAidongCosmeticLoadoutMaps } from '../modules/my-aidong/service.js'
 
 export const accountRouter = Router()
 
@@ -43,6 +57,143 @@ function normalizeSoundSettings(value: unknown) {
   return { bgmVolume, sfxVolume }
 }
 
+function projectSoundSettings(settings: { bgmVolume: number; sfxVolume: number }) {
+  return {
+    bgmVolume: settings.bgmVolume,
+    sfxVolume: settings.sfxVolume,
+  }
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+}
+
+async function buildAccountState(uid: string) {
+  const user = await getUserRepository().getUser(uid)
+  if (!user) return undefined
+
+  const [userSettings, sookso, host] = await Promise.all([
+    getUserSettingsRepository().getOrCreate(uid, user),
+    getSooksoRepository().getOrCreateSookso(uid, {
+      sooksoClean: Boolean(user.sooksoClean),
+      sooksoName: user.sooksoName,
+    }),
+    getHostStateRepository().getOrCreate(uid, {
+      hostName: user.hostName,
+      coins: user.coins,
+      diamonds: user.diamonds,
+      diceCount: user.diceCount,
+      inventory: user.inventory,
+    }),
+  ])
+  const soundSettings = projectSoundSettings(userSettings)
+
+  return {
+    uid: user.uid,
+    isGuest: user.isGuest,
+    nickname: user.nickname,
+    gameStartedAt: user.gameStartedAt,
+    openingSeen: user.openingSeen,
+    sooksoClean: Boolean(sookso.sooksoClean),
+    onboardingComplete: user.onboardingComplete,
+    hostName: host.hostName ?? user.hostName,
+    sooksoName: sookso.sooksoName,
+    soundSettings,
+    userSettings,
+    sookso,
+  }
+}
+
+async function buildAccountBootstrap(uid: string) {
+  const account = await buildAccountState(uid)
+  if (!account) return undefined
+
+  const host = await getHostStateRepository().getOrCreate(uid)
+  const moduleRepos = getDedicatedModuleRepositories()
+  const [
+    currencies,
+    diceResource,
+    inventory,
+    mydongs,
+    myAidong,
+    myIsland,
+    codex,
+    ship,
+    pediaInventory,
+    cosmeticInventory,
+    cosmeticLoadouts,
+    personaPartStates,
+  ] = await Promise.all([
+    getCurrencyRepository().getBalances(uid, {
+      coin: host.coins,
+      diamond: host.diamonds,
+    }),
+    getDiceResourceRepository().getOrCreate(uid, {
+      diceQuantity: host.diceCount,
+    }),
+    getUserInventoryRepository().getInventoryMap(uid, host.inventory),
+    getMydongRepository().list(uid),
+    moduleRepos['my-aidong'].getOrCreate(uid),
+    moduleRepos['my-island'].getOrCreate(uid),
+    moduleRepos.codex.getOrCreate(uid),
+    moduleRepos.ship.getOrCreate(uid),
+    getMydongPediaInventoryRepository().list(uid),
+    getMydongCosmeticRepository().listInventory(uid),
+    getMydongCosmeticRepository().listLoadouts(uid),
+    getMydongCosmeticRepository().listPersonaPartStates(uid),
+  ])
+
+  const myAidongRecord = asRecord(myAidong)
+  const aidongCodexItems = await getAidongCodexItemMap(uid, myAidongRecord)
+  const cosmeticMaps = await getAidongCosmeticLoadoutMaps(uid, myAidongRecord)
+  const myAidongState = {
+    ...myAidongRecord,
+    recruitedAidongs: mydongs.map((mydong) => mydong.aidongId),
+    aidongCodexItems,
+    equippedOutfit: cosmeticMaps.equippedOutfit,
+    equippedItems: cosmeticMaps.equippedItems,
+  }
+  const hostState = {
+    ...asRecord(host),
+    coins: currencies.coin,
+    diamonds: currencies.diamond,
+    diceCount: diceResource.diceQuantity,
+    inventory,
+  }
+  const state = {
+    ...account,
+    ...hostState,
+    ...myAidongState,
+    ...asRecord(myIsland),
+    ...asRecord(codex),
+    ...asRecord(ship),
+  }
+
+  return {
+    state,
+    snapshot: {
+      account,
+      host: hostState,
+      userSettings: account.userSettings,
+      currencies,
+      diceResource,
+      inventory,
+      sookso: account.sookso,
+      mydongs,
+      myAidong: myAidongState,
+      myIsland,
+      codex,
+      ship,
+      pediaInventory,
+      cosmeticInventory,
+      cosmeticLoadouts,
+      personaPartStates,
+    },
+  }
+}
+
 function pickAccountPatch(source: Record<string, unknown>) {
   const patch: Record<string, unknown> = {}
   for (const field of ACCOUNT_FIELDS) {
@@ -65,22 +216,24 @@ accountRouter.get('/state', async (req, res) => {
   const uid = getRequestUid(req)
   if (!uid) return res.status(401).json({ error: 'no_uid' })
 
-  const user = await getUserRepository().getUser(uid)
-  if (!user) return res.status(404).json({ error: 'not_found' })
+  const state = await buildAccountState(uid)
+  if (!state) return res.status(404).json({ error: 'not_found' })
 
   res.json({
-    state: {
-      uid: user.uid,
-      isGuest: user.isGuest,
-      nickname: user.nickname,
-      gameStartedAt: user.gameStartedAt,
-      openingSeen: user.openingSeen,
-      sooksoClean: Boolean(user.sooksoClean),
-      onboardingComplete: user.onboardingComplete,
-      hostName: user.hostName,
-      sooksoName: user.sooksoName,
-      soundSettings: user.soundSettings,
-    },
+    state,
+  })
+})
+
+accountRouter.get('/bootstrap', async (req, res) => {
+  const uid = getRequestUid(req)
+  if (!uid) return res.status(401).json({ error: 'no_uid' })
+
+  const bootstrap = await buildAccountBootstrap(uid)
+  if (!bootstrap) return res.status(404).json({ error: 'not_found' })
+
+  res.json({
+    ok: true,
+    ...bootstrap,
   })
 })
 
@@ -93,8 +246,27 @@ accountRouter.patch('/state', async (req, res) => {
     return res.status(400).json({ error: 'invalid_patch' })
   }
 
-  const updated = await getUserRepository().updateUser(uid, pickAccountPatch(patch))
+  const accountPatch = pickAccountPatch(patch)
+  const updated = await getUserRepository().updateUser(uid, accountPatch)
   if (!updated) return res.status(404).json({ error: 'not_found' })
+  const sooksoPatch: { sooksoClean?: boolean; sooksoName?: string } = {}
+  if ('sooksoClean' in accountPatch) sooksoPatch.sooksoClean = Boolean(accountPatch.sooksoClean)
+  if ('sooksoName' in accountPatch) {
+    sooksoPatch.sooksoName = typeof accountPatch.sooksoName === 'string'
+      ? accountPatch.sooksoName
+      : undefined
+  }
+  const sookso = Object.keys(sooksoPatch).length
+    ? await getSooksoRepository().patchSookso(uid, sooksoPatch)
+    : await getSooksoRepository().getOrCreateSookso(uid, {
+      sooksoClean: Boolean(updated.sooksoClean),
+      sooksoName: updated.sooksoName,
+    })
+  const settingsPatch = userSettingsPatchFromUserPatch(accountPatch)
+  const userSettings = Object.keys(settingsPatch).length
+    ? await getUserSettingsRepository().patch(uid, settingsPatch)
+    : await getUserSettingsRepository().getOrCreate(uid, updated)
+  const soundSettings = projectSoundSettings(userSettings)
 
   res.json({
     state: {
@@ -103,11 +275,13 @@ accountRouter.patch('/state', async (req, res) => {
       nickname: updated.nickname,
       gameStartedAt: updated.gameStartedAt,
       openingSeen: updated.openingSeen,
-      sooksoClean: Boolean(updated.sooksoClean),
+      sooksoClean: Boolean(sookso.sooksoClean),
       onboardingComplete: updated.onboardingComplete,
       hostName: updated.hostName,
-      sooksoName: updated.sooksoName,
-      soundSettings: updated.soundSettings,
+      sooksoName: sookso.sooksoName,
+      soundSettings,
+      userSettings,
+      sookso,
     },
   })
 })

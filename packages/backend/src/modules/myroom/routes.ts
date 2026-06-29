@@ -10,6 +10,7 @@ import { getRequestUid } from '../../middleware/auth.js'
 import { getHostStateRepository, getUserRepository } from '../../repositories/index.js'
 import { requireModuleRepo } from '../shared.js'
 import { buildAidongCodexProgress, listAidongCodexCatalogItems } from '../my-aidong/codexCatalog.js'
+import { getAidongCodexItemMap, getAidongCosmeticLoadoutMaps, listOwnedMydongs } from '../my-aidong/service.js'
 
 export const myRoomRouter = Router()
 
@@ -21,34 +22,22 @@ function asRecord(value: unknown): Record<string, unknown> {
     : {}
 }
 
-function getNestedNumberMap(value: unknown): Record<string, Record<string, number>> {
-  const source = asRecord(value)
-  const result: Record<string, Record<string, number>> = {}
-  for (const [characterId, rawItems] of Object.entries(source)) {
-    const items = asRecord(rawItems)
-    result[characterId] = Object.fromEntries(
-      Object.entries(items)
-        .map(([itemId, amount]) => [itemId, Number(amount)] as [string, number])
-        .filter(([, amount]) => Number.isFinite(amount) && amount > 0),
-    )
-  }
-  return result
-}
-
 export async function buildMyRoomSummary(uid: string) {
-  const [user, host, myAidong, codex, lodge] = await Promise.all([
+  const [user, host, myAidong, codex, lodge, mydongs] = await Promise.all([
     getUserRepository().getUser(uid),
     getHostStateRepository().getOrCreate(uid),
     requireModuleRepo('my-aidong').getOrCreate(uid),
     requireModuleRepo('codex').getOrCreate(uid),
     requireModuleRepo('lodge').getOrCreate(uid),
+    listOwnedMydongs(uid),
   ])
 
   const myAidongState = asRecord(myAidong)
   const codexState = asRecord(codex)
   const lodgeState = asRecord(lodge)
-  const recruitedAidongs = Array.isArray(myAidongState.recruitedAidongs) ? myAidongState.recruitedAidongs as string[] : []
-  const aidongCodexItems = getNestedNumberMap(myAidongState.aidongCodexItems)
+  const recruitedAidongs = mydongs.map((mydong) => mydong.aidongId)
+  const aidongCodexItems = await getAidongCodexItemMap(uid, myAidongState)
+  const cosmeticLoadouts = await getAidongCosmeticLoadoutMaps(uid, myAidongState)
   const aidongCodexProgress = Object.fromEntries(
     recruitedAidongs.map((characterId) => [
       characterId,
@@ -81,8 +70,8 @@ export async function buildMyRoomSummary(uid: string) {
       recruitedAidongs,
       affinities: asRecord(myAidongState.affinities),
       needs: asRecord(myAidongState.needs),
-      equippedOutfit: asRecord(myAidongState.equippedOutfit),
-      equippedItems: asRecord(myAidongState.equippedItems),
+      equippedOutfit: cosmeticLoadouts.equippedOutfit,
+      equippedItems: cosmeticLoadouts.equippedItems,
       aidongCodexItems,
       aidongUpgradeState: asRecord(myAidongState.aidongUpgradeState),
     },

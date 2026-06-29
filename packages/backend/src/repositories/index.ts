@@ -17,11 +17,35 @@ import { memoryCustomsLogRepository } from './memoryCustomsLogRepository.js'
 import { mongoCustomsLogRepository } from './mongoCustomsLogRepository.js'
 import { memoryAdminRepository } from './memoryAdminRepository.js'
 import { mongoAdminRepository } from './mongoAdminRepository.js'
+import { memoryUserSettingsRepository } from './memoryUserSettingsRepository.js'
+import { mongoUserSettingsRepository } from './mongoUserSettingsRepository.js'
+import { memoryUserInventoryRepository } from './memoryUserInventoryRepository.js'
+import { mongoUserInventoryRepository } from './mongoUserInventoryRepository.js'
+import { memoryCurrencyRepository } from './memoryCurrencyRepository.js'
+import { mongoCurrencyRepository } from './mongoCurrencyRepository.js'
+import { memoryDiceResourceRepository } from './memoryDiceResourceRepository.js'
+import { mongoDiceResourceRepository } from './mongoDiceResourceRepository.js'
+import { memoryMydongRepository } from './memoryMydongRepository.js'
+import { mongoMydongRepository } from './mongoMydongRepository.js'
+import { memorySooksoRepository } from './memorySooksoRepository.js'
+import { mongoSooksoRepository } from './mongoSooksoRepository.js'
+import { memoryMydongPediaInventoryRepository } from './memoryMydongPediaInventoryRepository.js'
+import { mongoMydongPediaInventoryRepository } from './mongoMydongPediaInventoryRepository.js'
+import { memoryMydongCosmeticRepository } from './memoryMydongCosmeticRepository.js'
+import { mongoMydongCosmeticRepository } from './mongoMydongCosmeticRepository.js'
 import type { AdminRepository } from './adminRepository.js'
+import type { CurrencyRepository } from './currencyRepository.js'
+import type { DiceResourceRepository } from './diceResourceRepository.js'
+import type { MydongRepository } from './mydongRepository.js'
+import type { MydongPediaInventoryRepository } from './mydongPediaInventoryRepository.js'
+import type { MydongCosmeticRepository } from './mydongCosmeticRepository.js'
+import type { SooksoRepository } from './sooksoRepository.js'
 import type { CustomsLogRepository } from './customsLogRepository.js'
 import type { HostStateRepository } from './hostStateRepository.js'
 import type { ModuleStateRepository } from './moduleStateRepository.js'
 import type { UserRepository } from './userRepository.js'
+import type { UserSettingsRepository } from './userSettingsRepository.js'
+import type { UserInventoryRepository } from './userInventoryRepository.js'
 
 let userRepository: UserRepository = memoryUserRepository
 let moduleStateRepository: ModuleStateRepository = memoryModuleStateRepository
@@ -29,6 +53,14 @@ let hostStateRepository: HostStateRepository = memoryHostStateRepository
 let dedicatedModuleRepositories: ModuleRepositoryMap = createDedicatedModuleRepositories('memory')
 let customsLogRepository: CustomsLogRepository = memoryCustomsLogRepository
 let adminRepository: AdminRepository = memoryAdminRepository
+let userSettingsRepository: UserSettingsRepository = memoryUserSettingsRepository
+let userInventoryRepository: UserInventoryRepository = memoryUserInventoryRepository
+let currencyRepository: CurrencyRepository = memoryCurrencyRepository
+let diceResourceRepository: DiceResourceRepository = memoryDiceResourceRepository
+let mydongRepository: MydongRepository = memoryMydongRepository
+let sooksoRepository: SooksoRepository = memorySooksoRepository
+let mydongPediaInventoryRepository: MydongPediaInventoryRepository = memoryMydongPediaInventoryRepository
+let mydongCosmeticRepository: MydongCosmeticRepository = memoryMydongCosmeticRepository
 let repositoryBackend: 'memory' | 'mongo' = 'memory'
 
 export function initializeRepositories(): void {
@@ -41,6 +73,14 @@ export function initializeRepositories(): void {
     dedicatedModuleRepositories = createDedicatedModuleRepositories('mongo')
     customsLogRepository = mongoCustomsLogRepository
     adminRepository = mongoAdminRepository
+    userSettingsRepository = mongoUserSettingsRepository
+    userInventoryRepository = mongoUserInventoryRepository
+    currencyRepository = mongoCurrencyRepository
+    diceResourceRepository = mongoDiceResourceRepository
+    mydongRepository = mongoMydongRepository
+    sooksoRepository = mongoSooksoRepository
+    mydongPediaInventoryRepository = mongoMydongPediaInventoryRepository
+    mydongCosmeticRepository = mongoMydongCosmeticRepository
     console.info('[repositories] using mongo repositories')
     return
   }
@@ -52,6 +92,14 @@ export function initializeRepositories(): void {
   dedicatedModuleRepositories = createDedicatedModuleRepositories('memory')
   customsLogRepository = memoryCustomsLogRepository
   adminRepository = memoryAdminRepository
+  userSettingsRepository = memoryUserSettingsRepository
+  userInventoryRepository = memoryUserInventoryRepository
+  currencyRepository = memoryCurrencyRepository
+  diceResourceRepository = memoryDiceResourceRepository
+  mydongRepository = memoryMydongRepository
+  sooksoRepository = memorySooksoRepository
+  mydongPediaInventoryRepository = memoryMydongPediaInventoryRepository
+  mydongCosmeticRepository = memoryMydongCosmeticRepository
   console.info('[repositories] using memory repositories')
 }
 
@@ -77,6 +125,38 @@ export function getCustomsLogRepository(): CustomsLogRepository {
 
 export function getAdminRepository(): AdminRepository {
   return adminRepository
+}
+
+export function getUserSettingsRepository(): UserSettingsRepository {
+  return userSettingsRepository
+}
+
+export function getUserInventoryRepository(): UserInventoryRepository {
+  return userInventoryRepository
+}
+
+export function getCurrencyRepository(): CurrencyRepository {
+  return currencyRepository
+}
+
+export function getDiceResourceRepository(): DiceResourceRepository {
+  return diceResourceRepository
+}
+
+export function getMydongRepository(): MydongRepository {
+  return mydongRepository
+}
+
+export function getSooksoRepository(): SooksoRepository {
+  return sooksoRepository
+}
+
+export function getMydongPediaInventoryRepository(): MydongPediaInventoryRepository {
+  return mydongPediaInventoryRepository
+}
+
+export function getMydongCosmeticRepository(): MydongCosmeticRepository {
+  return mydongCosmeticRepository
 }
 
 export function getRepositoryStatus() {

@@ -11,6 +11,8 @@
 
 현재 프로젝트는 여러 번의 기획 변경과 구조 개편을 거쳤다. 그래서 오래된 next_work, 오래된 세관 UX, 오래된 dynamic zone 흐름을 그대로 믿으면 안 된다. 아래 읽는 순서와 규칙을 먼저 따른다.
 
+2026-06-29 이후에는 동적 유저 데이터가 xlsx 정책 기준으로 한 번 더 분리됐다. 새 개발자는 `users`, `hostStates`, `myAidongStates`, `lodgeStates`만 보고 전체 유저 상태를 판단하면 안 된다. 재화, 주사위, 전역 인벤토리, 숙소, 보유 Aidong, 도감템, 코스메틱은 별도 collection이 권위다.
+
 ## 1. 먼저 읽을 문서 순서
 
 새 개발자는 아래 순서대로 읽으면 된다.
@@ -114,9 +116,23 @@
 
 | collection | 역할 |
 |---|---|
-| `users` | 계정, guest, auth 연결 user document |
-| `hostStates` | host 이름, 광역 재화, 주사위, 통 inventory |
-| `myAidongStates` | 영입 Aidong, needs, 케어, 착용, 도감 아이템 후보 원장 |
+| `users` | 계정, guest, 진행 플래그, auth 호환 user document |
+| `providerAccounts` | provider별 인증 연결. 한 유저 여러 provider 연결 가능 |
+| `userSettings` | 약관, 마케팅, 푸시, 시간대, 사운드 설정 |
+| `hostStates` | host 이름과 기존 API 호환 projection |
+| `userCurrencyBalances` | coin/diamond 잔액 |
+| `userCurrencyLedger` | 재화 변경 이력 |
+| `diceResources` | 주사위 수량과 충전 메타 |
+| `userInventoryItems` | 전역 인벤토리 item row |
+| `myAidongStates` | needs, 케어, 호감도 등 Aidong 호환 state |
+| `mydongList` | 유저가 보유한 개별 Aidong row |
+| `mydongPediaInventory` | Aidong별 도감템 수량 row |
+| `userCosmeticInventory` | 코스메틱 보유 row |
+| `mydongCosmeticLoadouts` | Aidong별 코스메틱 장착 |
+| `mydongPersonaPartStates` | persona part 상태 |
+| `sooksoStates` | 숙소 청소/이름 |
+| `roomSlots` | 숙소 방 배정 |
+| `roomFurniturePlacements` | 숙소 방별 가구 배치 |
 | `myIslandStates` | 마이섬 해금, 15구역 slot, 구역 진행 |
 | `codexStates` | 도감 표시, 일지, 등록 상태. 수량 원장은 아님 |
 | `routeNeighborStates` | 항해 route catalog, landing/encounter 결과 호환 기록. 현재 route/current cell/출항 여부는 저장하지 않음 |
@@ -130,6 +146,8 @@
 - 새 runtime 기능에서 `/api/state`를 되살리면 안 된다.
 - module state는 `/api/modules/{moduleId}` 아래 API를 쓴다.
 - domain rule이 있는 기능은 단순 state patch가 아니라 action API로 만든다.
+- `hostStates.inventory`, `hostStates.coins`, `hostStates.diceCount`, `myAidongStates.aidongCodexItems`, `lodgeStates.rooms`는 기존 화면/API 호환 projection 또는 mirror일 수 있다.
+- 새 기능은 `userInventoryItems`, `userCurrencyBalances`, `diceResources`, `mydongPediaInventory`, `roomFurniturePlacements` 같은 권위 collection을 거치는 repository/API를 사용한다.
 
 ### 3.3 frontend store 구조
 
@@ -389,8 +407,8 @@ packages/backend/src/modules/my-island/service.ts
 
 반대로 다음 경우에는 customs보다 domain action API를 우선한다.
 
-- gameplay 보상이 `hostStates.inventory` 같은 단일 권위 저장소로 바로 들어가는 경우.
-- 아이동별 도감 아이템이 `myAidongStates` 후보 원장으로 바로 들어가는 경우.
+- gameplay 보상이 `userInventoryItems`, `userCurrencyBalances`, `diceResources` 같은 단일 권위 저장소로 바로 들어가는 경우.
+- 아이동별 도감 아이템이 `mydongPediaInventory`로 바로 들어가는 경우.
 
 ## 6. 절대 지켜야 하는 작업 규칙
 
@@ -419,7 +437,7 @@ frontend api.patchState
 
 ```text
 route-neighbor service가 myIslandStates를 직접 수정
-zone-garden service가 hostStates.inventory를 임의 patch
+zone-garden service가 userInventoryItems를 거치지 않고 hostStates.inventory를 임의 patch
 ship service가 lodgeStates를 직접 수정
 ```
 
@@ -428,7 +446,7 @@ ship service가 lodgeStates를 직접 수정
 ```text
 my-aidong 영입은 my-aidong service
 my-island 편입은 my-island service
-host inventory 변경은 host service 또는 명시 action
+전역 inventory 변경은 host service, userInventory repository, 또는 명시 action
 cross-module debit/credit은 customs
 ```
 
@@ -499,7 +517,7 @@ Select-String -Path .cloud/수정한문서.md -Pattern ([char]0xFFFD)
 2. 저장 위치를 정한다.
    - 전용 collection인지.
    - `moduleStates` fallback인지.
-   - 기존 `hostStates`, `myAidongStates`, `myIslandStates`에 들어갈지.
+   - 기존 호환 projection이 아니라 `userCurrencyBalances`, `diceResources`, `userInventoryItems`, `mydongList`, `mydongPediaInventory`, `sooksoStates` 같은 권위 collection에 들어갈지.
 3. 전용 저장소가 필요하면 model을 만든다.
 4. repository를 만든다.
 5. `moduleRepositoryRegistry`에 등록한다.
@@ -600,20 +618,24 @@ my-island/slots/incorporate가 담당
 
 `codexStates`는 도감 표시, 등록, 일지 진행 상태를 담당한다.
 
-아이동별 25개 도감 아이템 수량은 후보상 다음 쪽이 맞다.
+아이동별 25개 도감 아이템 수량은 다음 collection이 권위다.
 
 ```text
-myAidongStates.aidongCodexItems
+mydongPediaInventory
 ```
 
-### 8.4 hostStates.inventory는 통 inventory 후보다
+`myAidongStates.aidongCodexItems`는 기존 화면/API 호환 mirror로만 본다.
 
-일반 소유 아이템, Aidong 착용 아이템 소유권은 `hostStates.inventory`가 가진다.
+### 8.4 userInventoryItems가 전역 inventory 기준이다
+
+일반 소유 아이템, Aidong 착용 아이템 소유권은 `userInventoryItems`가 가진다.
+
+`hostStates.inventory`는 기존 화면/API를 깨지 않기 위한 projection이다.
 
 착용 상태는 따로 둔다.
 
 ```text
-myAidongStates.equippedItems
+mydongCosmeticLoadouts
 ```
 
 ### 8.5 ship/lodge inventory는 당장 삭제하지 않는다

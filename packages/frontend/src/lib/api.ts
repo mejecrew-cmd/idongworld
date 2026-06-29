@@ -150,6 +150,29 @@ export interface PasswordSignupStartResponse {
   isNew: true
 }
 
+export interface AccountBootstrapResponse<TState = Record<string, unknown>> {
+  ok: boolean
+  state: TState
+  snapshot: {
+    account?: Record<string, unknown>
+    host?: Record<string, unknown>
+    userSettings?: Record<string, unknown>
+    currencies?: Record<string, number>
+    diceResource?: Record<string, unknown>
+    inventory?: Record<string, number>
+    sookso?: Record<string, unknown>
+    mydongs?: Array<Record<string, unknown>>
+    myAidong?: Record<string, unknown>
+    myIsland?: Record<string, unknown>
+    codex?: Record<string, unknown>
+    ship?: Record<string, unknown>
+    pediaInventory?: Array<Record<string, unknown>>
+    cosmeticInventory?: Array<Record<string, unknown>>
+    cosmeticLoadouts?: Array<Record<string, unknown>>
+    personaPartStates?: Array<Record<string, unknown>>
+  }
+}
+
 export type AdminRole = 'owner' | 'admin' | 'operator' | 'viewer'
 export type AdminHostResource = 'coins' | 'diamonds' | 'diceCount'
 
@@ -205,6 +228,65 @@ export interface AdminHostSummary {
   inventory: Record<string, number>
   createdAt: number
   updatedAt: number
+}
+
+export interface AdminSplitSummary {
+  providerAccounts: Array<{
+    providerCode: string
+    providerSubjectId: string
+    email?: string
+    emailVerified?: boolean
+    displayName?: string
+    linkedAt?: number
+    lastLoginAt?: number
+    status?: string
+  }>
+  userSettings: {
+    locale?: string
+    timeZone?: string
+    marketingAccepted: boolean
+    pushNotificationAccepted: boolean
+    bgmVolume: number
+    sfxVolume: number
+  }
+  currencies: Record<string, number>
+  diceResource: {
+    diceQuantity: number
+    maxDiceQuantity: number
+    chargeIntervalMinutes: number
+    nextChargeAt?: number
+    dailyRollCount: number
+    dailyRollDate?: string
+  }
+  inventory: {
+    count: number
+    totalQuantity: number
+    sample: Array<{ itemId: string; quantity: number }>
+  }
+  sookso: {
+    sooksoClean: boolean
+    sooksoName?: string
+    assignedAidongCount: number
+    assignedAidongIds: string[]
+    roomCount: number
+    furniturePlacementCount: number
+  }
+  mydongs: {
+    count: number
+    activeCount: number
+    sample: Array<Record<string, unknown>>
+  }
+  pediaInventory: {
+    rowCount: number
+    totalQuantity: number
+    aidongCount: number
+  }
+  cosmetics: {
+    inventoryRowCount: number
+    inventoryTotalQuantity: number
+    loadoutCount: number
+    personaPartStateCount: number
+  }
 }
 
 function getPasswordSessionToken(): string | null {
@@ -315,7 +397,7 @@ export const api = {
     ),
 
   adminGetUser: (uid: string) =>
-    apiFetch<{ user: AdminUserDetail; host: AdminHostSummary }>(
+    apiFetch<{ user: AdminUserDetail; host: AdminHostSummary; splitSummary: AdminSplitSummary }>(
       `/api/admin/users/${encodeURIComponent(uid)}`,
     ),
 
@@ -359,6 +441,9 @@ export const api = {
 
   getAccountState: <TState = Record<string, unknown>>(uid: string) =>
     apiFetch<{ state: TState }>(`/api/account/state?uid=${encodeURIComponent(uid)}`, { uid }),
+
+  getAccountBootstrap: <TState = Record<string, unknown>>(uid: string) =>
+    apiFetch<AccountBootstrapResponse<TState>>('/api/account/bootstrap', { uid }),
 
   patchAccountState: <TState = Record<string, unknown>>(
     uid: string,
@@ -434,11 +519,18 @@ export const api = {
     }),
 
   recruitAidong: <TState = Record<string, unknown>>(uid: string, characterId: string) =>
-    apiFetch<ActionResponse<TState>>('/api/modules/my-aidong/recruit', {
+    apiFetch<ActionResponse<TState> & { mydongs?: Array<Record<string, unknown>> }>('/api/modules/my-aidong/recruit', {
       method: 'POST',
       uid,
       body: JSON.stringify({ characterId }),
     }),
+
+  listOwnedMydongs: (uid: string) =>
+    apiFetch<{
+      ok: boolean
+      mydongs: Array<Record<string, unknown>>
+      recruitedAidongs: string[]
+    }>('/api/modules/my-aidong/owned', { uid }),
 
   addAidongAffinity: <TState = Record<string, unknown>>(
     uid: string,

@@ -111,6 +111,17 @@ function normalizeHostState(state: Record<string, unknown>) {
 }
 
 export async function hydrateSplitState(uid: string) {
+  try {
+    const bootstrap = await api.getAccountBootstrap<Partial<UserState>>(uid)
+    userStoreRuntimeFacade.setState({
+      ...mergeRecord(bootstrap.state),
+      firebaseUid: uid,
+    } as Partial<UserState>)
+    return
+  } catch (error) {
+    console.warn('[sync] account bootstrap failed; falling back to split hydrate', error)
+  }
+
   const [
     account,
     host,

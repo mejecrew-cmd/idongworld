@@ -7,6 +7,20 @@
  */
 import { DEFAULT_SOUND_SETTINGS, type UserDoc } from '../store/memoryStore.js'
 import { UserModel } from '../models/UserModel.js'
+import { ProviderAccountModel } from '../models/ProviderAccountModel.js'
+import { UserSettingsModel } from '../models/UserSettingsModel.js'
+import { UserInventoryItemModel } from '../models/UserInventoryItemModel.js'
+import { UserCurrencyBalanceModel } from '../models/UserCurrencyBalanceModel.js'
+import { UserCurrencyLedgerModel } from '../models/UserCurrencyLedgerModel.js'
+import { DiceResourceModel } from '../models/DiceResourceModel.js'
+import { MydongModel } from '../models/MydongModel.js'
+import { MydongPediaInventoryModel } from '../models/MydongPediaInventoryModel.js'
+import { MydongCosmeticLoadoutModel } from '../models/MydongCosmeticLoadoutModel.js'
+import { MydongPersonaPartStateModel } from '../models/MydongPersonaPartStateModel.js'
+import { RoomFurniturePlacementModel } from '../models/RoomFurniturePlacementModel.js'
+import { RoomSlotModel } from '../models/RoomSlotModel.js'
+import { SooksoStateModel } from '../models/SooksoStateModel.js'
+import { UserCosmeticInventoryModel } from '../models/UserCosmeticInventoryModel.js'
 import { AidongIslandStateModel } from '../models/AidongIslandStateModel.js'
 import { CodexStateModel } from '../models/CodexStateModel.js'
 import { CustomsLogModel } from '../models/CustomsLogModel.js'
@@ -21,18 +35,74 @@ import { ShipStateModel } from '../models/ShipStateModel.js'
 import { ZoneStateModel } from '../models/ZoneStateModel.js'
 import { mongoHostStateRepository } from './mongoHostStateRepository.js'
 import type { HostStatePatch } from './hostStateRepository.js'
-import type { PasswordUserInput, UserRepository } from './userRepository.js'
+import type {
+  AuthProviderCode,
+  PasswordUserInput,
+  ProviderAccountDoc,
+  UserRepository,
+} from './userRepository.js'
 
 function toUserDoc(doc: unknown): UserDoc {
   const plain = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>
   delete plain._id
   if (plain.openingSeen === undefined) plain.openingSeen = true
   if (plain.sooksoClean === undefined) plain.sooksoClean = false
-  if (plain.diamonds === undefined && typeof plain.gems === 'number') plain.diamonds = plain.gems
-  delete plain.gems
+  if (plain.status === undefined) plain.status = 'active'
   if (plain.soundSettings === undefined) plain.soundSettings = DEFAULT_SOUND_SETTINGS
   if (plain.gameStartedAt === undefined) plain.gameStartedAt = plain.createdAt
   return plain as unknown as UserDoc
+}
+
+function toProviderAccountDoc(doc: unknown): ProviderAccountDoc {
+  const plain = JSON.parse(JSON.stringify(doc)) as Record<string, unknown>
+  delete plain._id
+  return plain as unknown as ProviderAccountDoc
+}
+
+function providerAccountId(providerCode: string, providerSubjectId: string): string {
+  return `${providerCode}-${providerSubjectId}`
+}
+
+async function upsertProviderAccount(input: {
+  uid: string
+  providerCode: ProviderAccountDoc['providerCode']
+  providerSubjectId: string
+  email?: string
+  emailNormalized?: string
+  emailVerified?: boolean
+  displayName?: string
+  photoUrl?: string
+  loginAt?: number
+}): Promise<ProviderAccountDoc> {
+  const now = input.loginAt ?? Date.now()
+  const doc = await ProviderAccountModel.findOneAndUpdate(
+    {
+      providerCode: input.providerCode,
+      providerSubjectId: input.providerSubjectId,
+    },
+    {
+      $set: {
+        uid: input.uid,
+        email: input.email,
+        emailNormalized: input.emailNormalized,
+        emailVerified: input.emailVerified,
+        displayName: input.displayName,
+        photoUrl: input.photoUrl,
+        lastLoginAt: now,
+        status: 'active',
+        updatedAt: now,
+      },
+      $setOnInsert: {
+        id: providerAccountId(input.providerCode, input.providerSubjectId),
+        providerCode: input.providerCode,
+        providerSubjectId: input.providerSubjectId,
+        linkedAt: now,
+        createdAt: now,
+      },
+    },
+    { new: true, upsert: true, lean: true, setDefaultsOnInsert: true },
+  )
+  return toProviderAccountDoc(doc)
 }
 
 function createGuestDoc(): UserDoc {
@@ -41,6 +111,9 @@ function createGuestDoc(): UserDoc {
   return {
     uid,
     isGuest: true,
+    status: 'active',
+    lastLoginAt: now,
+    lastLoginProvider: 'guest',
     nickname: 'guest',
     gameStartedAt: now,
     sooksoClean: false,
@@ -74,6 +147,9 @@ function createPasswordDoc(input: PasswordUserInput): UserDoc {
     loginId: input.loginId,
     loginIdNormalized: input.loginIdNormalized,
     passwordHash: input.passwordHash,
+    status: 'active',
+    lastLoginAt: now,
+    lastLoginProvider: 'password',
     nickname: input.loginId,
     gameStartedAt: now,
     sooksoClean: false,
@@ -131,8 +207,12 @@ export const mongoUserRepository: UserRepository = {
       providerUid: input.providerUid ?? input.uid,
       email: input.email,
       emailNormalized: input.emailNormalized,
+      emailVerified: input.emailVerified,
       displayName: input.displayName,
       photoURL: input.photoURL,
+      status: 'active',
+      lastLoginAt: now,
+      lastLoginProvider: input.provider,
       updatedAt: now,
     }
 
@@ -144,6 +224,7 @@ export const mongoUserRepository: UserRepository = {
             uid: input.uid,
             nickname: fallbackNickname,
             signupProfileCompleted: false,
+            status: 'active',
             gameStartedAt: now,
             sooksoClean: false,
             coins: 100,
@@ -169,6 +250,17 @@ export const mongoUserRepository: UserRepository = {
       )
 
     const user = toUserDoc(doc)
+    await upsertProviderAccount({
+      uid: user.uid,
+      providerCode: input.provider,
+      providerSubjectId: input.providerUid ?? input.uid,
+      email: input.email,
+      emailNormalized: input.emailNormalized,
+      emailVerified: input.emailVerified,
+      displayName: input.displayName,
+      photoUrl: input.photoURL,
+      loginAt: now,
+    })
     await mongoHostStateRepository.getOrCreate(user.uid, {
       hostName: user.hostName,
       coins: user.coins,
@@ -183,6 +275,12 @@ export const mongoUserRepository: UserRepository = {
     const userDoc = createPasswordDoc(input)
     const created = await UserModel.create(userDoc)
     const user = toUserDoc(created.toObject())
+    await upsertProviderAccount({
+      uid: user.uid,
+      providerCode: 'password',
+      providerSubjectId: input.loginIdNormalized,
+      loginAt: user.lastLoginAt,
+    })
     await mongoHostStateRepository.getOrCreate(user.uid, {
       hostName: user.hostName,
       coins: user.coins,
@@ -194,8 +292,72 @@ export const mongoUserRepository: UserRepository = {
   },
 
   async findByLoginId(loginIdNormalized) {
+    const providerAccount = await ProviderAccountModel.findOne({
+      providerCode: 'password',
+      providerSubjectId: loginIdNormalized,
+    }).lean()
+    if (providerAccount) {
+      const account = toProviderAccountDoc(providerAccount)
+      const doc = await UserModel.findOne({ uid: account.uid }).lean()
+      return doc ? toUserDoc(doc) : undefined
+    }
     const doc = await UserModel.findOne({ loginIdNormalized }).lean()
     return doc ? toUserDoc(doc) : undefined
+  },
+
+  async findByProviderAccount(providerCode, providerSubjectId) {
+    const providerAccount = await ProviderAccountModel.findOne({
+      providerCode,
+      providerSubjectId,
+      status: 'active',
+    }).lean()
+    if (!providerAccount) return undefined
+    const account = toProviderAccountDoc(providerAccount)
+    const doc = await UserModel.findOne({ uid: account.uid }).lean()
+    return doc ? toUserDoc(doc) : undefined
+  },
+
+  async listProviderAccounts(uid) {
+    const docs = await ProviderAccountModel.find({ uid }).lean()
+    return docs.map(toProviderAccountDoc)
+  },
+
+  async recordLogin(uid, provider: AuthProviderCode | string) {
+    const now = Date.now()
+    const doc = await UserModel.findOneAndUpdate(
+      { uid },
+      {
+        $set: {
+          lastLoginAt: now,
+          lastLoginProvider: provider,
+          updatedAt: now,
+        },
+      },
+      { new: true, lean: true },
+    )
+    if (!doc) return undefined
+    const user = toUserDoc(doc)
+    if (provider === 'password' && user.loginIdNormalized) {
+      await upsertProviderAccount({
+        uid,
+        providerCode: 'password',
+        providerSubjectId: user.loginIdNormalized,
+        loginAt: now,
+      })
+    } else if (user.providerUid) {
+      await upsertProviderAccount({
+        uid,
+        providerCode: provider,
+        providerSubjectId: user.providerUid,
+        email: user.email,
+        emailNormalized: user.emailNormalized,
+        emailVerified: user.emailVerified,
+        displayName: user.displayName,
+        photoUrl: user.photoURL,
+        loginAt: now,
+      })
+    }
+    return user
   },
 
   async getUser(uid) {
@@ -221,6 +383,20 @@ export const mongoUserRepository: UserRepository = {
   async deleteUser(uid) {
     const result = await UserModel.deleteOne({ uid })
     await Promise.all([
+      ProviderAccountModel.deleteMany({ uid }),
+      UserSettingsModel.deleteOne({ uid }),
+      UserInventoryItemModel.deleteMany({ uid }),
+      UserCurrencyBalanceModel.deleteMany({ uid }),
+      UserCurrencyLedgerModel.deleteMany({ uid }),
+      DiceResourceModel.deleteOne({ uid }),
+      MydongModel.deleteMany({ uid }),
+      MydongPediaInventoryModel.deleteMany({ uid }),
+      UserCosmeticInventoryModel.deleteMany({ uid }),
+      MydongCosmeticLoadoutModel.deleteMany({ uid }),
+      MydongPersonaPartStateModel.deleteMany({ uid }),
+      SooksoStateModel.deleteOne({ uid }),
+      RoomSlotModel.deleteMany({ uid }),
+      RoomFurniturePlacementModel.deleteMany({ uid }),
       HostStateModel.deleteOne({ uid }),
       ModuleStateModel.deleteMany({ uid }),
       MyAidongStateModel.deleteOne({ uid }),

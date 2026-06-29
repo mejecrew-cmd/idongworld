@@ -25,6 +25,7 @@
     "check:backend:model-specs": "pnpm --filter backend check:model-specs",
     "check:backend:migration": "pnpm --filter backend check:migration",
     "check:backend:migration:local-mongo": "pnpm --filter backend check:migration:local-mongo",
+    "migrate:dynamic-schema": "pnpm --filter backend migrate:dynamic-schema --",
     "check:module-actions-smoke": "pnpm --filter backend check:module-actions-smoke",
     "check:frontend:state-route-runtime": "pnpm --filter frontend check:state-route-runtime",
     "check:state-route-static": "pnpm audit:legacy-state && pnpm check:backend:model-specs && pnpm typecheck",

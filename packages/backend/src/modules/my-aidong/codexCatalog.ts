@@ -3,7 +3,7 @@
  * ------------------------------------------------------------
  * 역할: packages/modules/my-aidong/codex-items.csv를 backend 권위 검증용 catalog로 읽는다.
  * 연결: my-aidong service의 도감 아이템 지급, 25칸 progress 파생, myroom aggregation의 기준 데이터다.
- * 주의: 이 파일은 static catalog만 다룬다. 실제 보유 수량은 myAidongStates.aidongCodexItems가 소유한다.
+ * 주의: 이 파일은 static catalog만 다룬다. 실제 보유 수량은 mydongPediaInventory가 소유한다.
  */
 import fs from 'fs'
 import path from 'path'

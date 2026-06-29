@@ -26,6 +26,7 @@ import {
   type AdminHostResource,
   type AdminHostSummary,
   type AdminRole,
+  type AdminSplitSummary,
   type AdminUserContext,
   type AdminUserDetail,
   type AdminUserSummary,
@@ -54,6 +55,14 @@ function adminRoleText(role?: AdminRole, enabled?: boolean) {
   return enabled && role ? role : '유저'
 }
 
+function formatProviderAccounts(splitSummary?: AdminSplitSummary) {
+  const accounts = splitSummary?.providerAccounts ?? []
+  if (accounts.length === 0) return '-'
+  return accounts
+    .map((account) => `${account.providerCode}${account.status ? `(${account.status})` : ''}`)
+    .join(', ')
+}
+
 export const AdminScreen = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -63,7 +72,7 @@ export const AdminScreen = () => {
   const [users, setUsers] = useState<AdminUserSummary[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedUid, setSelectedUid] = useState('')
-  const [detail, setDetail] = useState<{ user: AdminUserDetail; host: AdminHostSummary } | null>(null)
+  const [detail, setDetail] = useState<{ user: AdminUserDetail; host: AdminHostSummary; splitSummary?: AdminSplitSummary } | null>(null)
   const [grantResource, setGrantResource] = useState<AdminHostResource>('coins')
   const [grantDelta, setGrantDelta] = useState('100')
   const [accountPatch, setAccountPatch] = useState({
@@ -329,6 +338,34 @@ export const AdminScreen = () => {
                     <Typography variant="body2">다이아: {detail.host.diamonds}</Typography>
                     <Typography variant="body2">주사위: {detail.host.diceCount}</Typography>
                     <Typography variant="body2">인벤토리 항목: {Object.keys(detail.host.inventory ?? {}).length}</Typography>
+                    {detail.splitSummary && (
+                      <>
+                        <Divider />
+                        <Typography variant="subtitle2">동적 스키마 요약</Typography>
+                        <Typography variant="body2">연결 Provider: {formatProviderAccounts(detail.splitSummary)}</Typography>
+                        <Typography variant="body2">
+                          재화 문서: coin {detail.splitSummary.currencies.coin ?? 0} / diamond {detail.splitSummary.currencies.diamond ?? 0}
+                        </Typography>
+                        <Typography variant="body2">
+                          주사위 문서: {detail.splitSummary.diceResource.diceQuantity} / {detail.splitSummary.diceResource.maxDiceQuantity}
+                        </Typography>
+                        <Typography variant="body2">
+                          전역 인벤토리 row: {detail.splitSummary.inventory.count}개 · 총 {detail.splitSummary.inventory.totalQuantity}
+                        </Typography>
+                        <Typography variant="body2">
+                          숙소: {boolText(detail.splitSummary.sookso.sooksoClean)} · 배정 {detail.splitSummary.sookso.assignedAidongCount} · 방 {detail.splitSummary.sookso.roomCount} · 가구 {detail.splitSummary.sookso.furniturePlacementCount}
+                        </Typography>
+                        <Typography variant="body2">
+                          보유 Aidong: {detail.splitSummary.mydongs.count}개 · active {detail.splitSummary.mydongs.activeCount}개
+                        </Typography>
+                        <Typography variant="body2">
+                          도감 row: {detail.splitSummary.pediaInventory.rowCount}개 · Aidong {detail.splitSummary.pediaInventory.aidongCount}명
+                        </Typography>
+                        <Typography variant="body2">
+                          코스메틱: 보유 row {detail.splitSummary.cosmetics.inventoryRowCount} / 장착 {detail.splitSummary.cosmetics.loadoutCount} / 페르소나 {detail.splitSummary.cosmetics.personaPartStateCount}
+                        </Typography>
+                      </>
+                    )}
                   </Stack>
                 )}
               </Paper>
@@ -381,7 +418,7 @@ export const AdminScreen = () => {
                 DB 관리
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                DB 관리 메뉴 자리입니다. 실제 조회/수정 기능은 별도 API 경계가 정해진 뒤 연결합니다.
+                DB 관리 메뉴 자리입니다. 정적 테이블 import/update 전용으로 연결하고, 유저 진행도처럼 계속 변하는 동적 데이터는 유저 상세와 전용 API에서만 확인/수정합니다.
               </Typography>
             </Paper>
 

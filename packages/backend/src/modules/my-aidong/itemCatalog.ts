@@ -2,8 +2,8 @@
  * packages/backend/src/modules/my-aidong/itemCatalog.ts
  * ------------------------------------------------------------
  * 역할: my-aidong/items.csv를 읽어 Aidong 소지/착용 가능 아이템을 검증한다.
- * 연결: my-aidong service의 equippedItems API가 host inventory에 들어온 itemId를 검증할 때 사용한다.
- * 주의: 실제 보유 수량은 hostStates.inventory가 권위이고, 이 catalog는 착용 가능한 id 목록만 정의한다.
+ * 연결: my-aidong service의 equippedItems API가 host inventory에서 mirror된 cosmeticId를 검증할 때 사용한다.
+ * 주의: 코스메틱 보유 수량의 새 권위 저장소는 userCosmeticInventory이고, 이 catalog는 착용 가능한 id 목록만 정의한다.
  */
 import fs from 'fs'
 import path from 'path'

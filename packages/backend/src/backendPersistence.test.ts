@@ -13,6 +13,10 @@ import {
   getUserRepository,
   getHostStateRepository,
   getCustomsLogRepository,
+  getMydongCosmeticRepository,
+  getMydongPediaInventoryRepository,
+  getMydongRepository,
+  getSooksoRepository,
   initializeRepositories,
 } from './repositories/index.js'
 import { calculateCustomsAmounts, getCustomsRule, listCustomsRules } from './customs/rules.js'
@@ -34,6 +38,7 @@ import {
 } from './middleware/auth.js'
 import { adminMiddleware } from './middleware/admin.js'
 import { adminRouter } from './routes/admin.js'
+import { accountRouter } from './routes/account.js'
 import {
   getAidongIslandConfig,
   interactAidongIsland,
@@ -50,6 +55,7 @@ import {
 import { purchaseLodgeFurniture, toggleLodgeAidongAssign, toggleLodgeRoomFurniture } from './modules/lodge/service.js'
 import {
   addAidongAffinity,
+  assertAidongRecruited,
   getAidongCodexProgress,
   grantAidongCodexItem,
   recruitAidong,
@@ -720,6 +726,40 @@ describe('backend persistence contracts', () => {
       const host = await getHostStateRepository().getOrCreate(normalUser.uid)
       expect(host.coins).toBe(125)
 
+      const detail = await fetch(`${baseUrl}/users/${normalUser.uid}`, {
+        headers: { 'X-Uid': ownerUid },
+      })
+      expect(detail.status).toBe(200)
+      await expect(detail.json()).resolves.toMatchObject({
+        user: {
+          uid: normalUser.uid,
+          adminEnabled: false,
+        },
+        splitSummary: {
+          currencies: {
+            coin: 125,
+            diamond: 0,
+          },
+          diceResource: {
+            diceQuantity: 6,
+          },
+          inventory: {
+            count: 0,
+            totalQuantity: 0,
+          },
+          sookso: {
+            sooksoClean: false,
+            assignedAidongCount: 0,
+          },
+          mydongs: {
+            count: 0,
+          },
+          cosmetics: {
+            loadoutCount: 0,
+          },
+        },
+      })
+
       const logs = await getAdminRepository().listAdminAuditLogs({
         adminUid: ownerUid,
         action: 'users.resources.grant',
@@ -753,6 +793,80 @@ describe('backend persistence contracts', () => {
       } else {
         process.env.NODE_ENV = previousNodeEnv
       }
+    }
+  })
+
+  it('serves account bootstrap aggregate from split dynamic repositories', async () => {
+    initializeRepositories()
+
+    const uid = testUid('account-bootstrap')
+    await getUserRepository().createPasswordUser({
+      uid,
+      loginId: 'bootstrap-user',
+      loginIdNormalized: 'bootstrap-user',
+      passwordHash: 'test-hash',
+    })
+    await getHostStateRepository().mutateResource(uid, 'coins', 50)
+    await getHostStateRepository().mutateInventory(uid, 'aidong-ribbon', 1)
+    await recruitAidong(uid, '황금멍')
+    await grantAidongCodexItem(uid, '황금멍', 'hwanggumeong-golden-paw', 1, 'test')
+    await toggleAidongEquippedItem(uid, '황금멍', 'aidong-ribbon')
+    await getSooksoRepository().patchSookso(uid, {
+      sooksoClean: true,
+      sooksoName: '테스트숙소',
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api', authMiddleware)
+    app.use('/api/account', accountRouter)
+    const server = app.listen(0)
+
+    try {
+      const address = server.address()
+      if (!address || typeof address === 'string') throw new Error('invalid_test_server_address')
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/account/bootstrap`, {
+        headers: { 'X-Uid': uid },
+      })
+      expect(response.status).toBe(200)
+      const body = await response.json() as {
+        ok: boolean
+        state: Record<string, unknown>
+        snapshot: Record<string, unknown>
+      }
+      expect(body.ok).toBe(true)
+      expect(body.state).toMatchObject({
+        uid,
+        coins: 150,
+        diceCount: 6,
+        sooksoClean: true,
+        sooksoName: '테스트숙소',
+        inventory: { 'aidong-ribbon': 1 },
+        recruitedAidongs: ['황금멍'],
+        aidongCodexItems: {
+          '황금멍': { 'hwanggumeong-golden-paw': 1 },
+        },
+        equippedItems: {
+          '황금멍': ['aidong-ribbon'],
+        },
+      })
+      expect(body.snapshot).toMatchObject({
+        currencies: { coin: 150, diamond: 0 },
+        diceResource: { diceQuantity: 6 },
+        sookso: { sooksoClean: true, sooksoName: '테스트숙소' },
+      })
+      expect(body.snapshot.mydongs).toMatchObject([{ uid, aidongId: '황금멍' }])
+      expect(body.snapshot.pediaInventory).toMatchObject([
+        { uid, aidongId: '황금멍', pediaItemId: 'hwanggumeong-golden-paw', quantity: 1 },
+      ])
+      expect(body.snapshot.cosmeticInventory).toMatchObject([
+        { uid, cosmeticId: 'aidong-ribbon', quantity: 1 },
+      ])
+      expect(body.snapshot.cosmeticLoadouts).toMatchObject([
+        { uid, aidongId: '황금멍', equippedItemIds: ['aidong-ribbon'] },
+      ])
+    } finally {
+      await closeTestServer(server)
     }
   })
 
@@ -1633,6 +1747,28 @@ describe('backend persistence contracts', () => {
 
     const recruited = await recruitAidong(uid, characterId) as MyAidongStateDoc
     expect(recruited.recruitedAidongs).toContain(characterId)
+    const mydongs = await getMydongRepository().list(uid)
+    expect(mydongs).toEqual([
+      expect.objectContaining({
+        uid,
+        aidongId: characterId,
+        mydongUid: `${uid}:${characterId}`,
+        status: 'active',
+      }),
+    ])
+
+    const legacyUid = testUid('legacy-mydong-seed')
+    await getDedicatedModuleRepositories()['my-aidong'].patch(legacyUid, {
+      recruitedAidongs: ['legacy-aidong'],
+    })
+    await assertAidongRecruited(legacyUid, 'legacy-aidong')
+    expect(await getMydongRepository().list(legacyUid)).toEqual([
+      expect.objectContaining({
+        uid: legacyUid,
+        aidongId: 'legacy-aidong',
+        mydongUid: `${legacyUid}:legacy-aidong`,
+      }),
+    ])
 
     const incorporated = await incorporateSlot(uid, { areaNo: 'AREA-01', characterId }) as MyIslandStateDoc
     expect(incorporated.zoneSlots['AREA-01'].occupantAidongId).toBe(characterId)
@@ -1763,6 +1899,11 @@ describe('backend persistence contracts', () => {
     await getHostStateRepository().mutateInventory(uid, 'aidong-ribbon', 1)
     const equippedItem = await toggleAidongEquippedItem(uid, 'test-aidong', 'aidong-ribbon') as MyAidongStateDoc
     expect(equippedItem.equippedItems['test-aidong']).toEqual(['aidong-ribbon'])
+    expect(await getMydongCosmeticRepository().listInventory(uid)).toMatchObject([
+      { uid, cosmeticId: 'aidong-ribbon', quantity: 1, source: 'host-inventory-mirror' },
+    ])
+    expect((await getMydongCosmeticRepository().listLoadouts(uid)).find((entry) => entry.aidongId === 'test-aidong'))
+      .toMatchObject({ uid, aidongId: 'test-aidong', equippedItemIds: ['aidong-ribbon'] })
     await recruitAidong(uid, 'second-aidong')
     await expect(toggleAidongEquippedItem(uid, 'second-aidong', 'aidong-ribbon')).rejects.toMatchObject({
       code: 'aidong_item_not_owned_or_available',
@@ -1770,6 +1911,8 @@ describe('backend persistence contracts', () => {
     })
     const unequippedItem = await toggleAidongEquippedItem(uid, 'test-aidong', 'aidong-ribbon') as MyAidongStateDoc
     expect(unequippedItem.equippedItems['test-aidong']).toEqual([])
+    expect((await getMydongCosmeticRepository().listLoadouts(uid)).find((entry) => entry.aidongId === 'test-aidong'))
+      .toMatchObject({ uid, aidongId: 'test-aidong', equippedItemIds: [] })
 
     const ship = await toggleHarborAssign(uid, 'test-aidong') as { harborAssignedChars?: string[] }
     expect(ship.harborAssignedChars).toContain('test-aidong')
@@ -1781,12 +1924,16 @@ describe('backend persistence contracts', () => {
     const lodge = await toggleLodgeAidongAssign(uid, 'test-aidong') as LodgeStateDoc
     expect(lodge.assignedAidongs).toContain('test-aidong')
     expect(lodge.lodgeInventory).toEqual({})
+    expect(await getSooksoRepository().getAssignedAidongIds(uid)).toEqual(['test-aidong'])
 
     const purchasedLodgeFurniture = await purchaseLodgeFurniture(uid, 'plant') as { state: LodgeStateDoc }
     expect(purchasedLodgeFurniture.state.furniture.plant).toBe(1)
     const placedLodgeFurniture = await toggleLodgeRoomFurniture(uid, 'test-aidong', 'plant') as LodgeStateDoc
     expect((placedLodgeFurniture.rooms['test-aidong'] as { furniture?: string[] }).furniture)
       .toEqual(['plant'])
+    expect(await getSooksoRepository().getRoomFurnitureMap(uid)).toEqual({
+      'test-aidong': { furniture: ['plant'] },
+    })
     await expect(toggleLodgeRoomFurniture(uid, 'second-aidong', 'plant')).rejects.toMatchObject({
       code: 'lodge_furniture_not_owned_or_available',
       status: 409,
@@ -1794,6 +1941,7 @@ describe('backend persistence contracts', () => {
 
     const lodgeCleared = await toggleLodgeAidongAssign(uid, 'test-aidong') as LodgeStateDoc
     expect(lodgeCleared.assignedAidongs).not.toContain('test-aidong')
+    expect(await getSooksoRepository().getAssignedAidongIds(uid)).toEqual([])
 
     await expect(toggleLodgeAidongAssign(uid, 'not-recruited')).rejects.toMatchObject({
       code: 'aidong_not_recruited',
@@ -1878,11 +2026,17 @@ describe('backend persistence contracts', () => {
     }
     expect(cabinCleared.cabinAssignments).toEqual({})
 
-    await getHostStateRepository().getOrCreate(uid, { diceCount: 1 })
+    await getHostStateRepository().patch(uid, { diceCount: 1 })
     await startRoute(uid, 'neighbor')
     const rolled = await rollRoute(uid, 6, { routeId: 'neighbor', boardPosition: 6 })
     expect(rolled.steps).toBe(6)
     expect(rolled.boardPosition).toBe(6)
+    expect(rolled.host.diceCount).toBe(0)
+    await expect(rollRoute(uid, 1, { routeId: 'neighbor', boardPosition: 7 })).rejects.toMatchObject({
+      code: 'insufficient_dice',
+    })
+    const refreshedHostAfterRoll = await getHostStateRepository().getOrCreate(uid)
+    expect(refreshedHostAfterRoll.diceCount).toBe(0)
     expect((rolled.state as { boardPosition?: number }).boardPosition).toBeUndefined()
     expect(rolled.landing).toMatchObject({
       landingId: 'neighbor:6',
@@ -2028,6 +2182,16 @@ describe('backend persistence contracts', () => {
 
     const granted = await grantAidongCodexItem(uid, characterId, 'hwanggumeong-golden-paw', 2, 'test') as MyAidongStateDoc
     expect(granted.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(2)
+    expect(await getMydongPediaInventoryRepository().list(uid)).toMatchObject([
+      {
+        uid,
+        aidongId: characterId,
+        pediaItemId: 'hwanggumeong-golden-paw',
+        slotNo: 1,
+        quantity: 2,
+        source: 'test',
+      },
+    ])
 
     const progress = await getAidongCodexProgress(uid, characterId)
     expect(progress.ownedItems['hwanggumeong-golden-paw']).toBe(2)
@@ -2048,6 +2212,11 @@ describe('backend persistence contracts', () => {
 
     const duplicated = await grantAidongCodexItem(uid, characterId, 'hwanggumeong-golden-paw', 1, 'test-duplicate') as MyAidongStateDoc
     expect(duplicated.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(3)
+    expect((await getMydongPediaInventoryRepository().list(uid))[0]).toMatchObject({
+      pediaItemId: 'hwanggumeong-golden-paw',
+      quantity: 3,
+      source: 'test-duplicate',
+    })
     const duplicatedProgress = await getAidongCodexProgress(uid, characterId)
     expect(duplicatedProgress.progress[0]).toMatchObject({ status: 'owned', quantity: 3 })
 
@@ -2171,6 +2340,14 @@ describe('backend persistence contracts', () => {
     const claimedAidongState = claimed.aidongState as unknown as MyAidongStateDoc
     const claimedZoneState = claimed.state as ZoneStateDoc
     expect(claimedAidongState.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(1)
+    expect(await getMydongPediaInventoryRepository().list(uid)).toMatchObject([
+      {
+        uid,
+        aidongId: characterId,
+        pediaItemId: 'hwanggumeong-golden-paw',
+        quantity: 1,
+      },
+    ])
     expect((claimedZoneState.progress as Record<string, unknown>).lastProductionClaim).toMatchObject({
       slotId: 'slot1',
       characterId,
