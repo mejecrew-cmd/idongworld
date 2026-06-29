@@ -150,6 +150,245 @@ export interface PasswordSignupStartResponse {
   isNew: true
 }
 
+export interface AccountBootstrapResponse<TState = Record<string, unknown>> {
+  ok: boolean
+  state: TState
+  snapshot: {
+    account?: Record<string, unknown>
+    host?: Record<string, unknown>
+    userSettings?: Record<string, unknown>
+    currencies?: Record<string, number>
+    diceResource?: Record<string, unknown>
+    inventory?: Record<string, number>
+    sookso?: Record<string, unknown>
+    mydongs?: Array<Record<string, unknown>>
+    myAidong?: Record<string, unknown>
+    myIsland?: Record<string, unknown>
+    codex?: Record<string, unknown>
+    ship?: Record<string, unknown>
+    pediaInventory?: Array<Record<string, unknown>>
+    cosmeticInventory?: Array<Record<string, unknown>>
+    cosmeticLoadouts?: Array<Record<string, unknown>>
+    personaPartStates?: Array<Record<string, unknown>>
+  }
+}
+
+export type AdminRole = 'owner' | 'admin' | 'operator' | 'viewer'
+export type AdminHostResource = 'coins' | 'diamonds' | 'diceCount'
+
+export interface AdminUserContext {
+  uid: string
+  role: AdminRole
+  permissions: string[]
+  enabled: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+export interface AdminUserSummary {
+  uid: string
+  isGuest: boolean
+  authProvider?: string
+  nickname?: string
+  email?: string
+  signupProfileCompleted?: boolean
+  timezoneCompleted?: boolean
+  termsCompleted?: boolean
+  sooksoClean?: boolean
+  openingSeen?: boolean
+  onboardingComplete?: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+export interface AdminUserDetail extends AdminUserSummary {
+  displayName?: string
+  photoURL?: string
+  timeZone?: string
+  detectedTimeZone?: string
+  utcOffsetMinutes?: number
+  termsAgreements?: Record<string, unknown>
+  profileImageSource?: string
+  gameStartedAt?: number
+  hostName?: string
+  sooksoName?: string
+  soundSettings?: Record<string, unknown>
+  recruitedAidongs?: string[]
+  firstGachaAttempts?: number
+  adminRole?: AdminRole
+  adminEnabled?: boolean
+}
+
+export interface AdminHostSummary {
+  uid: string
+  hostName?: string
+  coins: number
+  diamonds: number
+  diceCount: number
+  inventory: Record<string, number>
+  createdAt: number
+  updatedAt: number
+}
+
+export interface AdminSplitSummary {
+  providerAccounts: Array<{
+    providerCode: string
+    providerSubjectId: string
+    email?: string
+    emailVerified?: boolean
+    displayName?: string
+    linkedAt?: number
+    lastLoginAt?: number
+    status?: string
+  }>
+  userSettings: {
+    locale?: string
+    timeZone?: string
+    marketingAccepted: boolean
+    pushNotificationAccepted: boolean
+    bgmVolume: number
+    sfxVolume: number
+  }
+  currencies: Record<string, number>
+  diceResource: {
+    diceQuantity: number
+    maxDiceQuantity: number
+    chargeIntervalMinutes: number
+    nextChargeAt?: number
+    dailyRollCount: number
+    dailyRollDate?: string
+  }
+  inventory: {
+    count: number
+    totalQuantity: number
+    sample: Array<{ itemId: string; quantity: number }>
+  }
+  sookso: {
+    sooksoClean: boolean
+    sooksoName?: string
+    assignedAidongCount: number
+    assignedAidongIds: string[]
+    roomCount: number
+    furniturePlacementCount: number
+  }
+  mydongs: {
+    count: number
+    activeCount: number
+    sample: Array<Record<string, unknown>>
+  }
+  pediaInventory: {
+    rowCount: number
+    totalQuantity: number
+    aidongCount: number
+  }
+  cosmetics: {
+    inventoryRowCount: number
+    inventoryTotalQuantity: number
+    loadoutCount: number
+    personaPartStateCount: number
+  }
+}
+
+export interface AdminStaticTableDefinition {
+  tableCode: string
+  tableName: string
+  category: string
+  importKind: 'row' | 'bundle' | 'excluded'
+  requiredColumns: string[]
+  primaryKey: string[]
+  targetCollection: string
+  bundleCollection?: string
+  notes?: string
+}
+
+export interface AdminStaticTableFileSummary {
+  fileName: string
+  tableCode: string
+  sourceHash: string
+  rowCount: number
+  importable: boolean
+  importKind?: 'row' | 'bundle' | 'excluded'
+  targetCollection?: string
+  bundleCollection?: string
+}
+
+export interface AdminStaticTableScanError {
+  fileName: string
+  code: string
+  message: string
+}
+
+export interface AdminStaticTableValidationIssue {
+  level: 'error' | 'warning'
+  tableCode?: string
+  rowNo?: number
+  column?: string
+  code: string
+  message: string
+}
+
+export interface AdminStaticTableValidation {
+  ok: boolean
+  summaries?: Array<{
+    tableCode: string
+    rowCount: number
+    errors?: AdminStaticTableValidationIssue[]
+    warnings?: AdminStaticTableValidationIssue[]
+  }>
+  issues?: AdminStaticTableValidationIssue[]
+  errors?: AdminStaticTableValidationIssue[]
+  warnings?: AdminStaticTableValidationIssue[]
+}
+
+export interface AdminStaticTableImportRequest {
+  version?: string
+  importBatchId?: string
+  tableCodes?: string[]
+}
+
+export interface AdminStaticTableImportPreview {
+  ok: boolean
+  version: string
+  importBatchId: string
+  sourceDir?: string
+  sourceFiles: Array<{
+    fileName: string
+    tableCode: string
+    sourceHash: string
+    rowCount: number
+  }>
+  validation: AdminStaticTableValidation
+  tableRowCount: number
+  runtimeRowCounts: Record<string, number>
+  bundleCounts: Record<string, number>
+  bundles?: Array<Record<string, unknown>>
+  scanErrors?: AdminStaticTableScanError[]
+  committed?: boolean
+}
+
+export interface AdminStaticTableImportBatch {
+  importBatchId: string
+  status: 'validated' | 'dryRun' | 'committed' | 'activated' | 'failed'
+  version: string
+  sourceDir?: string
+  sourceFiles: Array<{
+    fileName: string
+    tableCode: string
+    sourceHash: string
+    rowCount: number
+  }>
+  actorUid?: string
+  validationSummary?: unknown
+  dryRunSummary?: unknown
+  commitSummary?: unknown
+  errorMessage?: string
+  createdAt: number
+  updatedAt: number
+  committedAt?: number
+  activatedAt?: number
+  failedAt?: number
+}
+
 function getPasswordSessionToken(): string | null {
   try {
     return window.localStorage.getItem(PASSWORD_SESSION_TOKEN_KEY)
@@ -179,8 +418,8 @@ export function clearPasswordSessionToken(): void {
 }
 
 async function apiFetch<T>(path: string, opts: FetchOpts = {}): Promise<T> {
-  const idToken = await getCurrentIdToken()
-  const passwordToken = idToken ? null : getPasswordSessionToken()
+  const passwordToken = getPasswordSessionToken()
+  const idToken = passwordToken ? null : await getCurrentIdToken()
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(idToken || passwordToken ? { Authorization: `Bearer ${idToken ?? passwordToken}` } : {}),
@@ -249,8 +488,117 @@ export const api = {
   authMe: () =>
     apiFetch<{ user: Record<string, unknown> }>('/api/auth/me'),
 
+  adminMe: () =>
+    apiFetch<{ isAdmin: boolean; adminUser: AdminUserContext }>('/api/admin/me'),
+
+  adminListUsers: (limit = 50, query = '') =>
+    apiFetch<{ users: AdminUserSummary[]; limit: number; hasMore: boolean }>(
+      `/api/admin/users?limit=${encodeURIComponent(String(limit))}&q=${encodeURIComponent(query)}`,
+    ),
+
+  adminGetUser: (uid: string) =>
+    apiFetch<{ user: AdminUserDetail; host: AdminHostSummary; splitSummary: AdminSplitSummary }>(
+      `/api/admin/users/${encodeURIComponent(uid)}`,
+    ),
+
+  adminGrantResource: (uid: string, resource: AdminHostResource, delta: number) =>
+    apiFetch<{ ok: boolean; host: AdminHostSummary }>(
+      `/api/admin/users/${encodeURIComponent(uid)}/resources/grant`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ resource, delta }),
+      },
+    ),
+
+  adminResetUser: (uid: string) =>
+    apiFetch<{ ok: boolean; account?: AdminUserDetail; host: AdminHostSummary; modules: Record<string, unknown> }>(
+      `/api/admin/users/${encodeURIComponent(uid)}/reset`,
+      {
+        method: 'POST',
+      },
+    ),
+
+  adminPatchUserAccount: (uid: string, patch: Record<string, unknown>) =>
+    apiFetch<{ ok: boolean; user: AdminUserDetail }>(
+      `/api/admin/users/${encodeURIComponent(uid)}/account`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ patch }),
+      },
+    ),
+
+  adminUpsertAdminUser: (
+    uid: string,
+    request: { role: AdminRole | null },
+  ) =>
+    apiFetch<{ ok: boolean; adminUser: AdminUserContext }>(
+      `/api/admin/admin-users/${encodeURIComponent(uid)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(request),
+      },
+    ),
+
+  adminStaticTableRegistry: () =>
+    apiFetch<{
+      definitions: AdminStaticTableDefinition[]
+      importableDefinitions: AdminStaticTableDefinition[]
+    }>('/api/admin/static-tables/registry'),
+
+  adminStaticTableFiles: () =>
+    apiFetch<{
+      sourceDir: string
+      files: AdminStaticTableFileSummary[]
+      errors: AdminStaticTableScanError[]
+    }>('/api/admin/static-tables/files'),
+
+  adminStaticTableValidate: (request: AdminStaticTableImportRequest = {}) =>
+    apiFetch<{
+      ok: boolean
+      importBatchId: string
+      version: string
+      sourceDir: string
+      files: AdminStaticTableFileSummary[]
+      scanErrors: AdminStaticTableScanError[]
+      validation: AdminStaticTableValidation
+    }>('/api/admin/static-tables/validate', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  adminStaticTableDryRun: (request: AdminStaticTableImportRequest = {}) =>
+    apiFetch<AdminStaticTableImportPreview>('/api/admin/static-tables/dry-run', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  adminStaticTableCommit: (request: AdminStaticTableImportRequest = {}) =>
+    apiFetch<AdminStaticTableImportPreview>('/api/admin/static-tables/commit', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    }),
+
+  adminStaticTableImports: () =>
+    apiFetch<{ imports: AdminStaticTableImportBatch[] }>('/api/admin/static-tables/imports'),
+
+  adminStaticTableImportDetail: (importBatchId: string) =>
+    apiFetch<{ import: AdminStaticTableImportBatch }>(
+      `/api/admin/static-tables/imports/${encodeURIComponent(importBatchId)}`,
+    ),
+
+  adminStaticTableActivate: (importBatchId: string) =>
+    apiFetch<{ ok: boolean; import: AdminStaticTableImportBatch }>(
+      `/api/admin/static-tables/imports/${encodeURIComponent(importBatchId)}/activate`,
+      {
+        method: 'POST',
+      },
+    ),
+
   getAccountState: <TState = Record<string, unknown>>(uid: string) =>
     apiFetch<{ state: TState }>(`/api/account/state?uid=${encodeURIComponent(uid)}`, { uid }),
+
+  getAccountBootstrap: <TState = Record<string, unknown>>(uid: string) =>
+    apiFetch<AccountBootstrapResponse<TState>>('/api/account/bootstrap', { uid }),
 
   patchAccountState: <TState = Record<string, unknown>>(
     uid: string,
@@ -326,11 +674,18 @@ export const api = {
     }),
 
   recruitAidong: <TState = Record<string, unknown>>(uid: string, characterId: string) =>
-    apiFetch<ActionResponse<TState>>('/api/modules/my-aidong/recruit', {
+    apiFetch<ActionResponse<TState> & { mydongs?: Array<Record<string, unknown>> }>('/api/modules/my-aidong/recruit', {
       method: 'POST',
       uid,
       body: JSON.stringify({ characterId }),
     }),
+
+  listOwnedMydongs: (uid: string) =>
+    apiFetch<{
+      ok: boolean
+      mydongs: Array<Record<string, unknown>>
+      recruitedAidongs: string[]
+    }>('/api/modules/my-aidong/owned', { uid }),
 
   addAidongAffinity: <TState = Record<string, unknown>>(
     uid: string,

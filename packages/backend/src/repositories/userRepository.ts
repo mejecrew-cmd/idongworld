@@ -7,12 +7,32 @@
  */
 import type { UserDoc } from '../store/memoryStore.js'
 
+export type AuthProviderCode = 'guest' | 'google' | 'twitter' | 'firebase' | 'password'
+
+export interface ProviderAccountDoc {
+  id: string
+  uid: string
+  providerCode: Exclude<AuthProviderCode, 'guest'> | string
+  providerSubjectId: string
+  email?: string
+  emailNormalized?: string
+  emailVerified?: boolean
+  displayName?: string
+  photoUrl?: string
+  linkedAt: number
+  lastLoginAt?: number
+  status: 'active' | 'unlinked' | 'blocked' | string
+  createdAt: number
+  updatedAt: number
+}
+
 export interface AuthUserInput {
   uid: string
   provider: 'google' | 'twitter' | 'firebase'
   providerUid?: string
   email?: string
   emailNormalized?: string
+  emailVerified?: boolean
   displayName?: string
   photoURL?: string
 }
@@ -28,6 +48,12 @@ export interface UserRepository {
   createGuestUser(): Promise<UserDoc>
   createOrUpdateAuthUser(input: AuthUserInput): Promise<UserDoc>
   createPasswordUser(input: PasswordUserInput): Promise<UserDoc>
+  findByProviderAccount(
+    providerCode: ProviderAccountDoc['providerCode'],
+    providerSubjectId: string,
+  ): Promise<UserDoc | undefined>
+  listProviderAccounts(uid: string): Promise<ProviderAccountDoc[]>
+  recordLogin(uid: string, provider: AuthProviderCode | string): Promise<UserDoc | undefined>
   findByLoginId(loginIdNormalized: string): Promise<UserDoc | undefined>
   getUser(uid: string): Promise<UserDoc | undefined>
   updateUser(uid: string, patch: Partial<UserDoc>): Promise<UserDoc | undefined>

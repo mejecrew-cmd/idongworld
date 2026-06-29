@@ -10,6 +10,8 @@ import { getRequestUid } from '../middleware/auth.js'
 import {
   getDedicatedModuleRepositories,
   getHostStateRepository,
+  getMydongCosmeticRepository,
+  getMydongPediaInventoryRepository,
   getUserRepository,
 } from '../repositories/index.js'
 import {
@@ -107,6 +109,8 @@ debugRouter.post('/reset', async (req, res) => {
     diceCount: 6,
     inventory: {},
   })
+  await getMydongPediaInventoryRepository().delete(uid)
+  await getMydongCosmeticRepository().delete(uid)
 
   const modules: Record<string, object> = {}
   const repositories = getDedicatedModuleRepositories()

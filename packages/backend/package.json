@@ -17,8 +17,10 @@
     "check:module-actions-smoke": "node scripts/smoke-module-actions.mjs",
     "check:migration": "node scripts/check-backend-migration.mjs",
     "check:migration:local-mongo": "node scripts/check-backend-migration.mjs --local-mongo",
+    "migrate:dynamic-schema": "node scripts/migrate-dynamic-schema.mjs",
     "smoke:persistence": "node scripts/smoke-persistence.mjs",
     "smoke:state-route-removed": "node scripts/smoke-state-route-removed.mjs",
+    "admin:create-owner": "node scripts/create-admin-owner.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

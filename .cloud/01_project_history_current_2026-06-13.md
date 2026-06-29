@@ -1,4 +1,4 @@
-# 아이동월드 구현 히스토리와 현재 기준 2026-06-13
+# 아이동월드 구현 히스토리와 현재 기준 2026-06-29
 
 이 문서는 지금까지 `.cloud`에 쌓였던 작업 히스토리를 현재 구현 기준으로 다시 정리한 기준 문서다.
 
@@ -44,6 +44,31 @@
 ```
 
 오래된 `next_work`, 임시 충돌 지도, 임시 작업 계획 문서는 이 문서에 흡수했다. 앞으로는 오래된 파일 이름을 기준으로 작업하지 않는다.
+
+## 1.1 2026-06-29 동적 DB 스키마 전환 기준
+
+6월 말 기준으로 동적 유저 데이터는 xlsx 정책을 반영해 normalized row 중심으로 분리했다.
+
+핵심은 다음이다.
+
+- `users`는 계정과 진행 플래그의 호환 원장으로 유지한다.
+- 인증 provider 연결은 `providerAccounts`가 권위다. 한 유저가 여러 provider를 연결할 수 있어야 한다.
+- 약관, 마케팅, 푸시, 시간대, 사운드 설정은 `userSettings`가 권위다. `users.termsAgreements`, `users.soundSettings`는 호환 mirror다.
+- coin/diamond는 `userCurrencyBalances`가 권위다. 변경 이력은 `userCurrencyLedger`에 남긴다.
+- 주사위 수량과 충전 메타는 `diceResources`가 권위다.
+- 전역 인벤토리는 `userInventoryItems`가 권위다. `hostStates.inventory`는 API 호환 projection이다.
+- 숙소 청소/이름은 `sooksoStates`, 방 배정은 `roomSlots`, 방 가구 배치는 `roomFurniturePlacements`가 권위다.
+- 유저가 보유한 개별 Aidong은 `mydongList`가 권위다.
+- `aidongId`는 캐릭터 원형 ID이고, `mydongUid`는 유저가 보유한 개별 Aidong ID다. 새 기능은 둘을 섞으면 안 된다.
+- Aidong 도감템 수량은 `mydongPediaInventory`가 권위다. `myAidongStates.aidongCodexItems`는 호환 mirror다.
+- 코스메틱 보유는 `userCosmeticInventory`, 장착은 `mydongCosmeticLoadouts`, persona part 상태는 `mydongPersonaPartStates`가 권위다.
+- `hostStates`, `myAidongStates`, `lodgeStates`의 기존 필드는 프론트/모듈 호환을 위해 남아 있지만 새 기능의 권위 저장소로 직접 삼지 않는다.
+
+운영 migration 절차는 아래 문서를 따른다.
+
+```text
+.cloud/105_dynamic_schema_migration_runbook_2026-06-29.md
+```
 
 ## 2. 6월에 실제로 닫은 루프
 
@@ -170,9 +195,23 @@ backend는 하나의 Express 서버다.
 
 | collection/state | 역할 |
 |---|---|
-| `users` | 계정, guest, auth 연결 user document |
-| `hostStates` | host 이름, 광역 재화, 주사위, 통 inventory |
-| `myAidongStates` | 영입 Aidong, needs, 케어, 착용, Aidong 도감템 후보 원장 |
+| `users` | 계정, guest, auth 연결, 진행 플래그 호환 document |
+| `providerAccounts` | provider별 인증 연결. 여러 소셜/패스워드 연결의 권위 |
+| `userSettings` | 약관, 마케팅, 푸시, 시간대, 사운드 설정 권위 |
+| `hostStates` | host 이름과 기존 API 호환 projection. 재화/주사위/inventory의 단독 권위가 아님 |
+| `userCurrencyBalances` | coin/diamond 잔액 권위 |
+| `userCurrencyLedger` | 재화 변경 이력 |
+| `diceResources` | 주사위 수량, 충전, 일일 roll 메타 권위 |
+| `userInventoryItems` | 전역 인벤토리 item row 권위 |
+| `myAidongStates` | needs, 호감도, 케어 등 Aidong 호환 state. 보유 Aidong/도감템/코스메틱 단독 권위가 아님 |
+| `mydongList` | 유저가 보유한 개별 Aidong row 권위 |
+| `mydongPediaInventory` | Aidong별 도감템 수량 row 권위 |
+| `userCosmeticInventory` | 코스메틱 보유 row 권위 |
+| `mydongCosmeticLoadouts` | Aidong별 코스메틱 장착 권위 |
+| `mydongPersonaPartStates` | persona part 상태 권위 |
+| `sooksoStates` | 숙소 청소/이름 권위 |
+| `roomSlots` | 숙소 방 배정 권위 |
+| `roomFurniturePlacements` | 숙소 방별 가구 배치 권위 |
 | `myIslandStates` | 마이섬 해금, 15구역 `zoneSlots`, 구역 진행 |
 | `codexStates` | 도감 표시, 등록, 일지 상태. 수량 원장이 아님 |
 | `routeNeighborStates` | 항해 route catalog, landing/encounter 결과 호환 기록. 현재 항해 위치와 출항/정박 여부는 저장하지 않는다 |
@@ -183,17 +222,17 @@ backend는 하나의 Express 서버다.
 
 중요한 점은 `codexStates`가 수량 원장이 아니라는 것이다.
 
-아이동별 25개 도감템 수량 후보는 아래에 둔다.
+아이동별 25개 도감템 수량은 아래에 둔다.
 
 ```text
-myAidongStates.aidongCodexItems
+mydongPediaInventory
 ```
 
-일반 소유 아이템과 Aidong 착용 아이템의 소유권은 host inventory 쪽이 기본 후보다.
+일반 소유 아이템과 Aidong 착용 아이템의 소유권은 전역 인벤토리 row가 기본이다.
 
 ```text
-hostStates.inventory
-myAidongStates.equippedItems
+userInventoryItems
+mydongCosmeticLoadouts
 ```
 
 ## 6. frontend 현재 구조
@@ -337,7 +376,8 @@ M4에서 Aidong별 25칸 도감템 원장 구조를 잡았다.
 
 현재 방향:
 
-- 도감템 수량은 `myAidongStates.aidongCodexItems` 후보 원장에 둔다.
+- 도감템 수량은 `mydongPediaInventory` 원장에 둔다.
+- `myAidongStates.aidongCodexItems`는 기존 화면/API 호환 mirror다.
 - `codexStates`는 표시/등록/일지 성격이다.
 - zone production reward는 테스트용 도감템을 지급할 수 있다.
 - 마이룸 도감과 컬렉션은 같은 데이터를 서로 다른 방식으로 보여준다.

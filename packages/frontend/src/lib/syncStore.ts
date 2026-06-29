@@ -111,6 +111,17 @@ function normalizeHostState(state: Record<string, unknown>) {
 }
 
 export async function hydrateSplitState(uid: string) {
+  try {
+    const bootstrap = await api.getAccountBootstrap<Partial<UserState>>(uid)
+    userStoreRuntimeFacade.setState({
+      ...mergeRecord(bootstrap.state),
+      firebaseUid: uid,
+    } as Partial<UserState>)
+    return
+  } catch (error) {
+    console.warn('[sync] account bootstrap failed; falling back to split hydrate', error)
+  }
+
   const [
     account,
     host,
@@ -163,12 +174,11 @@ export async function bootstrapAuth() {
     try {
       await hydrateSplitState(state.firebaseUid)
     } catch {
-      try {
-        const r = await api.authGuest()
-        userStoreRuntimeFacade.setState({ firebaseUid: r.uid, isGuest: true, nickname: 'guest' })
-      } catch {
-        // local-only mode
-      }
+      userStoreRuntimeFacade.setState({
+        firebaseUid: undefined,
+        isGuest: false,
+        nickname: undefined,
+      })
     }
   }
 }

@@ -5,7 +5,14 @@
  * 연결: userStore action으로 처리하던 로직을 backend 권위 로직으로 옮기는 위치다.
  * 주의: 자기 module document만 직접 수정하고, 다른 module/host 자원 이동은 adapter 또는 customs를 통한다.
  */
-import { getHostStateRepository } from '../../repositories/index.js'
+import {
+  getHostStateRepository,
+  getMydongCosmeticRepository,
+  getMydongPediaInventoryRepository,
+  getMydongRepository,
+} from '../../repositories/index.js'
+import { groupLoadoutsByAidongId } from '../../repositories/mydongCosmeticRepository.js'
+import { groupPediaInventoryByAidongId } from '../../repositories/mydongPediaInventoryRepository.js'
 import { requireModuleRepo, ServiceError, type LooseState } from '../shared.js'
 import { isAidongEquippableItem } from './itemCatalog.js'
 import { buildAidongCodexProgress, getAidongCodexItem } from './codexCatalog.js'
@@ -65,15 +72,30 @@ function getRecruited(state: LooseState): string[] {
     : []
 }
 
+async function listOwnedAidongIds(uid: string, state?: LooseState): Promise<string[]> {
+  const legacyRecruited = state ? getRecruited(state) : []
+  const repo = getMydongRepository()
+  if (legacyRecruited.length) {
+    const seeded = await repo.seedFromAidongIds(uid, legacyRecruited, 'migration')
+    return seeded.map((mydong) => mydong.aidongId)
+  }
+  const owned = await repo.list(uid)
+  return owned.map((mydong) => mydong.aidongId)
+}
+
+async function isAidongRecruited(uid: string, state: LooseState, characterId: string): Promise<boolean> {
+  return (await listOwnedAidongIds(uid, state)).includes(characterId)
+}
+
 function getEquippedItems(state: LooseState): Record<string, string[]> {
   return state.equippedItems && typeof state.equippedItems === 'object'
     ? state.equippedItems as Record<string, string[]>
     : {}
 }
 
-function countEquippedItem(equippedItems: Record<string, string[]>, itemId: string, exceptCharacterId?: string): number {
-  return Object.entries(equippedItems).reduce((total, [characterId, itemIds]) => {
-    if (characterId === exceptCharacterId) return total
+function countEquippedItem(equippedItems: Record<string, string[]>, itemId: string, exceptMydongUid?: string): number {
+  return Object.entries(equippedItems).reduce((total, [mydongUid, itemIds]) => {
+    if (mydongUid === exceptMydongUid) return total
     return total + (Array.isArray(itemIds) ? itemIds.filter((id) => id === itemId).length : 0)
   }, 0)
 }
@@ -82,6 +104,98 @@ function getNestedNumberMap(state: LooseState, key: string): Record<string, Reco
   return state[key] && typeof state[key] === 'object' && !Array.isArray(state[key])
     ? state[key] as Record<string, Record<string, number>>
     : {}
+}
+
+async function resolveActiveMydong(uid: string, state: LooseState, characterId: string) {
+  if (!await isAidongRecruited(uid, state, characterId)) {
+    throw new ServiceError('aidong_not_recruited', 409)
+  }
+  const existing = await getMydongRepository().getActiveByAidongId(uid, characterId)
+  return existing ?? await getMydongRepository().getOrCreateForAidong(uid, {
+    aidongId: characterId,
+    acquisitionSource: 'migration',
+  })
+}
+
+async function seedPediaInventoryFromLegacyMap(uid: string, state: LooseState) {
+  const repo = getMydongPediaInventoryRepository()
+  const existing = await repo.list(uid)
+  if (existing.length) return existing
+
+  const legacyItems = getNestedNumberMap(state, 'aidongCodexItems')
+  for (const [aidongId, items] of Object.entries(legacyItems)) {
+    const mydong = await getMydongRepository().getOrCreateForAidong(uid, {
+      aidongId,
+      acquisitionSource: 'migration',
+    })
+    for (const [itemId, quantity] of Object.entries(items)) {
+      if (!Number.isFinite(quantity) || quantity <= 0) continue
+      const catalogItem = getAidongCodexItem(itemId)
+      if (!catalogItem || catalogItem.characterId !== aidongId) continue
+      await repo.grant(uid, {
+        mydongUid: mydong.mydongUid,
+        aidongId,
+        pediaItemId: itemId,
+        slotNo: catalogItem.slotNo,
+        quantity,
+        source: 'migration',
+      })
+    }
+  }
+
+  return await repo.list(uid)
+}
+
+export async function getAidongCodexItemMap(uid: string, state?: LooseState) {
+  const repo = requireModuleRepo('my-aidong')
+  const myAidongState = state ?? await repo.getOrCreate(uid) as LooseState
+  const rows = await seedPediaInventoryFromLegacyMap(uid, myAidongState)
+  return groupPediaInventoryByAidongId(rows)
+}
+
+async function seedCosmeticLoadoutsFromLegacyMaps(uid: string, state: LooseState) {
+  const repo = getMydongCosmeticRepository()
+  const existing = await repo.listLoadouts(uid)
+  if (existing.length) return existing
+
+  const legacyOutfits = state.equippedOutfit && typeof state.equippedOutfit === 'object'
+    ? state.equippedOutfit as Record<string, string>
+    : {}
+  const legacyItems = getEquippedItems(state)
+  const aidongIds = Array.from(new Set([...Object.keys(legacyOutfits), ...Object.keys(legacyItems)]))
+  for (const aidongId of aidongIds) {
+    const mydong = await getMydongRepository().getOrCreateForAidong(uid, {
+      aidongId,
+      acquisitionSource: 'migration',
+    })
+    if (legacyOutfits[aidongId]) {
+      await repo.setOutfit(uid, mydong.mydongUid, aidongId, legacyOutfits[aidongId])
+    }
+    if (legacyItems[aidongId]?.length) {
+      await repo.setEquippedItems(uid, mydong.mydongUid, aidongId, legacyItems[aidongId])
+    }
+  }
+  return await repo.listLoadouts(uid)
+}
+
+async function getCosmeticLoadoutMaps(uid: string, state: LooseState) {
+  const loadouts = await seedCosmeticLoadoutsFromLegacyMaps(uid, state)
+  return groupLoadoutsByAidongId(loadouts)
+}
+
+export async function getAidongCosmeticLoadoutMaps(uid: string, state?: LooseState) {
+  const repo = requireModuleRepo('my-aidong')
+  const myAidongState = state ?? await repo.getOrCreate(uid) as LooseState
+  return await getCosmeticLoadoutMaps(uid, myAidongState)
+}
+
+async function syncEquippableHostItemsToCosmeticInventory(uid: string, inventory: Record<string, number>) {
+  const repo = getMydongCosmeticRepository()
+  for (const [itemId, quantity] of Object.entries(inventory)) {
+    if (!isAidongEquippableItem(itemId)) continue
+    await repo.setInventoryQuantity(uid, itemId, quantity, 'host-inventory-mirror')
+  }
+  return await repo.listInventory(uid)
 }
 
 function getNestedLooseMap(state: LooseState, key: string): Record<string, Record<string, unknown>> {
@@ -102,7 +216,7 @@ function assertPositiveInteger(value: number, errorCode: string): void {
 export async function assertAidongRecruited(uid: string, characterId: string): Promise<void> {
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
-  if (!getRecruited(state).includes(characterId)) {
+  if (!await isAidongRecruited(uid, state, characterId)) {
     throw new ServiceError('aidong_not_recruited', 409)
   }
 }
@@ -114,7 +228,11 @@ export async function assertAidongRecruited(uid: string, characterId: string): P
 export async function recruitAidong(uid: string, characterId: string) {
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
-  const recruited = getRecruited(state)
+  await getMydongRepository().getOrCreateForAidong(uid, {
+    aidongId: characterId,
+    acquisitionSource: 'manual',
+  })
+  const recruited = await listOwnedAidongIds(uid, state)
 
   const next = recruited.includes(characterId) ? recruited : [...recruited, characterId]
   const needs = state.needs && typeof state.needs === 'object'
@@ -131,13 +249,20 @@ export async function recruitAidong(uid: string, characterId: string) {
   })
 }
 
+export async function listOwnedMydongs(uid: string) {
+  const repo = requireModuleRepo('my-aidong')
+  const state = await repo.getOrCreate(uid) as LooseState
+  await listOwnedAidongIds(uid, state)
+  return await getMydongRepository().list(uid)
+}
+
 // 친밀도 변경:
 // userStore.ts의 addAffinity()에 대응한다. 먼저 영입된 Aidong인지 확인한 뒤 score와 level을 갱신한다.
 // 영입되지 않은 캐릭터에 대한 요청은 service error로 막아 route가 409로 변환하게 한다.
 export async function addAidongAffinity(uid: string, characterId: string, delta: number) {
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
-  if (!getRecruited(state).includes(characterId)) {
+  if (!await isAidongRecruited(uid, state, characterId)) {
     throw new ServiceError('aidong_not_recruited', 409)
   }
   const affinities = state.affinities && typeof state.affinities === 'object'
@@ -160,15 +285,13 @@ export async function addAidongAffinity(uid: string, characterId: string, delta:
 export async function setAidongOutfit(uid: string, characterId: string, outfitId: string) {
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
-  if (!getRecruited(state).includes(characterId)) {
-    throw new ServiceError('aidong_not_recruited', 409)
-  }
-  const equippedOutfit = state.equippedOutfit && typeof state.equippedOutfit === 'object'
-    ? state.equippedOutfit as Record<string, string>
-    : {}
+  const mydong = await resolveActiveMydong(uid, state, characterId)
+  await seedCosmeticLoadoutsFromLegacyMaps(uid, state)
+  await getMydongCosmeticRepository().setOutfit(uid, mydong.mydongUid, characterId, outfitId)
+  const { equippedOutfit } = await getCosmeticLoadoutMaps(uid, state)
 
   return await repo.patch(uid, {
-    equippedOutfit: { ...equippedOutfit, [characterId]: outfitId },
+    equippedOutfit,
   })
 }
 
@@ -182,34 +305,48 @@ export async function toggleAidongEquippedItem(uid: string, characterId: string,
 
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
-  if (!getRecruited(state).includes(characterId)) {
-    throw new ServiceError('aidong_not_recruited', 409)
-  }
-
-  const equippedItems = getEquippedItems(state)
-  const currentItems = Array.isArray(equippedItems[characterId]) ? equippedItems[characterId] : []
+  const mydong = await resolveActiveMydong(uid, state, characterId)
+  await seedCosmeticLoadoutsFromLegacyMaps(uid, state)
+  const loadout = await getMydongCosmeticRepository().getLoadout(uid, mydong.mydongUid, {
+    aidongId: characterId,
+  })
+  const currentItems = loadout.equippedItemIds
   const isEquipped = currentItems.includes(itemId)
   if (isEquipped) {
+    await getMydongCosmeticRepository().setEquippedItems(
+      uid,
+      mydong.mydongUid,
+      characterId,
+      currentItems.filter((id) => id !== itemId),
+    )
+    const { equippedItems } = await getCosmeticLoadoutMaps(uid, state)
     return await repo.patch(uid, {
-      equippedItems: {
-        ...equippedItems,
-        [characterId]: currentItems.filter((id) => id !== itemId),
-      },
+      equippedItems,
     })
   }
 
   const host = await getHostStateRepository().getOrCreate(uid)
-  const owned = host.inventory[itemId] ?? 0
-  const equippedByOthers = countEquippedItem(equippedItems, itemId, characterId)
+  const cosmeticInventory = await syncEquippableHostItemsToCosmeticInventory(uid, host.inventory)
+  const owned = cosmeticInventory.find((item) => item.cosmeticId === itemId)?.quantity ?? 0
+  const loadouts = await getMydongCosmeticRepository().listLoadouts(uid)
+  const equippedByOthers = countEquippedItem(
+    Object.fromEntries(loadouts.map((entry) => [entry.mydongUid, entry.equippedItemIds])),
+    itemId,
+    mydong.mydongUid,
+  )
   if (owned - equippedByOthers <= 0) {
     throw new ServiceError('aidong_item_not_owned_or_available', 409)
   }
 
+  await getMydongCosmeticRepository().setEquippedItems(
+    uid,
+    mydong.mydongUid,
+    characterId,
+    [...currentItems, itemId],
+  )
+  const { equippedItems } = await getCosmeticLoadoutMaps(uid, state)
   return await repo.patch(uid, {
-    equippedItems: {
-      ...equippedItems,
-      [characterId]: [...currentItems, itemId],
-    },
+    equippedItems,
   })
 }
 
@@ -233,16 +370,22 @@ export async function grantAidongCodexItem(
 
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
-  if (!getRecruited(state).includes(characterId)) {
-    throw new ServiceError('aidong_not_recruited', 409)
-  }
+  const mydong = await resolveActiveMydong(uid, state, characterId)
 
-  const aidongCodexItems = getNestedNumberMap(state, 'aidongCodexItems')
+  const aidongCodexItems = await getAidongCodexItemMap(uid, state)
   const currentItems = aidongCodexItems[characterId] ?? {}
   const nextItems = {
     ...currentItems,
     [itemId]: (currentItems[itemId] ?? 0) + amount,
   }
+  await getMydongPediaInventoryRepository().grant(uid, {
+    mydongUid: mydong.mydongUid,
+    aidongId: characterId,
+    pediaItemId: itemId,
+    slotNo: catalogItem.slotNo,
+    quantity: amount,
+    source,
+  })
   const aidongUpgradeState = getNestedLooseMap(state, 'aidongUpgradeState')
   const upgradeState = aidongUpgradeState[characterId] ?? {}
 
@@ -267,11 +410,9 @@ export async function grantAidongCodexItem(
 export async function getAidongCodexProgress(uid: string, characterId: string) {
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
-  if (!getRecruited(state).includes(characterId)) {
-    throw new ServiceError('aidong_not_recruited', 409)
-  }
+  await resolveActiveMydong(uid, state, characterId)
 
-  const aidongCodexItems = getNestedNumberMap(state, 'aidongCodexItems')
+  const aidongCodexItems = await getAidongCodexItemMap(uid, state)
   const ownedItems = aidongCodexItems[characterId] ?? {}
   return {
     characterId,
@@ -291,7 +432,7 @@ export async function requestAidongUpgrade(
 ) {
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
-  if (!getRecruited(state).includes(characterId)) {
+  if (!await isAidongRecruited(uid, state, characterId)) {
     throw new ServiceError('aidong_not_recruited', 409)
   }
 
@@ -335,7 +476,7 @@ export async function applyAidongCareAction(uid: string, characterId: string, ac
 
   const repo = requireModuleRepo('my-aidong')
   const state = await repo.getOrCreate(uid) as LooseState
-  if (!getRecruited(state).includes(characterId)) {
+  if (!await isAidongRecruited(uid, state, characterId)) {
     throw new ServiceError('aidong_not_recruited', 409)
   }
 

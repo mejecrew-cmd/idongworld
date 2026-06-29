@@ -6,7 +6,7 @@
  * 주의: route에 domain rule을 몰아넣지 말고 service/repository 경계를 유지한다.
  */
 import { Router } from 'express'
-import { getUserRepository } from '../repositories/index.js'
+import { getUserRepository, getUserSettingsRepository } from '../repositories/index.js'
 import { getRequestUid, getRequestUser } from '../middleware/auth.js'
 import {
   hashPassword,
@@ -23,6 +23,7 @@ import {
 } from '../auth/socialProviderAdapters.js'
 import { readSocialProvider } from '../auth/socialProviders.js'
 import { getCurrentTermsConfig } from '../account/termsPolicy.js'
+import { userSettingsPatchFromUserPatch } from '../repositories/userSettingsRepository.js'
 
 export const authRouter = Router()
 
@@ -176,6 +177,7 @@ authRouter.post('/session', async (req, res) => {
   const user = await repo.createOrUpdateAuthUser({
     uid,
     provider,
+    providerUid: uid,
     email: readString(body.email) ?? requestUser?.email,
     displayName: readString(body.displayName),
     photoURL: readString(body.photoURL),
@@ -203,11 +205,13 @@ authRouter.post('/session/complete', async (req, res) => {
   const createdOrUpdated = await repo.createOrUpdateAuthUser({
     uid,
     provider,
+    providerUid: uid,
     email: readString(body.email) ?? requestUser?.email,
     displayName: readString(body.displayName),
     photoURL: readString(body.photoURL),
   })
   const user = await repo.updateUser(createdOrUpdated.uid, completion.patch) ?? createdOrUpdated
+  await getUserSettingsRepository().patch(user.uid, userSettingsPatchFromUserPatch(completion.patch))
 
   res.json({ uid: user.uid, isNew: true, user })
 })
@@ -228,13 +232,16 @@ authRouter.post('/social/entry', async (req, res) => {
     if (!authProvider) return res.status(400).json({ error: 'unsupported_provider' })
 
     const repo = getUserRepository()
-    const existing = await repo.getUser(identity.providerUid)
+    const existing = await repo.findByProviderAccount(authProvider, identity.providerUid)
+      ?? await repo.getUser(identity.providerUid)
+    const uid = existing?.uid ?? identity.providerUid
     const user = await repo.createOrUpdateAuthUser({
-      uid: identity.providerUid,
+      uid,
       provider: authProvider,
       providerUid: identity.providerUid,
       email: identity.email,
       emailNormalized: normalizeEmail(identity.email),
+      emailVerified: identity.emailVerified,
       displayName: identity.displayName,
       photoURL: identity.photoURL,
     })
@@ -309,6 +316,7 @@ authRouter.post('/password/signup/complete', async (req, res) => {
 
   const created = await repo.createPasswordUser(pending)
   const user = await repo.updateUser(created.uid, completion.patch) ?? created
+  await getUserSettingsRepository().patch(user.uid, userSettingsPatchFromUserPatch(completion.patch))
   const token = issuePasswordSessionToken(user.uid)
   res.json({ uid: user.uid, token, isNew: true, user })
 })
@@ -320,13 +328,15 @@ authRouter.post('/password/login', async (req, res) => {
     return res.status(400).json({ error: 'invalid_credentials' })
   }
 
-  const user = await getUserRepository().findByLoginId(normalizeLoginIdKey(loginId))
+  const repo = getUserRepository()
+  const user = await repo.findByLoginId(normalizeLoginIdKey(loginId))
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return res.status(401).json({ error: 'invalid_credentials' })
   }
 
+  const loggedInUser = await repo.recordLogin(user.uid, 'password') ?? user
   const token = issuePasswordSessionToken(user.uid)
-  res.json({ uid: user.uid, token, isNew: false, user })
+  res.json({ uid: loggedInUser.uid, token, isNew: false, user: loggedInUser })
 })
 
 authRouter.delete('/account', async (req, res) => {

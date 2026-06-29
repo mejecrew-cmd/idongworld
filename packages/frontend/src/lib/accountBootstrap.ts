@@ -63,8 +63,9 @@ export function bootstrapAccount(): void {
   if (!isFirebaseEnabled) return
 
   onFirebaseAuthChanged((user) => {
+    if (hasPasswordSessionToken()) return
+
     if (!user) {
-      if (hasPasswordSessionToken()) return
       clearPasswordSessionToken()
       accountStoreFacade.logout()
       return

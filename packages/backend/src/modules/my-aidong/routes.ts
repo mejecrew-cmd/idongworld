@@ -13,6 +13,7 @@ import {
   applyAidongCareAction,
   grantAidongCodexItem,
   getAidongCodexProgress,
+  listOwnedMydongs,
   recruitAidong,
   requestAidongUpgrade,
   setAidongOutfit,
@@ -31,7 +32,20 @@ myAidongRouter.post('/recruit', async (req, res) => {
   if (!characterId) return res.status(400).json({ error: 'invalid_character_id' })
 
   const state = await recruitAidong(uid, characterId)
-  res.json({ ok: true, state })
+  const mydongs = await listOwnedMydongs(uid)
+  res.json({ ok: true, state, mydongs })
+})
+
+myAidongRouter.get('/owned', async (req, res) => {
+  const uid = getRequestUid(req)
+  if (!uid) return res.status(401).json({ error: 'no_uid' })
+
+  const mydongs = await listOwnedMydongs(uid)
+  res.json({
+    ok: true,
+    mydongs,
+    recruitedAidongs: mydongs.map((mydong) => mydong.aidongId),
+  })
 })
 
 // frontend의 addAffinity action을 backend로 옮긴 경로다.
@@ -123,7 +137,7 @@ myAidongRouter.post('/items/equip-toggle', async (req, res) => {
 
 
 // Aidong별 25칸 도감 progress 조회.
-// 저장 원장은 aidongCodexItems 수량 map이고, progress는 static catalog와 수량을 합쳐 파생한다.
+// 저장 원장은 mydongPediaInventory row이고, progress는 static catalog와 수량을 합쳐 파생한다.
 myAidongRouter.get('/codex-items/progress', async (req, res) => {
   const uid = getRequestUid(req)
   if (!uid) return res.status(401).json({ error: 'no_uid' })

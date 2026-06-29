@@ -53,6 +53,11 @@ export interface UserDoc {
   emailVerified?: boolean
   displayName?: string
   photoURL?: string
+  status?: 'active' | 'suspended' | 'withdrawn' | string
+  locale?: string
+  lastLoginAt?: number
+  lastLoginProvider?: 'guest' | 'google' | 'twitter' | 'firebase' | 'password' | string
+  aidongTimeBase?: string
   nickname?: string
   nicknameNormalized?: string
   signupProfileCompleted?: boolean
@@ -100,6 +105,9 @@ export function createGuestUser(): UserDoc {
   const doc: UserDoc = {
     uid,
     isGuest: true,
+    status: 'active',
+    lastLoginAt: now,
+    lastLoginProvider: 'guest',
     nickname: 'guest',
     gameStartedAt: now,
     coins: 100,

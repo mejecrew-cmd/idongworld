@@ -44,7 +44,7 @@ export interface SceneChoice {
   next: string  // scene ID or special token (__END__, __SCENARIO_RECRUIT__, ...)
   trigger?: TriggerValue
   requires_material?: string
-  requires_gems?: number
+  requires_diamonds?: number
   max_attempts?: number
   dynamic_cost_policy?: string
 }

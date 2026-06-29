@@ -6,11 +6,17 @@
  * 주의: 새 dedicated module storage나 customs adapter를 추가하면 이 테스트의 기대값도 함께 갱신한다.
  */
 import { describe, expect, it } from 'vitest'
+import express from 'express'
 import {
   getDedicatedModuleRepositories,
+  getAdminRepository,
   getUserRepository,
   getHostStateRepository,
   getCustomsLogRepository,
+  getMydongCosmeticRepository,
+  getMydongPediaInventoryRepository,
+  getMydongRepository,
+  getSooksoRepository,
   initializeRepositories,
 } from './repositories/index.js'
 import { calculateCustomsAmounts, getCustomsRule, listCustomsRules } from './customs/rules.js'
@@ -21,6 +27,15 @@ import {
   type ResourceRef,
 } from './resources/index.js'
 import { getModuleResourceBinding, listModuleResourceBindings } from './resources/moduleResourceRegistry.js'
+import {
+  isStaticTableImportable,
+  listImportableStaticTableDefinitions,
+  listStaticTableDefinitions,
+  parseStaticTableCodeFromFileName,
+  resolveStaticTableDefinition,
+  validateStaticTableRegistry,
+} from './staticTables/registry.js'
+import { InMemoryStaticTableRepository } from './staticTables/repository.js'
 import { executeCustomsTransfer, isAdHocCustomsApplyEnabled } from './routes/customs.js'
 import { resolveBackendAssetRef } from './routes/assets.js'
 import {
@@ -30,6 +45,9 @@ import {
   isLegacyAuthFallbackEnabled,
   type AuthedRequest,
 } from './middleware/auth.js'
+import { adminMiddleware } from './middleware/admin.js'
+import { adminRouter } from './routes/admin.js'
+import { accountRouter } from './routes/account.js'
 import {
   getAidongIslandConfig,
   interactAidongIsland,
@@ -46,6 +64,7 @@ import {
 import { purchaseLodgeFurniture, toggleLodgeAidongAssign, toggleLodgeRoomFurniture } from './modules/lodge/service.js'
 import {
   addAidongAffinity,
+  assertAidongRecruited,
   getAidongCodexProgress,
   grantAidongCodexItem,
   recruitAidong,
@@ -94,10 +113,43 @@ import type { HostStateDoc } from './models/HostStateModel.js'
 import type { LodgeStateDoc } from './models/LodgeStateModel.js'
 import type { MyAidongStateDoc } from './models/MyAidongStateModel.js'
 import type { MyIslandStateDoc } from './models/MyIslandStateModel.js'
+import {
+  STATIC_RUNTIME_BUNDLE_MODELS,
+  STATIC_RUNTIME_ROW_MODELS,
+  StaticDataImportBatchModel,
+  StaticTableRowModel,
+} from './models/StaticTableModels.js'
 import type { ZoneStateDoc } from './models/ZoneStateModel.js'
 
 function testUid(label: string) {
   return `test-${label}-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function createTestResponse() {
+  const context: { statusCode: number; body: unknown } = {
+    statusCode: 200,
+    body: undefined,
+  }
+  const res = {
+    status(code: number) {
+      context.statusCode = code
+      return res
+    },
+    json(body: unknown) {
+      context.body = body
+      return res
+    },
+  }
+  return { context, res }
+}
+
+async function closeTestServer(server: ReturnType<ReturnType<typeof express>['listen']>) {
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => {
+      if (error) reject(error)
+      else resolve()
+    })
+  })
 }
 
 const MODULE_REPOSITORY_OPERATION_CASES: Record<string, {
@@ -467,6 +519,101 @@ describe('backend persistence contracts', () => {
     }
   })
 
+  it('keeps admin APIs protected by server auth and adminUsers state', async () => {
+    initializeRepositories()
+    const previousNodeEnv = process.env.NODE_ENV
+    const previousFallback = process.env.AUTH_LEGACY_UID_FALLBACK_ENABLED
+
+    const ownerUid = testUid('admin-owner')
+    const disabledUid = testUid('admin-disabled')
+    const normalUid = testUid('admin-normal')
+
+    await getAdminRepository().upsertAdminUser({
+      uid: ownerUid,
+      role: 'owner',
+      enabled: true,
+    })
+    await getAdminRepository().upsertAdminUser({
+      uid: disabledUid,
+      role: 'admin',
+      enabled: false,
+    })
+
+    delete process.env.AUTH_LEGACY_UID_FALLBACK_ENABLED
+    process.env.NODE_ENV = 'production'
+
+    const productionReq = {
+      headers: { 'x-uid': ownerUid },
+      query: {},
+      body: {},
+    } as unknown as AuthedRequest
+    await authMiddleware(productionReq, {} as never, () => {})
+    const productionResponse = createTestResponse()
+    let productionNextCalled = false
+    await adminMiddleware(productionReq, productionResponse.res as never, () => {
+      productionNextCalled = true
+    })
+    expect(productionNextCalled).toBe(false)
+    expect(productionResponse.context.statusCode).toBe(401)
+    expect(productionResponse.context.body).toMatchObject({ error: 'auth_required' })
+
+    process.env.NODE_ENV = 'development'
+
+    const normalReq = {
+      headers: { 'x-uid': normalUid },
+      query: {},
+      body: {},
+    } as unknown as AuthedRequest
+    await authMiddleware(normalReq, {} as never, () => {})
+    const normalResponse = createTestResponse()
+    let normalNextCalled = false
+    await adminMiddleware(normalReq, normalResponse.res as never, () => {
+      normalNextCalled = true
+    })
+    expect(normalNextCalled).toBe(false)
+    expect(normalResponse.context.statusCode).toBe(403)
+    expect(normalResponse.context.body).toMatchObject({ error: 'admin_required' })
+
+    const disabledReq = {
+      headers: { 'x-uid': disabledUid },
+      query: {},
+      body: {},
+    } as unknown as AuthedRequest
+    await authMiddleware(disabledReq, {} as never, () => {})
+    const disabledResponse = createTestResponse()
+    let disabledNextCalled = false
+    await adminMiddleware(disabledReq, disabledResponse.res as never, () => {
+      disabledNextCalled = true
+    })
+    expect(disabledNextCalled).toBe(false)
+    expect(disabledResponse.context.statusCode).toBe(403)
+
+    const ownerReq = {
+      headers: { 'x-uid': ownerUid },
+      query: {},
+      body: {},
+    } as unknown as AuthedRequest
+    await authMiddleware(ownerReq, {} as never, () => {})
+    const ownerResponse = createTestResponse()
+    let ownerNextCalled = false
+    await adminMiddleware(ownerReq, ownerResponse.res as never, () => {
+      ownerNextCalled = true
+    })
+    expect(ownerNextCalled).toBe(true)
+    expect((ownerReq as { adminUser?: { role?: string } }).adminUser?.role).toBe('owner')
+
+    if (previousNodeEnv === undefined) {
+      delete process.env.NODE_ENV
+    } else {
+      process.env.NODE_ENV = previousNodeEnv
+    }
+    if (previousFallback === undefined) {
+      delete process.env.AUTH_LEGACY_UID_FALLBACK_ENABLED
+    } else {
+      process.env.AUTH_LEGACY_UID_FALLBACK_ENABLED = previousFallback
+    }
+  })
+
   it('reports production Firebase auth as required unless explicitly disabled', () => {
     const previousNodeEnv = process.env.NODE_ENV
     const previousRequired = process.env.AUTH_FIREBASE_REQUIRED
@@ -501,6 +648,240 @@ describe('backend persistence contracts', () => {
       delete process.env.AUTH_FIREBASE_REQUIRED
     } else {
       process.env.AUTH_FIREBASE_REQUIRED = previousRequired
+    }
+  })
+
+  it('serves admin API smoke cases for owner, normal user, disabled admin, grant, and audit log', async () => {
+    initializeRepositories()
+    const previousNodeEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'development'
+
+    const ownerUid = testUid('admin-api-owner')
+    const disabledUid = testUid('admin-api-disabled')
+    const normalUser = await getUserRepository().createPasswordUser({
+      uid: testUid('admin-api-normal'),
+      loginId: 'admin-api-normal',
+      loginIdNormalized: 'admin-api-normal',
+      passwordHash: 'test-hash',
+    })
+    await getUserRepository().createPasswordUser({
+      uid: ownerUid,
+      loginId: 'admin-api-owner',
+      loginIdNormalized: 'admin-api-owner',
+      passwordHash: 'test-hash',
+    })
+    await getUserRepository().createPasswordUser({
+      uid: disabledUid,
+      loginId: 'admin-api-disabled',
+      loginIdNormalized: 'admin-api-disabled',
+      passwordHash: 'test-hash',
+    })
+    await getAdminRepository().upsertAdminUser({
+      uid: ownerUid,
+      role: 'owner',
+      enabled: true,
+    })
+    await getAdminRepository().upsertAdminUser({
+      uid: disabledUid,
+      role: 'admin',
+      permissions: ['users.resources.grant'],
+      enabled: false,
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api', authMiddleware)
+    app.use('/api/admin', adminRouter)
+    const server = app.listen(0)
+
+    try {
+      const address = server.address()
+      if (!address || typeof address === 'string') throw new Error('invalid_test_server_address')
+      const baseUrl = `http://127.0.0.1:${address.port}/api/admin`
+
+      const normalMe = await fetch(`${baseUrl}/me`, {
+        headers: { 'X-Uid': normalUser.uid },
+      })
+      expect(normalMe.status).toBe(403)
+
+      const disabledMe = await fetch(`${baseUrl}/me`, {
+        headers: { 'X-Uid': disabledUid },
+      })
+      expect(disabledMe.status).toBe(403)
+
+      const ownerMe = await fetch(`${baseUrl}/me`, {
+        headers: { 'X-Uid': ownerUid },
+      })
+      expect(ownerMe.status).toBe(200)
+      await expect(ownerMe.json()).resolves.toMatchObject({
+        isAdmin: true,
+        adminUser: {
+          uid: ownerUid,
+          role: 'owner',
+        },
+      })
+
+      const grant = await fetch(`${baseUrl}/users/${normalUser.uid}/resources/grant`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Uid': ownerUid,
+        },
+        body: JSON.stringify({ resource: 'coins', delta: 25 }),
+      })
+      expect(grant.status).toBe(200)
+      await expect(grant.json()).resolves.toMatchObject({
+        ok: true,
+        host: {
+          uid: normalUser.uid,
+          coins: 125,
+        },
+      })
+
+      const host = await getHostStateRepository().getOrCreate(normalUser.uid)
+      expect(host.coins).toBe(125)
+
+      const detail = await fetch(`${baseUrl}/users/${normalUser.uid}`, {
+        headers: { 'X-Uid': ownerUid },
+      })
+      expect(detail.status).toBe(200)
+      await expect(detail.json()).resolves.toMatchObject({
+        user: {
+          uid: normalUser.uid,
+          adminEnabled: false,
+        },
+        splitSummary: {
+          currencies: {
+            coin: 125,
+            diamond: 0,
+          },
+          diceResource: {
+            diceQuantity: 6,
+          },
+          inventory: {
+            count: 0,
+            totalQuantity: 0,
+          },
+          sookso: {
+            sooksoClean: false,
+            assignedAidongCount: 0,
+          },
+          mydongs: {
+            count: 0,
+          },
+          cosmetics: {
+            loadoutCount: 0,
+          },
+        },
+      })
+
+      const logs = await getAdminRepository().listAdminAuditLogs({
+        adminUid: ownerUid,
+        action: 'users.resources.grant',
+        targetUid: normalUser.uid,
+        limit: 5,
+      })
+      expect(logs[0]).toMatchObject({
+        adminUid: ownerUid,
+        targetUid: normalUser.uid,
+        action: 'users.resources.grant',
+        payloadSummary: {
+          resource: 'coins',
+          delta: 25,
+        },
+      })
+
+      const directLog = await getAdminRepository().writeAdminAuditLog({
+        adminUid: ownerUid,
+        action: 'test.probe',
+        targetUid: normalUser.uid,
+      })
+      expect(directLog).toMatchObject({
+        adminUid: ownerUid,
+        action: 'test.probe',
+        targetUid: normalUser.uid,
+      })
+    } finally {
+      await closeTestServer(server)
+      if (previousNodeEnv === undefined) {
+        delete process.env.NODE_ENV
+      } else {
+        process.env.NODE_ENV = previousNodeEnv
+      }
+    }
+  })
+
+  it('serves account bootstrap aggregate from split dynamic repositories', async () => {
+    initializeRepositories()
+
+    const uid = testUid('account-bootstrap')
+    await getUserRepository().createPasswordUser({
+      uid,
+      loginId: 'bootstrap-user',
+      loginIdNormalized: 'bootstrap-user',
+      passwordHash: 'test-hash',
+    })
+    await getHostStateRepository().mutateResource(uid, 'coins', 50)
+    await getHostStateRepository().mutateInventory(uid, 'aidong-ribbon', 1)
+    await recruitAidong(uid, '황금멍')
+    await grantAidongCodexItem(uid, '황금멍', 'hwanggumeong-golden-paw', 1, 'test')
+    await toggleAidongEquippedItem(uid, '황금멍', 'aidong-ribbon')
+    await getSooksoRepository().patchSookso(uid, {
+      sooksoClean: true,
+      sooksoName: '테스트숙소',
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/api', authMiddleware)
+    app.use('/api/account', accountRouter)
+    const server = app.listen(0)
+
+    try {
+      const address = server.address()
+      if (!address || typeof address === 'string') throw new Error('invalid_test_server_address')
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/account/bootstrap`, {
+        headers: { 'X-Uid': uid },
+      })
+      expect(response.status).toBe(200)
+      const body = await response.json() as {
+        ok: boolean
+        state: Record<string, unknown>
+        snapshot: Record<string, unknown>
+      }
+      expect(body.ok).toBe(true)
+      expect(body.state).toMatchObject({
+        uid,
+        coins: 150,
+        diceCount: 6,
+        sooksoClean: true,
+        sooksoName: '테스트숙소',
+        inventory: { 'aidong-ribbon': 1 },
+        recruitedAidongs: ['황금멍'],
+        aidongCodexItems: {
+          '황금멍': { 'hwanggumeong-golden-paw': 1 },
+        },
+        equippedItems: {
+          '황금멍': ['aidong-ribbon'],
+        },
+      })
+      expect(body.snapshot).toMatchObject({
+        currencies: { coin: 150, diamond: 0 },
+        diceResource: { diceQuantity: 6 },
+        sookso: { sooksoClean: true, sooksoName: '테스트숙소' },
+      })
+      expect(body.snapshot.mydongs).toMatchObject([{ uid, aidongId: '황금멍' }])
+      expect(body.snapshot.pediaInventory).toMatchObject([
+        { uid, aidongId: '황금멍', pediaItemId: 'hwanggumeong-golden-paw', quantity: 1 },
+      ])
+      expect(body.snapshot.cosmeticInventory).toMatchObject([
+        { uid, cosmeticId: 'aidong-ribbon', quantity: 1 },
+      ])
+      expect(body.snapshot.cosmeticLoadouts).toMatchObject([
+        { uid, aidongId: '황금멍', equippedItemIds: ['aidong-ribbon'] },
+      ])
+    } finally {
+      await closeTestServer(server)
     }
   })
 
@@ -588,6 +969,152 @@ describe('backend persistence contracts', () => {
       resourceField: 'resources',
       storage: 'moduleStates',
     })
+  })
+
+  it('declares static CSV table import rules through an explicit registry', () => {
+    expect(validateStaticTableRegistry()).toEqual([])
+
+    const allTableCodes = listStaticTableDefinitions().map((definition) => definition.tableCode)
+    expect(allTableCodes).toContain('G-CHR-01')
+    expect(allTableCodes).toContain('G-STR-01')
+    expect(allTableCodes).toContain('X-DLG-AIDONG-*')
+    expect(allTableCodes).toContain('M17-ECO-01')
+
+    const importableTableCodes = listImportableStaticTableDefinitions().map((definition) => definition.tableCode)
+    expect(importableTableCodes).toContain('G-CHR-01')
+    expect(importableTableCodes).toContain('X-ECO-00')
+    expect(importableTableCodes).not.toContain('G-USR-01')
+    expect(importableTableCodes).not.toContain('M17-ECO-01')
+
+    expect(resolveStaticTableDefinition('X-DLG-AIDONG-0019')).toMatchObject({
+      tableCode: 'X-DLG-AIDONG-*',
+      importKind: 'bundle',
+      bundleCollection: 'staticDialoguePacks',
+    })
+
+    expect(parseStaticTableCodeFromFileName('G-CHR-01_aidong_master.csv')).toBe('G-CHR-01')
+    expect(parseStaticTableCodeFromFileName('G-STR-01_M03-HUB-MAP_string_table.csv')).toBe('G-STR-01')
+    expect(parseStaticTableCodeFromFileName('X-DLG-AIDONG-0019_daily_dialogue.csv')).toBe('X-DLG-AIDONG-0019')
+    expect(parseStaticTableCodeFromFileName('X-DLG-A0019_daily_dialogue.csv')).toBe('X-DLG-AIDONG-0019')
+    expect(parseStaticTableCodeFromFileName('X-DLG-A0119_daily_dialogue.csv')).toBe('X-DLG-AIDONG-0119')
+    expect(parseStaticTableCodeFromFileName('X-ECO-00__currency_master.csv')).toBe('X-ECO-00')
+
+    expect(isStaticTableImportable('G-CHR-01')).toBe(true)
+    expect(isStaticTableImportable('X-DLG-AIDONG-0119')).toBe(true)
+    expect(isStaticTableImportable('G-USR-01')).toBe(false)
+    expect(isStaticTableImportable('M17-ECO-01')).toBe(false)
+    expect(isStaticTableImportable('UNKNOWN')).toBe(false)
+  })
+
+  it('declares static import audit and runtime Mongo models', () => {
+    expect(StaticDataImportBatchModel.collection.name).toBe('staticDataImportBatches')
+    expect(StaticTableRowModel.collection.name).toBe('staticTableRows')
+
+    expect(Object.keys(STATIC_RUNTIME_ROW_MODELS).sort()).toEqual([
+      'staticAidongMasters',
+      'staticAidongPediaItemMasters',
+      'staticCurrencyMasters',
+      'staticIslandZones',
+      'staticItemCatalogs',
+      'staticModuleCurrencyPolicies',
+    ])
+    expect(Object.keys(STATIC_RUNTIME_BUNDLE_MODELS).sort()).toEqual([
+      'staticAidongIslandBundles',
+      'staticBoardSets',
+      'staticCosmeticRuleSets',
+      'staticDialoguePacks',
+      'staticSooksoRuleSets',
+      'staticStoryBundles',
+      'staticStringPacks',
+    ])
+
+    expect(STATIC_RUNTIME_ROW_MODELS.staticAidongMasters.collection.name).toBe('staticAidongMasters')
+    expect(STATIC_RUNTIME_BUNDLE_MODELS.staticBoardSets.collection.name).toBe('staticBoardSets')
+
+    const staticTableRowIndexes = StaticTableRowModel.schema.indexes()
+    expect(staticTableRowIndexes).toEqual(expect.arrayContaining([
+      [expect.objectContaining({ tableCode: 1, version: 1, rowKey: 1 }), expect.objectContaining({ unique: true })],
+      [expect.objectContaining({ tableCode: 1, version: 1, enabled: 1 }), expect.any(Object)],
+    ]))
+
+    const boardSetIndexes = STATIC_RUNTIME_BUNDLE_MODELS.staticBoardSets.schema.indexes()
+    expect(boardSetIndexes).toEqual(expect.arrayContaining([
+      [expect.objectContaining({ bundleId: 1, version: 1 }), expect.objectContaining({ unique: true })],
+      [expect.objectContaining({ enabled: 1, version: 1 }), expect.any(Object)],
+    ]))
+  })
+
+  it('keeps a memory static table repository for importer service tests', async () => {
+    const repository = new InMemoryStaticTableRepository()
+    const now = Date.now()
+
+    await repository.upsertImportBatch({
+      importBatchId: 'batch-1',
+      status: 'dryRun',
+      version: 'v1',
+      sourceFiles: [
+        {
+          fileName: 'X-ECO-00_currency_master.csv',
+          tableCode: 'X-ECO-00',
+          sourceHash: 'hash-1',
+          rowCount: 1,
+        },
+      ],
+      createdAt: now,
+      updatedAt: now,
+    })
+    await repository.upsertTableRows([
+      {
+        tableCode: 'X-ECO-00',
+        version: 'v1',
+        rowKey: 'coin',
+        rowNo: 2,
+        sourceFile: 'X-ECO-00_currency_master.csv',
+        sourceHash: 'hash-1',
+        importBatchId: 'batch-1',
+        originalRow: { currency_id: 'coin' },
+        normalizedRow: { currencyId: 'coin' },
+        enabled: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ])
+    await repository.upsertRuntimeRows('staticCurrencyMasters', [
+      {
+        tableCode: 'X-ECO-00',
+        version: 'v1',
+        rowKey: 'coin',
+        sourceHash: 'hash-1',
+        importBatchId: 'batch-1',
+        enabled: true,
+        data: { currencyId: 'coin' },
+        createdAt: now,
+        updatedAt: now,
+      },
+    ])
+    await repository.upsertRuntimeBundles('staticBoardSets', [
+      {
+        bundleId: 'neighbor',
+        version: 'v1',
+        sourceTableCodes: ['X-CFG-01', 'M05-MAP-02'],
+        importBatchId: 'batch-1',
+        enabled: true,
+        data: { slots: [] },
+        createdAt: now,
+        updatedAt: now,
+      },
+    ])
+
+    expect(await repository.listImportBatches()).toHaveLength(1)
+    expect(await repository.listTableRows('X-ECO-00', 'v1')).toEqual([
+      expect.objectContaining({ rowKey: 'coin', normalizedRow: { currencyId: 'coin' } }),
+    ])
+    expect(await repository.listRuntimeRows('staticCurrencyMasters', 'v1')).toEqual([
+      expect.objectContaining({ rowKey: 'coin', data: { currencyId: 'coin' } }),
+    ])
+    expect(await repository.listRuntimeBundles('staticBoardSets', 'v1')).toEqual([
+      expect.objectContaining({ bundleId: 'neighbor', data: { slots: [] } }),
+    ])
   })
 
   it('loads ship type config from ship balance.csv', () => {
@@ -1381,6 +1908,28 @@ describe('backend persistence contracts', () => {
 
     const recruited = await recruitAidong(uid, characterId) as MyAidongStateDoc
     expect(recruited.recruitedAidongs).toContain(characterId)
+    const mydongs = await getMydongRepository().list(uid)
+    expect(mydongs).toEqual([
+      expect.objectContaining({
+        uid,
+        aidongId: characterId,
+        mydongUid: `${uid}:${characterId}`,
+        status: 'active',
+      }),
+    ])
+
+    const legacyUid = testUid('legacy-mydong-seed')
+    await getDedicatedModuleRepositories()['my-aidong'].patch(legacyUid, {
+      recruitedAidongs: ['legacy-aidong'],
+    })
+    await assertAidongRecruited(legacyUid, 'legacy-aidong')
+    expect(await getMydongRepository().list(legacyUid)).toEqual([
+      expect.objectContaining({
+        uid: legacyUid,
+        aidongId: 'legacy-aidong',
+        mydongUid: `${legacyUid}:legacy-aidong`,
+      }),
+    ])
 
     const incorporated = await incorporateSlot(uid, { areaNo: 'AREA-01', characterId }) as MyIslandStateDoc
     expect(incorporated.zoneSlots['AREA-01'].occupantAidongId).toBe(characterId)
@@ -1511,6 +2060,11 @@ describe('backend persistence contracts', () => {
     await getHostStateRepository().mutateInventory(uid, 'aidong-ribbon', 1)
     const equippedItem = await toggleAidongEquippedItem(uid, 'test-aidong', 'aidong-ribbon') as MyAidongStateDoc
     expect(equippedItem.equippedItems['test-aidong']).toEqual(['aidong-ribbon'])
+    expect(await getMydongCosmeticRepository().listInventory(uid)).toMatchObject([
+      { uid, cosmeticId: 'aidong-ribbon', quantity: 1, source: 'host-inventory-mirror' },
+    ])
+    expect((await getMydongCosmeticRepository().listLoadouts(uid)).find((entry) => entry.aidongId === 'test-aidong'))
+      .toMatchObject({ uid, aidongId: 'test-aidong', equippedItemIds: ['aidong-ribbon'] })
     await recruitAidong(uid, 'second-aidong')
     await expect(toggleAidongEquippedItem(uid, 'second-aidong', 'aidong-ribbon')).rejects.toMatchObject({
       code: 'aidong_item_not_owned_or_available',
@@ -1518,6 +2072,8 @@ describe('backend persistence contracts', () => {
     })
     const unequippedItem = await toggleAidongEquippedItem(uid, 'test-aidong', 'aidong-ribbon') as MyAidongStateDoc
     expect(unequippedItem.equippedItems['test-aidong']).toEqual([])
+    expect((await getMydongCosmeticRepository().listLoadouts(uid)).find((entry) => entry.aidongId === 'test-aidong'))
+      .toMatchObject({ uid, aidongId: 'test-aidong', equippedItemIds: [] })
 
     const ship = await toggleHarborAssign(uid, 'test-aidong') as { harborAssignedChars?: string[] }
     expect(ship.harborAssignedChars).toContain('test-aidong')
@@ -1529,12 +2085,16 @@ describe('backend persistence contracts', () => {
     const lodge = await toggleLodgeAidongAssign(uid, 'test-aidong') as LodgeStateDoc
     expect(lodge.assignedAidongs).toContain('test-aidong')
     expect(lodge.lodgeInventory).toEqual({})
+    expect(await getSooksoRepository().getAssignedAidongIds(uid)).toEqual(['test-aidong'])
 
     const purchasedLodgeFurniture = await purchaseLodgeFurniture(uid, 'plant') as { state: LodgeStateDoc }
     expect(purchasedLodgeFurniture.state.furniture.plant).toBe(1)
     const placedLodgeFurniture = await toggleLodgeRoomFurniture(uid, 'test-aidong', 'plant') as LodgeStateDoc
     expect((placedLodgeFurniture.rooms['test-aidong'] as { furniture?: string[] }).furniture)
       .toEqual(['plant'])
+    expect(await getSooksoRepository().getRoomFurnitureMap(uid)).toEqual({
+      'test-aidong': { furniture: ['plant'] },
+    })
     await expect(toggleLodgeRoomFurniture(uid, 'second-aidong', 'plant')).rejects.toMatchObject({
       code: 'lodge_furniture_not_owned_or_available',
       status: 409,
@@ -1542,6 +2102,7 @@ describe('backend persistence contracts', () => {
 
     const lodgeCleared = await toggleLodgeAidongAssign(uid, 'test-aidong') as LodgeStateDoc
     expect(lodgeCleared.assignedAidongs).not.toContain('test-aidong')
+    expect(await getSooksoRepository().getAssignedAidongIds(uid)).toEqual([])
 
     await expect(toggleLodgeAidongAssign(uid, 'not-recruited')).rejects.toMatchObject({
       code: 'aidong_not_recruited',
@@ -1626,11 +2187,17 @@ describe('backend persistence contracts', () => {
     }
     expect(cabinCleared.cabinAssignments).toEqual({})
 
-    await getHostStateRepository().getOrCreate(uid, { diceCount: 1 })
+    await getHostStateRepository().patch(uid, { diceCount: 1 })
     await startRoute(uid, 'neighbor')
     const rolled = await rollRoute(uid, 6, { routeId: 'neighbor', boardPosition: 6 })
     expect(rolled.steps).toBe(6)
     expect(rolled.boardPosition).toBe(6)
+    expect(rolled.host.diceCount).toBe(0)
+    await expect(rollRoute(uid, 1, { routeId: 'neighbor', boardPosition: 7 })).rejects.toMatchObject({
+      code: 'insufficient_dice',
+    })
+    const refreshedHostAfterRoll = await getHostStateRepository().getOrCreate(uid)
+    expect(refreshedHostAfterRoll.diceCount).toBe(0)
     expect((rolled.state as { boardPosition?: number }).boardPosition).toBeUndefined()
     expect(rolled.landing).toMatchObject({
       landingId: 'neighbor:6',
@@ -1776,6 +2343,16 @@ describe('backend persistence contracts', () => {
 
     const granted = await grantAidongCodexItem(uid, characterId, 'hwanggumeong-golden-paw', 2, 'test') as MyAidongStateDoc
     expect(granted.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(2)
+    expect(await getMydongPediaInventoryRepository().list(uid)).toMatchObject([
+      {
+        uid,
+        aidongId: characterId,
+        pediaItemId: 'hwanggumeong-golden-paw',
+        slotNo: 1,
+        quantity: 2,
+        source: 'test',
+      },
+    ])
 
     const progress = await getAidongCodexProgress(uid, characterId)
     expect(progress.ownedItems['hwanggumeong-golden-paw']).toBe(2)
@@ -1796,6 +2373,11 @@ describe('backend persistence contracts', () => {
 
     const duplicated = await grantAidongCodexItem(uid, characterId, 'hwanggumeong-golden-paw', 1, 'test-duplicate') as MyAidongStateDoc
     expect(duplicated.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(3)
+    expect((await getMydongPediaInventoryRepository().list(uid))[0]).toMatchObject({
+      pediaItemId: 'hwanggumeong-golden-paw',
+      quantity: 3,
+      source: 'test-duplicate',
+    })
     const duplicatedProgress = await getAidongCodexProgress(uid, characterId)
     expect(duplicatedProgress.progress[0]).toMatchObject({ status: 'owned', quantity: 3 })
 
@@ -1919,6 +2501,14 @@ describe('backend persistence contracts', () => {
     const claimedAidongState = claimed.aidongState as unknown as MyAidongStateDoc
     const claimedZoneState = claimed.state as ZoneStateDoc
     expect(claimedAidongState.aidongCodexItems[characterId]?.['hwanggumeong-golden-paw']).toBe(1)
+    expect(await getMydongPediaInventoryRepository().list(uid)).toMatchObject([
+      {
+        uid,
+        aidongId: characterId,
+        pediaItemId: 'hwanggumeong-golden-paw',
+        quantity: 1,
+      },
+    ])
     expect((claimedZoneState.progress as Record<string, unknown>).lastProductionClaim).toMatchObject({
       slotId: 'slot1',
       characterId,

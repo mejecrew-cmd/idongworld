@@ -11,6 +11,8 @@
 
 현재 프로젝트는 여러 번의 기획 변경과 구조 개편을 거쳤다. 그래서 오래된 next_work, 오래된 세관 UX, 오래된 dynamic zone 흐름을 그대로 믿으면 안 된다. 아래 읽는 순서와 규칙을 먼저 따른다.
 
+2026-06-29 이후에는 동적 유저 데이터가 xlsx 정책 기준으로 한 번 더 분리됐다. 새 개발자는 `users`, `hostStates`, `myAidongStates`, `lodgeStates`만 보고 전체 유저 상태를 판단하면 안 된다. 재화, 주사위, 전역 인벤토리, 숙소, 보유 Aidong, 도감템, 코스메틱은 별도 collection이 권위다.
+
 ## 1. 먼저 읽을 문서 순서
 
 새 개발자는 아래 순서대로 읽으면 된다.
@@ -114,9 +116,23 @@
 
 | collection | 역할 |
 |---|---|
-| `users` | 계정, guest, auth 연결 user document |
-| `hostStates` | host 이름, 광역 재화, 주사위, 통 inventory |
-| `myAidongStates` | 영입 Aidong, needs, 케어, 착용, 도감 아이템 후보 원장 |
+| `users` | 계정, guest, 진행 플래그, auth 호환 user document |
+| `providerAccounts` | provider별 인증 연결. 한 유저 여러 provider 연결 가능 |
+| `userSettings` | 약관, 마케팅, 푸시, 시간대, 사운드 설정 |
+| `hostStates` | host 이름과 기존 API 호환 projection |
+| `userCurrencyBalances` | coin/diamond 잔액 |
+| `userCurrencyLedger` | 재화 변경 이력 |
+| `diceResources` | 주사위 수량과 충전 메타 |
+| `userInventoryItems` | 전역 인벤토리 item row |
+| `myAidongStates` | needs, 케어, 호감도 등 Aidong 호환 state |
+| `mydongList` | 유저가 보유한 개별 Aidong row |
+| `mydongPediaInventory` | Aidong별 도감템 수량 row |
+| `userCosmeticInventory` | 코스메틱 보유 row |
+| `mydongCosmeticLoadouts` | Aidong별 코스메틱 장착 |
+| `mydongPersonaPartStates` | persona part 상태 |
+| `sooksoStates` | 숙소 청소/이름 |
+| `roomSlots` | 숙소 방 배정 |
+| `roomFurniturePlacements` | 숙소 방별 가구 배치 |
 | `myIslandStates` | 마이섬 해금, 15구역 slot, 구역 진행 |
 | `codexStates` | 도감 표시, 일지, 등록 상태. 수량 원장은 아님 |
 | `routeNeighborStates` | 항해 route catalog, landing/encounter 결과 호환 기록. 현재 route/current cell/출항 여부는 저장하지 않음 |
@@ -130,6 +146,8 @@
 - 새 runtime 기능에서 `/api/state`를 되살리면 안 된다.
 - module state는 `/api/modules/{moduleId}` 아래 API를 쓴다.
 - domain rule이 있는 기능은 단순 state patch가 아니라 action API로 만든다.
+- `hostStates.inventory`, `hostStates.coins`, `hostStates.diceCount`, `myAidongStates.aidongCodexItems`, `lodgeStates.rooms`는 기존 화면/API 호환 projection 또는 mirror일 수 있다.
+- 새 기능은 `userInventoryItems`, `userCurrencyBalances`, `diceResources`, `mydongPediaInventory`, `roomFurniturePlacements` 같은 권위 collection을 거치는 repository/API를 사용한다.
 
 ### 3.3 frontend store 구조
 
@@ -255,6 +273,25 @@
 - 이 명령은 local Mongo, backend, frontend를 실제로 띄운다.
 - 문서만 통과한 것이 아니라 실제 실행까지 통과한 smoke 기준이다.
 - 7월 작업은 M5 검증을 깨지 않도록 작은 단위로 추가한다.
+
+### 3.10 정적 table import와 런타임 기준 데이터
+
+완료된 내용:
+
+- 기획에서 제공하는 CSV 정적 테이블을 `resources/table/*.csv` 기준으로 읽는 import 기반을 만들었다.
+- backend registry가 tableCode별 정적/동적 여부, 필수 컬럼, primary key, dependency, target collection, bundle builder를 선언한다.
+- Admin DB 관리 화면에서 CSV 스캔, validation, dry-run, commit, activate를 수행할 수 있다.
+- `staticTableRows`에는 원본 row snapshot을 남기고, 런타임에서 자주 쓰는 구조는 도메인별 row collection 또는 JSON bundle collection으로 따로 저장한다.
+- `/api/static/*`는 activate된 batch만 읽어 화면/서비스에 기준 데이터를 제공한다.
+
+개발자가 기억할 것:
+
+- 정적 table import는 “운영 기준 데이터 배포” 도구다.
+- `Aidong master`, `item catalog`, `currency master`, `island zone`, `board slot`, `sookso rule`, `string`, `dialogue`, `story`, `Aidong island` 같은 기준 데이터만 import한다.
+- `users`, `providerAccounts`, `userSettings`, `diceResources`, `userCurrencyBalances`, `mydongList`, `mydongPediaInventory`, `mydongIslandState`처럼 유저별로 바뀌는 데이터는 import하지 않는다.
+- 유저 데이터 schema 변경은 migration, repository, service, API를 함께 바꾸는 작업이다. CSV import로 덮어쓰면 안 된다.
+- rollback은 collection 삭제가 아니라 이전에 commit된 batch를 다시 activate하는 방식이 기본이다.
+
 ## 4. 현재 최신 실행 보드
 
 현재 최신 실행 보드는 다음 문서다.
@@ -389,8 +426,8 @@ packages/backend/src/modules/my-island/service.ts
 
 반대로 다음 경우에는 customs보다 domain action API를 우선한다.
 
-- gameplay 보상이 `hostStates.inventory` 같은 단일 권위 저장소로 바로 들어가는 경우.
-- 아이동별 도감 아이템이 `myAidongStates` 후보 원장으로 바로 들어가는 경우.
+- gameplay 보상이 `userInventoryItems`, `userCurrencyBalances`, `diceResources` 같은 단일 권위 저장소로 바로 들어가는 경우.
+- 아이동별 도감 아이템이 `mydongPediaInventory`로 바로 들어가는 경우.
 
 ## 6. 절대 지켜야 하는 작업 규칙
 
@@ -419,7 +456,7 @@ frontend api.patchState
 
 ```text
 route-neighbor service가 myIslandStates를 직접 수정
-zone-garden service가 hostStates.inventory를 임의 patch
+zone-garden service가 userInventoryItems를 거치지 않고 hostStates.inventory를 임의 patch
 ship service가 lodgeStates를 직접 수정
 ```
 
@@ -428,7 +465,7 @@ ship service가 lodgeStates를 직접 수정
 ```text
 my-aidong 영입은 my-aidong service
 my-island 편입은 my-island service
-host inventory 변경은 host service 또는 명시 action
+전역 inventory 변경은 host service, userInventory repository, 또는 명시 action
 cross-module debit/credit은 customs
 ```
 
@@ -499,7 +536,7 @@ Select-String -Path .cloud/수정한문서.md -Pattern ([char]0xFFFD)
 2. 저장 위치를 정한다.
    - 전용 collection인지.
    - `moduleStates` fallback인지.
-   - 기존 `hostStates`, `myAidongStates`, `myIslandStates`에 들어갈지.
+   - 기존 호환 projection이 아니라 `userCurrencyBalances`, `diceResources`, `userInventoryItems`, `mydongList`, `mydongPediaInventory`, `sooksoStates` 같은 권위 collection에 들어갈지.
 3. 전용 저장소가 필요하면 model을 만든다.
 4. repository를 만든다.
 5. `moduleRepositoryRegistry`에 등록한다.
@@ -600,20 +637,24 @@ my-island/slots/incorporate가 담당
 
 `codexStates`는 도감 표시, 등록, 일지 진행 상태를 담당한다.
 
-아이동별 25개 도감 아이템 수량은 후보상 다음 쪽이 맞다.
+아이동별 25개 도감 아이템 수량은 다음 collection이 권위다.
 
 ```text
-myAidongStates.aidongCodexItems
+mydongPediaInventory
 ```
 
-### 8.4 hostStates.inventory는 통 inventory 후보다
+`myAidongStates.aidongCodexItems`는 기존 화면/API 호환 mirror로만 본다.
 
-일반 소유 아이템, Aidong 착용 아이템 소유권은 `hostStates.inventory`가 가진다.
+### 8.4 userInventoryItems가 전역 inventory 기준이다
+
+일반 소유 아이템, Aidong 착용 아이템 소유권은 `userInventoryItems`가 가진다.
+
+`hostStates.inventory`는 기존 화면/API를 깨지 않기 위한 projection이다.
 
 착용 상태는 따로 둔다.
 
 ```text
-myAidongStates.equippedItems
+mydongCosmeticLoadouts
 ```
 
 ### 8.5 ship/lodge inventory는 당장 삭제하지 않는다
@@ -738,6 +779,8 @@ M5 기준으로 이미 해소된 debt:
 - Atlas 사용을 임의로 확정하지 않는다.
 - Mongo credential을 문서에 적지 않는다.
 - 오래된 next_work만 보고 현재 방향이라고 판단하지 않는다.
+- 정적 table import로 동적 유저 데이터를 만들거나 덮어쓰지 않는다.
+- activate 전 검증 없이 CSV를 운영 런타임 기준으로 삼지 않는다.
 - 한글 runbook을 영어로 새로 쓰지 않는다.
 - 한글 문서를 수정하고 깨짐 검사를 생략하지 않는다.
 - ship/lodge/destination POC 구현을 기획 변경이라는 이유만으로 무작정 삭제하지 않는다.
@@ -789,6 +832,7 @@ M5 10번 6월 동결 선언이 완료됐으므로 아래 순서로 이어간다.
 
 ## 변경 기록
 
+- **2026-06-29**: 정적 table import와 runtime static API 기준을 추가했다. CSV는 `resources/table`에서 읽고, admin validation/dry-run/commit/activate를 거쳐 정적 collection과 JSON bundle로 반영한다. 동적 유저 데이터는 import 대상이 아니다.
 - **2026-06-12**: 신규 개발자 합류를 대비해 현재 완료 상태, 남은 작업, module/backend/frontend 작업 규칙, 검증 명령, 금지 사항을 한 문서로 정리했다.
 - **2026-06-13**: M5 완료 상태에 맞춰 온보딩 문서를 현행화했다. 최신 실행 보드를 87번 M5로 수정하고, 완료된 M2~M5 항목, 남은 7월 후보, 새 개발자의 다음 작업을 다시 정리했다.
 - **2026-06-13**: M5 9번 완료에 맞춰 새 개발자의 다음 작업을 M5 10번 동결 선언으로 수정하고, 7월 backlog와 7월 첫 실행 보드 후보 문서를 읽기 목록에 추가했다.

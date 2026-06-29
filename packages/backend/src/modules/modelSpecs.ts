@@ -27,12 +27,9 @@ export const MODULE_MODEL_SPECS: ModuleModelSpec[] = [
       'careLog',
       'lastSequenceZone',
       'lastSequenceAt',
-      'equippedOutfit',
-      'equippedItems',
-      'aidongCodexItems',
       'aidongUpgradeState',
     ],
-    notes: 'Aidong 영입/욕구/착용 상태와 Phase 1 후보인 Aidong별 도감 아이템, 업그레이드 원장을 소유한다.',
+    notes: 'Aidong 영입/욕구와 업그레이드 원장을 소유한다. Aidong별 도감 보유 수량은 mydongPediaInventory, 코스메틱 보유/장착은 userCosmeticInventory/mydongCosmeticLoadouts가 권위 저장소이며 equippedOutfit/equippedItems는 호환 mirror다.',
   },
   {
     moduleId: 'my-island',

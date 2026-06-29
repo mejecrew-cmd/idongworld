@@ -45,6 +45,7 @@ import { AssetCatalogScreen } from './screens/dev/AssetCatalogScreen'
 import { CodexScreen } from './screens/CodexScreen'
 import { ShopScreen } from './screens/ShopScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
+import { AdminScreen } from './screens/AdminScreen'
 
 import { MyIslandLayout, VoyageLayout, FullScreenLayout } from './components/Layouts'
 import { DebugPanel } from './components/DebugPanel'
@@ -294,6 +295,9 @@ export const App = () => {
     <Route path="/debut/:id" element={<LegacyDebutRedirect />} />
     {/* 개발자·디자이너용 에셋 카탈로그 (개발 빌드만 권장) */}
     <Route path="/dev/catalog" element={<AssetCatalogScreen />} />
+
+    {/* 관리자 콘솔 — 권한 API 연결 전 더미 화면 */}
+    <Route path="/admin" element={<AdminScreen />} />
 
     {/* 그 외 모든 경로 → 루트로 되돌림 */}
     <Route path="*" element={<Navigate to="/" replace />} />
