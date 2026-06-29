@@ -33,18 +33,23 @@ export const mongoUserSettingsRepository: UserSettingsRepository = {
 
   async patch(uid, patch: UserSettingsPatch) {
     const now = Date.now()
+    const setValues = {
+      ...patch,
+      updatedAt: now,
+    }
+    const setOnInsert = {
+      ...buildDefaultUserSettings(uid),
+      createdAt: now,
+    } as Record<string, unknown>
+    for (const key of Object.keys(setValues)) {
+      delete setOnInsert[key]
+    }
+
     const doc = await UserSettingsModel.findOneAndUpdate(
       { uid },
       {
-        $set: {
-          ...patch,
-          uid,
-          updatedAt: now,
-        },
-        $setOnInsert: {
-          ...buildDefaultUserSettings(uid),
-          createdAt: now,
-        },
+        $set: setValues,
+        $setOnInsert: setOnInsert,
       },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     ).lean()
