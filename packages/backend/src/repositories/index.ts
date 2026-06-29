@@ -33,6 +33,8 @@ import { memoryMydongPediaInventoryRepository } from './memoryMydongPediaInvento
 import { mongoMydongPediaInventoryRepository } from './mongoMydongPediaInventoryRepository.js'
 import { memoryMydongCosmeticRepository } from './memoryMydongCosmeticRepository.js'
 import { mongoMydongCosmeticRepository } from './mongoMydongCosmeticRepository.js'
+import { InMemoryStaticTableRepository, type StaticTableRepository } from '../staticTables/repository.js'
+import { mongoStaticTableRepository } from '../staticTables/mongoRepository.js'
 import type { AdminRepository } from './adminRepository.js'
 import type { CurrencyRepository } from './currencyRepository.js'
 import type { DiceResourceRepository } from './diceResourceRepository.js'
@@ -61,6 +63,7 @@ let mydongRepository: MydongRepository = memoryMydongRepository
 let sooksoRepository: SooksoRepository = memorySooksoRepository
 let mydongPediaInventoryRepository: MydongPediaInventoryRepository = memoryMydongPediaInventoryRepository
 let mydongCosmeticRepository: MydongCosmeticRepository = memoryMydongCosmeticRepository
+let staticTableRepository: StaticTableRepository = new InMemoryStaticTableRepository()
 let repositoryBackend: 'memory' | 'mongo' = 'memory'
 
 export function initializeRepositories(): void {
@@ -81,6 +84,7 @@ export function initializeRepositories(): void {
     sooksoRepository = mongoSooksoRepository
     mydongPediaInventoryRepository = mongoMydongPediaInventoryRepository
     mydongCosmeticRepository = mongoMydongCosmeticRepository
+    staticTableRepository = mongoStaticTableRepository
     console.info('[repositories] using mongo repositories')
     return
   }
@@ -100,6 +104,7 @@ export function initializeRepositories(): void {
   sooksoRepository = memorySooksoRepository
   mydongPediaInventoryRepository = memoryMydongPediaInventoryRepository
   mydongCosmeticRepository = memoryMydongCosmeticRepository
+  staticTableRepository = new InMemoryStaticTableRepository()
   console.info('[repositories] using memory repositories')
 }
 
@@ -157,6 +162,10 @@ export function getMydongPediaInventoryRepository(): MydongPediaInventoryReposit
 
 export function getMydongCosmeticRepository(): MydongCosmeticRepository {
   return mydongCosmeticRepository
+}
+
+export function getStaticTableRepository(): StaticTableRepository {
+  return staticTableRepository
 }
 
 export function getRepositoryStatus() {

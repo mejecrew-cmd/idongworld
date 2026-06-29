@@ -273,6 +273,25 @@
 - 이 명령은 local Mongo, backend, frontend를 실제로 띄운다.
 - 문서만 통과한 것이 아니라 실제 실행까지 통과한 smoke 기준이다.
 - 7월 작업은 M5 검증을 깨지 않도록 작은 단위로 추가한다.
+
+### 3.10 정적 table import와 런타임 기준 데이터
+
+완료된 내용:
+
+- 기획에서 제공하는 CSV 정적 테이블을 `resources/table/*.csv` 기준으로 읽는 import 기반을 만들었다.
+- backend registry가 tableCode별 정적/동적 여부, 필수 컬럼, primary key, dependency, target collection, bundle builder를 선언한다.
+- Admin DB 관리 화면에서 CSV 스캔, validation, dry-run, commit, activate를 수행할 수 있다.
+- `staticTableRows`에는 원본 row snapshot을 남기고, 런타임에서 자주 쓰는 구조는 도메인별 row collection 또는 JSON bundle collection으로 따로 저장한다.
+- `/api/static/*`는 activate된 batch만 읽어 화면/서비스에 기준 데이터를 제공한다.
+
+개발자가 기억할 것:
+
+- 정적 table import는 “운영 기준 데이터 배포” 도구다.
+- `Aidong master`, `item catalog`, `currency master`, `island zone`, `board slot`, `sookso rule`, `string`, `dialogue`, `story`, `Aidong island` 같은 기준 데이터만 import한다.
+- `users`, `providerAccounts`, `userSettings`, `diceResources`, `userCurrencyBalances`, `mydongList`, `mydongPediaInventory`, `mydongIslandState`처럼 유저별로 바뀌는 데이터는 import하지 않는다.
+- 유저 데이터 schema 변경은 migration, repository, service, API를 함께 바꾸는 작업이다. CSV import로 덮어쓰면 안 된다.
+- rollback은 collection 삭제가 아니라 이전에 commit된 batch를 다시 activate하는 방식이 기본이다.
+
 ## 4. 현재 최신 실행 보드
 
 현재 최신 실행 보드는 다음 문서다.
@@ -760,6 +779,8 @@ M5 기준으로 이미 해소된 debt:
 - Atlas 사용을 임의로 확정하지 않는다.
 - Mongo credential을 문서에 적지 않는다.
 - 오래된 next_work만 보고 현재 방향이라고 판단하지 않는다.
+- 정적 table import로 동적 유저 데이터를 만들거나 덮어쓰지 않는다.
+- activate 전 검증 없이 CSV를 운영 런타임 기준으로 삼지 않는다.
 - 한글 runbook을 영어로 새로 쓰지 않는다.
 - 한글 문서를 수정하고 깨짐 검사를 생략하지 않는다.
 - ship/lodge/destination POC 구현을 기획 변경이라는 이유만으로 무작정 삭제하지 않는다.
@@ -811,6 +832,7 @@ M5 10번 6월 동결 선언이 완료됐으므로 아래 순서로 이어간다.
 
 ## 변경 기록
 
+- **2026-06-29**: 정적 table import와 runtime static API 기준을 추가했다. CSV는 `resources/table`에서 읽고, admin validation/dry-run/commit/activate를 거쳐 정적 collection과 JSON bundle로 반영한다. 동적 유저 데이터는 import 대상이 아니다.
 - **2026-06-12**: 신규 개발자 합류를 대비해 현재 완료 상태, 남은 작업, module/backend/frontend 작업 규칙, 검증 명령, 금지 사항을 한 문서로 정리했다.
 - **2026-06-13**: M5 완료 상태에 맞춰 온보딩 문서를 현행화했다. 최신 실행 보드를 87번 M5로 수정하고, 완료된 M2~M5 항목, 남은 7월 후보, 새 개발자의 다음 작업을 다시 정리했다.
 - **2026-06-13**: M5 9번 완료에 맞춰 새 개발자의 다음 작업을 M5 10번 동결 선언으로 수정하고, 7월 backlog와 7월 첫 실행 보드 후보 문서를 읽기 목록에 추가했다.

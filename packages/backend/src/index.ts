@@ -19,6 +19,7 @@ import { accountRouter, authRouter } from './modules/account/routes.js'
 import { hostRouter } from './modules/host/routes.js'
 import { customsRouter } from './modules/customs/routes.js'
 import { adminRouter } from './routes/admin.js'
+import { staticDataRouter } from './routes/staticData.js'
 import { backendModuleRouter } from './modules/index.js'
 import { connectMongo, disconnectMongo, getMongoStatus } from './db/mongo.js'
 import { getRepositoryStatus, initializeRepositories } from './repositories/index.js'
@@ -97,6 +98,7 @@ app.use('/api/modules', modulesRouter)
 app.use('/api/host', hostRouter)
 app.use('/api/customs', customsRouter)
 app.use('/api/admin', adminRouter)
+app.use('/api/static', staticDataRouter)
 
 app.use((req, res) => {
   res.status(404).json({ error: 'not_found', path: req.path })

@@ -27,6 +27,15 @@ import {
   type ResourceRef,
 } from './resources/index.js'
 import { getModuleResourceBinding, listModuleResourceBindings } from './resources/moduleResourceRegistry.js'
+import {
+  isStaticTableImportable,
+  listImportableStaticTableDefinitions,
+  listStaticTableDefinitions,
+  parseStaticTableCodeFromFileName,
+  resolveStaticTableDefinition,
+  validateStaticTableRegistry,
+} from './staticTables/registry.js'
+import { InMemoryStaticTableRepository } from './staticTables/repository.js'
 import { executeCustomsTransfer, isAdHocCustomsApplyEnabled } from './routes/customs.js'
 import { resolveBackendAssetRef } from './routes/assets.js'
 import {
@@ -104,6 +113,12 @@ import type { HostStateDoc } from './models/HostStateModel.js'
 import type { LodgeStateDoc } from './models/LodgeStateModel.js'
 import type { MyAidongStateDoc } from './models/MyAidongStateModel.js'
 import type { MyIslandStateDoc } from './models/MyIslandStateModel.js'
+import {
+  STATIC_RUNTIME_BUNDLE_MODELS,
+  STATIC_RUNTIME_ROW_MODELS,
+  StaticDataImportBatchModel,
+  StaticTableRowModel,
+} from './models/StaticTableModels.js'
 import type { ZoneStateDoc } from './models/ZoneStateModel.js'
 
 function testUid(label: string) {
@@ -954,6 +969,150 @@ describe('backend persistence contracts', () => {
       resourceField: 'resources',
       storage: 'moduleStates',
     })
+  })
+
+  it('declares static CSV table import rules through an explicit registry', () => {
+    expect(validateStaticTableRegistry()).toEqual([])
+
+    const allTableCodes = listStaticTableDefinitions().map((definition) => definition.tableCode)
+    expect(allTableCodes).toContain('G-CHR-01')
+    expect(allTableCodes).toContain('G-STR-01')
+    expect(allTableCodes).toContain('X-DLG-AIDONG-*')
+    expect(allTableCodes).toContain('M17-ECO-01')
+
+    const importableTableCodes = listImportableStaticTableDefinitions().map((definition) => definition.tableCode)
+    expect(importableTableCodes).toContain('G-CHR-01')
+    expect(importableTableCodes).toContain('X-ECO-00')
+    expect(importableTableCodes).not.toContain('G-USR-01')
+    expect(importableTableCodes).not.toContain('M17-ECO-01')
+
+    expect(resolveStaticTableDefinition('X-DLG-AIDONG-0019')).toMatchObject({
+      tableCode: 'X-DLG-AIDONG-*',
+      importKind: 'bundle',
+      bundleCollection: 'staticDialoguePacks',
+    })
+
+    expect(parseStaticTableCodeFromFileName('G-CHR-01_aidong_master.csv')).toBe('G-CHR-01')
+    expect(parseStaticTableCodeFromFileName('G-STR-01_M03-HUB-MAP_string_table.csv')).toBe('G-STR-01')
+    expect(parseStaticTableCodeFromFileName('X-DLG-AIDONG-0019_daily_dialogue.csv')).toBe('X-DLG-AIDONG-0019')
+    expect(parseStaticTableCodeFromFileName('X-ECO-00__currency_master.csv')).toBe('X-ECO-00')
+
+    expect(isStaticTableImportable('G-CHR-01')).toBe(true)
+    expect(isStaticTableImportable('X-DLG-AIDONG-0119')).toBe(true)
+    expect(isStaticTableImportable('G-USR-01')).toBe(false)
+    expect(isStaticTableImportable('M17-ECO-01')).toBe(false)
+    expect(isStaticTableImportable('UNKNOWN')).toBe(false)
+  })
+
+  it('declares static import audit and runtime Mongo models', () => {
+    expect(StaticDataImportBatchModel.collection.name).toBe('staticDataImportBatches')
+    expect(StaticTableRowModel.collection.name).toBe('staticTableRows')
+
+    expect(Object.keys(STATIC_RUNTIME_ROW_MODELS).sort()).toEqual([
+      'staticAidongMasters',
+      'staticAidongPediaItemMasters',
+      'staticCurrencyMasters',
+      'staticIslandZones',
+      'staticItemCatalogs',
+      'staticModuleCurrencyPolicies',
+    ])
+    expect(Object.keys(STATIC_RUNTIME_BUNDLE_MODELS).sort()).toEqual([
+      'staticAidongIslandBundles',
+      'staticBoardSets',
+      'staticCosmeticRuleSets',
+      'staticDialoguePacks',
+      'staticSooksoRuleSets',
+      'staticStoryBundles',
+      'staticStringPacks',
+    ])
+
+    expect(STATIC_RUNTIME_ROW_MODELS.staticAidongMasters.collection.name).toBe('staticAidongMasters')
+    expect(STATIC_RUNTIME_BUNDLE_MODELS.staticBoardSets.collection.name).toBe('staticBoardSets')
+
+    const staticTableRowIndexes = StaticTableRowModel.schema.indexes()
+    expect(staticTableRowIndexes).toEqual(expect.arrayContaining([
+      [expect.objectContaining({ tableCode: 1, version: 1, rowKey: 1 }), expect.objectContaining({ unique: true })],
+      [expect.objectContaining({ tableCode: 1, version: 1, enabled: 1 }), expect.any(Object)],
+    ]))
+
+    const boardSetIndexes = STATIC_RUNTIME_BUNDLE_MODELS.staticBoardSets.schema.indexes()
+    expect(boardSetIndexes).toEqual(expect.arrayContaining([
+      [expect.objectContaining({ bundleId: 1, version: 1 }), expect.objectContaining({ unique: true })],
+      [expect.objectContaining({ enabled: 1, version: 1 }), expect.any(Object)],
+    ]))
+  })
+
+  it('keeps a memory static table repository for importer service tests', async () => {
+    const repository = new InMemoryStaticTableRepository()
+    const now = Date.now()
+
+    await repository.upsertImportBatch({
+      importBatchId: 'batch-1',
+      status: 'dryRun',
+      version: 'v1',
+      sourceFiles: [
+        {
+          fileName: 'X-ECO-00_currency_master.csv',
+          tableCode: 'X-ECO-00',
+          sourceHash: 'hash-1',
+          rowCount: 1,
+        },
+      ],
+      createdAt: now,
+      updatedAt: now,
+    })
+    await repository.upsertTableRows([
+      {
+        tableCode: 'X-ECO-00',
+        version: 'v1',
+        rowKey: 'coin',
+        rowNo: 2,
+        sourceFile: 'X-ECO-00_currency_master.csv',
+        sourceHash: 'hash-1',
+        importBatchId: 'batch-1',
+        originalRow: { currency_id: 'coin' },
+        normalizedRow: { currencyId: 'coin' },
+        enabled: true,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ])
+    await repository.upsertRuntimeRows('staticCurrencyMasters', [
+      {
+        tableCode: 'X-ECO-00',
+        version: 'v1',
+        rowKey: 'coin',
+        sourceHash: 'hash-1',
+        importBatchId: 'batch-1',
+        enabled: true,
+        data: { currencyId: 'coin' },
+        createdAt: now,
+        updatedAt: now,
+      },
+    ])
+    await repository.upsertRuntimeBundles('staticBoardSets', [
+      {
+        bundleId: 'neighbor',
+        version: 'v1',
+        sourceTableCodes: ['X-CFG-01', 'M05-MAP-02'],
+        importBatchId: 'batch-1',
+        enabled: true,
+        data: { slots: [] },
+        createdAt: now,
+        updatedAt: now,
+      },
+    ])
+
+    expect(await repository.listImportBatches()).toHaveLength(1)
+    expect(await repository.listTableRows('X-ECO-00', 'v1')).toEqual([
+      expect.objectContaining({ rowKey: 'coin', normalizedRow: { currencyId: 'coin' } }),
+    ])
+    expect(await repository.listRuntimeRows('staticCurrencyMasters', 'v1')).toEqual([
+      expect.objectContaining({ rowKey: 'coin', data: { currencyId: 'coin' } }),
+    ])
+    expect(await repository.listRuntimeBundles('staticBoardSets', 'v1')).toEqual([
+      expect.objectContaining({ bundleId: 'neighbor', data: { slots: [] } }),
+    ])
   })
 
   it('loads ship type config from ship balance.csv', () => {
