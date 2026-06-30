@@ -19,6 +19,7 @@ import {
   setAidongOutfit,
   toggleAidongEquippedItem,
 } from './service.js'
+import { listAidongItemCatalog } from './itemCatalog.js'
 
 export const myAidongRouter = Router()
 
@@ -45,6 +46,13 @@ myAidongRouter.get('/owned', async (req, res) => {
     ok: true,
     mydongs,
     recruitedAidongs: mydongs.map((mydong) => mydong.aidongId),
+  })
+})
+
+myAidongRouter.get('/items/catalog', (_req, res) => {
+  res.json({
+    ok: true,
+    items: listAidongItemCatalog(),
   })
 })
 

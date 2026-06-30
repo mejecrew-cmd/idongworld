@@ -17,6 +17,9 @@ export interface DecorCatalogItem {
   placementScope: string
   description: string
   phase: string
+  category?: string
+  itemIconId?: string
+  assetPath?: string
 }
 
 interface DecorCatalogRow {
@@ -27,6 +30,9 @@ interface DecorCatalogRow {
   placementScope: string
   description: string
   phase: string
+  category?: string
+  itemIconId?: string
+  assetPath?: string
 }
 
 const __filename = fileURLToPath(import.meta.url)
@@ -84,6 +90,9 @@ function toDecorItem(moduleId: string, row: DecorCatalogRow): DecorCatalogItem {
     placementScope: row.placementScope,
     description: row.description,
     phase: row.phase,
+    category: row.category?.trim() || undefined,
+    itemIconId: row.itemIconId?.trim() || undefined,
+    assetPath: row.assetPath?.trim() || undefined,
   }
 }
 

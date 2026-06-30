@@ -83,6 +83,27 @@ export interface DecorItemConfig {
   label: string
   cost: number
   defaultOwned: number
+  placementScope?: string
+  description?: string
+  phase?: string
+  category?: string
+  itemIconId?: string
+  assetPath?: string
+}
+
+export interface AidongItemConfig {
+  itemId: string
+  name: string
+  kind: string
+  stackable: boolean
+  maxStack: number
+  scope: string
+  description: string
+  phase?: string
+  category?: string
+  itemIconId?: string
+  assetPath?: string
+  price?: number
 }
 
 export interface DynamicAidongZone {
@@ -691,6 +712,12 @@ export const api = {
       mydongs: Array<Record<string, unknown>>
       recruitedAidongs: string[]
     }>('/api/modules/my-aidong/owned', { uid }),
+
+  listAidongItemCatalog: () =>
+    apiFetch<{
+      ok: boolean
+      items: AidongItemConfig[]
+    }>('/api/modules/my-aidong/items/catalog'),
 
   addAidongAffinity: <TState = Record<string, unknown>>(
     uid: string,

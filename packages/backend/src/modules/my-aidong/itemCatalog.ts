@@ -17,6 +17,11 @@ export interface AidongItemCatalogEntry {
   maxStack: number
   scope: string
   description: string
+  phase?: string
+  category?: string
+  itemIconId?: string
+  assetPath?: string
+  price?: number
 }
 
 const __filename = fileURLToPath(import.meta.url)
@@ -53,6 +58,11 @@ function parseCatalog(): AidongItemCatalogEntry[] {
       maxStack: Number(record.maxStack || 1),
       scope: record.scope,
       description: record.description,
+      phase: record.phase,
+      category: record.category || undefined,
+      itemIconId: record.itemIconId || undefined,
+      assetPath: record.assetPath || undefined,
+      price: Number.isFinite(Number(record.price)) ? Number(record.price) : undefined,
     })
   }
   return entries

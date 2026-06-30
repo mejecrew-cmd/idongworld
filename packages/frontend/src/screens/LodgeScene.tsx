@@ -35,12 +35,13 @@ import { CareModal } from '@/components/CareModal'
 import { CustomsTransferDialog } from '@/components/CustomsTransferDialog'
 import { GameStage } from '@/components/GameStage'
 import { ScreenHeader } from '@/components/ScreenHeader'
-import { PHASE_COLOR, PHASE_LABEL, getZoneById, getZoneKindLabel } from '@/data/zones'
+import { BedroomModule } from './BedroomModule'
+import { PHASE_COLOR, PHASE_LABEL, getZoneByAreaNo, getZoneById, getZoneKindLabel } from '@/data/zones'
 import { INITIAL_NEEDS, calcMoodScore, moodFromScore, moodToExpression } from '@/data/needs'
 import { getCurrentZone } from '@/data/schedZone'
-import { api, type DecorItemConfig } from '@/lib/api'
+import { api, type AidongItemConfig, type DecorItemConfig } from '@/lib/api'
 import { applyActionApiResponse, applyModuleActionState } from '@/lib/actionApiSync'
-import { accountStoreFacade, hostStoreFacade, myAidongStoreFacade } from '@/lib/storeFacades'
+import { accountStoreFacade, hostStoreFacade, myAidongStoreFacade, myIslandStoreFacade } from '@/lib/storeFacades'
 
 const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
 const CUSTOMS_UI_ENABLED = import.meta.env.VITE_CUSTOMS_UI_ENABLED === 'true'
@@ -52,10 +53,10 @@ const EMPTY_ROOMS = [
 ]
 
 const FALLBACK_FURNITURE: DecorItemConfig[] = [
-  { itemId: 'bed', label: '침대', cost: 0, defaultOwned: 1 },
-  { itemId: 'desk', label: '책상', cost: 0, defaultOwned: 1 },
-  { itemId: 'plant', label: '화분', cost: 30, defaultOwned: 0 },
-  { itemId: 'rug', label: '카펫', cost: 50, defaultOwned: 0 },
+  { itemId: 'bed', label: '침대', cost: 0, defaultOwned: 1, category: 'bed', itemIconId: 'ICON-1570', assetPath: 'image/item_icon/full/u_1570_chimdae.png' },
+  { itemId: 'desk', label: '책상', cost: 0, defaultOwned: 1, category: 'desk', itemIconId: 'ICON-1573', assetPath: 'image/item_icon/full/u_1573_chaeksang.png' },
+  { itemId: 'plant', label: '화분', cost: 30, defaultOwned: 0, category: 'plant', itemIconId: 'ICON-2707', assetPath: 'image/item_icon/full/r_2707_hwabunbatchimmulbati.png' },
+  { itemId: 'rug', label: '카펫', cost: 50, defaultOwned: 0, category: 'rug' },
 ]
 
 const FURNITURE_MARKS: Record<string, string> = {
@@ -102,11 +103,48 @@ const RESOURCE_LABELS: Record<string, string> = {
 
 type LodgeRoomState = { furniture: string[] }
 type LodgeSection = 'yard' | 'rooms' | 'decor' | 'practice' | 'debut' | 'myroom'
+type LodgeModule = 'bedroom' | 'yard'
 type RoomOption = {
   roomId: string
   label: string
   characterId?: AidongCharacterId
   empty?: boolean
+}
+
+const LODGE_SECTION_LABELS: Record<LodgeSection, string> = {
+  rooms: '아이동 침실',
+  decor: '회의실',
+  practice: '연습실',
+  myroom: '휴게실',
+  debut: '마당',
+  yard: '이사하기',
+}
+
+const LODGE_SIGN_POSITIONS: Record<LodgeSection, { top: string; left: string }> = {
+  rooms: { top: '23%', left: '50%' },
+  decor: { top: '45%', left: '29%' },
+  practice: { top: '45%', left: '71%' },
+  myroom: { top: '66%', left: '28%' },
+  debut: { top: '66%', left: '72%' },
+  yard: { top: '82%', left: '50%' },
+}
+
+const ZONE_DISPLAY_LABELS: Record<string, string> = {
+  lighthouse: '등대',
+  harbor: '항구',
+  'memory-forest': '기억숲',
+  'worry-cave': '걱정동굴',
+  'confidence-waterfall': '폭포',
+  oasis: '오아시스',
+  'sand-square': '모래광장',
+  'reflection-trail': '산책길',
+  'goal-mountain': '목표산',
+  'friendship-bridge': '우정다리',
+  'creative-spring': '창의샘',
+  'challenge-cliff': '절벽',
+  lodge: '숙소',
+  'growth-garden': '꽃정원',
+  'regret-lake': '호수',
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -207,7 +245,7 @@ function LodgeCleaningScene() {
         console.warn('[lodge] failed to persist sooksoClean', error)
       }
     }
-    navigate('/island')
+    navigate('/island/lodge', { replace: true })
   }
 
   return (
@@ -223,10 +261,10 @@ function LodgeCleaningScene() {
         <Box
           sx={{
             position: 'relative',
-            width: { xs: 'min(82vw, calc(52dvh * 3 / 4))', sm: '100%' },
-            maxWidth: 560,
+            width: { xs: 'calc(100dvh * 3 / 4)', sm: 'min(100vw, calc(100dvh * 3 / 4))' },
+            maxWidth: 'none',
+            height: '100dvh',
             mx: 'auto',
-            aspectRatio: '3 / 4',
             backgroundImage: 'url(/assets/backgrounds/03_Home_04.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -249,6 +287,7 @@ function LodgeCleaningScene() {
               textAlign: 'center',
               boxShadow: '0 12px 30px rgba(80,57,30,0.18)',
               cursor: allCleaned && !namingOpen ? 'pointer' : 'default',
+              pointerEvents: allCleaned && !namingOpen ? 'none' : 'auto',
               zIndex: 3,
             }}
             onClick={() => {
@@ -320,13 +359,32 @@ function LodgeCleaningScene() {
             )
           })}
 
+          {allCleaned && !namingOpen && (
+            <Box
+              role="button"
+              tabIndex={0}
+              aria-label="숙소 이름 짓기 열기"
+              onClick={() => setNamingOpen(true)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') setNamingOpen(true)
+              }}
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 2,
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            />
+          )}
+
           {namingOpen && (
             <Box
               sx={{
                 position: 'absolute',
                 left: '50%',
-                bottom: 18,
-                transform: 'translateX(-50%)',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
                 width: 'min(88%, 420px)',
                 bgcolor: 'rgba(255,255,255,0.96)',
                 border: '1px solid rgba(62,155,143,0.28)',
@@ -378,8 +436,10 @@ export const LodgeScene = () => {
   const needs = myAidongStoreFacade.useNeeds()
   const coins = hostStoreFacade.useCoins()
   const inventory = hostStoreFacade.useInventory()
+  const affinities = myAidongStoreFacade.useAffinities()
   const equippedOutfit = myAidongStoreFacade.useEquippedOutfit()
   const equippedItems = myAidongStoreFacade.useEquippedItems()
+  const zoneSlots = myIslandStoreFacade.useZoneSlots()
   const [section, setSection] = useState<LodgeSection>('yard')
   const [tab, setTab] = useState<'rooms' | 'outfit' | 'food'>('rooms')
   const [selectedRoomId, setSelectedRoomId] = useState<string>('')
@@ -387,6 +447,7 @@ export const LodgeScene = () => {
   const [sailingAidongs, setSailingAidongs] = useState<Set<string>>(new Set())
   const [harborAidongs, setHarborAidongs] = useState<Set<string>>(new Set())
   const [furnitureItems, setFurnitureItems] = useState<DecorItemConfig[]>(FALLBACK_FURNITURE)
+  const [aidongItemCatalog, setAidongItemCatalog] = useState<AidongItemConfig[]>([])
   const [lodgeInventory, setLodgeInventory] = useState<Record<string, number>>({})
   const [lodgeFurniture, setLodgeFurniture] = useState<Record<string, number>>({})
   const [lodgeRooms, setLodgeRooms] = useState<Record<string, LodgeRoomState>>({})
@@ -394,6 +455,7 @@ export const LodgeScene = () => {
   const [lodgeStateLoading, setLodgeStateLoading] = useState(false)
   const [inventoryOpen, setInventoryOpen] = useState(false)
   const [lodgeCustomsOpen, setLodgeCustomsOpen] = useState(false)
+  const [activeModule, setActiveModule] = useState<LodgeModule | null>(null)
 
   const curZone = getCurrentZone()
   const unavailableAidongs = useMemo(
@@ -408,6 +470,33 @@ export const LodgeScene = () => {
     () => recruitedAidongs.filter((id) => unavailableAidongs.has(id)),
     [recruitedAidongs, unavailableAidongs],
   )
+  const aidongLocationLabels = useMemo(() => {
+    const labels: Record<string, string> = {}
+    for (const characterId of recruitedAidongs) {
+      labels[characterId] = '마당'
+    }
+    for (const slot of Object.values(zoneSlots)) {
+      const occupant = slot.occupantAidongId
+      if (!occupant) continue
+      labels[occupant] = ZONE_DISPLAY_LABELS[slot.areaId]
+        ?? ZONE_DISPLAY_LABELS[getZoneByAreaNo(slot.areaNo)?.id ?? '']
+        ?? slot.areaNo
+    }
+    for (const characterId of harborAidongs) {
+      labels[characterId] = '항구'
+    }
+    for (const characterId of sailingAidongs) {
+      labels[characterId] = '항해중'
+    }
+    return labels
+  }, [harborAidongs, recruitedAidongs, sailingAidongs, zoneSlots])
+  const aidongLevels = useMemo(() => {
+    const levels: Record<string, number> = {}
+    for (const characterId of recruitedAidongs) {
+      levels[characterId] = Math.max(1, affinities[characterId]?.level ?? 1)
+    }
+    return levels
+  }, [affinities, recruitedAidongs])
 
   const roomOptions = useMemo<RoomOption[]>(() => [
     ...recruitedAidongs.map((characterId) => ({
@@ -427,6 +516,18 @@ export const LodgeScene = () => {
   const selectedMood = selectedNeeds ? moodFromScore(selectedMoodScore, curZone === 4) : null
   const selectedExpression = selectedMood ? moodToExpression(selectedMood) : undefined
   const hasLodgeInventory = Object.values(lodgeInventory).some((amount) => amount > 0)
+
+  const openLodgeModule = (moduleId: LodgeSection) => {
+    if (moduleId === 'rooms') {
+      setActiveModule('bedroom')
+      return
+    }
+    if (moduleId === 'debut') {
+      setActiveModule('yard')
+      return
+    }
+    window.alert('준비 중입니다.')
+  }
 
   useEffect(() => {
     if (!selectedRoomId && roomOptions.length > 0) {
@@ -470,13 +571,17 @@ export const LodgeScene = () => {
     if (!uid) return
     setLodgeStateLoading(true)
     try {
-      const [configResponse, stateResponse] = await Promise.all([
+      const [configResponse, aidongItemsResponse, stateResponse] = await Promise.all([
         api.getLodgeConfig(),
+        api.listAidongItemCatalog(),
         api.getModuleState(uid, 'lodge'),
       ])
 
       if (Array.isArray(configResponse.furnitureItems) && configResponse.furnitureItems.length > 0) {
         setFurnitureItems(configResponse.furnitureItems)
+      }
+      if (Array.isArray(aidongItemsResponse.items)) {
+        setAidongItemCatalog(aidongItemsResponse.items)
       }
 
       const state = asRecord(stateResponse.state)
@@ -609,10 +714,10 @@ export const LodgeScene = () => {
           sx={{
             position: 'relative',
             // 모바일: 화면 높이(dvh) 기준으로 제한해 집 전체와 아래 콘텐츠가 한 화면에 보이도록.
-            width: { xs: 'min(82vw, calc(52dvh * 3 / 4))', sm: '100%' },
-            maxWidth: 560,
+            width: { xs: 'calc(100dvh * 3 / 4)', sm: 'min(100vw, calc(100dvh * 3 / 4))' },
+            maxWidth: 'none',
+            height: '100dvh',
             mx: 'auto',
-            aspectRatio: '3 / 4',
             backgroundImage: 'url(/assets/backgrounds/03_Home_04.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -629,6 +734,7 @@ export const LodgeScene = () => {
               py: 0.75,
               borderRadius: 2,
               boxShadow: '0 10px 24px rgba(80, 57, 30, 0.16)',
+              display: 'none',
             }}
           >
             {LODGE_ZONE && (
@@ -653,38 +759,39 @@ export const LodgeScene = () => {
             <Button
               key={item.id}
               size="small"
-              variant={section === item.id ? 'contained' : 'outlined'}
-              onClick={() => {
-                setSection(item.id)
-                if (item.id === 'decor') setTab('rooms')
-              }}
+              disableRipple
+              variant="contained"
+              onClick={() => openLodgeModule(item.id)}
               sx={{
                 position: 'absolute',
-                top: item.top,
-                left: item.left,
+                top: LODGE_SIGN_POSITIONS[item.id].top,
+                left: LODGE_SIGN_POSITIONS[item.id].left,
                 transform: 'translate(-50%, -50%)',
                 minWidth: 0,
-                px: 1.25,
-                py: 0.5,
-                fontSize: 12,
+                width: item.id === 'yard' ? { xs: 154, sm: 180 } : { xs: 112, sm: 136 },
+                height: item.id === 'yard' ? { xs: 54, sm: 62 } : { xs: 34, sm: 40 },
+                px: 1,
+                py: 0,
+                fontSize: item.id === 'yard' ? { xs: 19, sm: 22 } : { xs: 13, sm: 15 },
                 fontWeight: 800,
                 whiteSpace: 'nowrap',
-                borderRadius: 999,
-                color: section === item.id ? 'primary.contrastText' : '#5b4636',
-                bgcolor: section === item.id ? 'primary.main' : 'rgba(255,254,250,0.92)',
-                boxShadow: '0 6px 16px rgba(80,57,30,0.24)',
+                borderRadius: item.id === 'yard' ? 3 : 1.5,
+                color: item.id === 'yard' ? '#fff' : '#714a36',
+                bgcolor: item.id === 'yard' ? '#f27f86' : 'rgba(244,196,121,0.94)',
+                border: item.id === 'yard' ? '3px solid rgba(255,170,178,0.9)' : '2px solid rgba(126,83,40,0.22)',
+                boxShadow: item.id === 'yard' ? '0 8px 18px rgba(146,72,72,0.28)' : '0 4px 10px rgba(80,57,30,0.2)',
                 '&:hover': {
-                  bgcolor: section === item.id ? 'primary.dark' : 'rgba(255,255,255,0.98)',
+                  bgcolor: item.id === 'yard' ? '#ed747d' : 'rgba(247,205,135,0.98)',
                 },
               }}
             >
-              {item.label}
+              {LODGE_SECTION_LABELS[item.id]}
             </Button>
           ))}
         </Box>
       </GameStage>
 
-      <GameStage stageSx={{ px: 2, py: 2 }}>
+      <GameStage sx={{ display: 'none' }} stageSx={{ px: 2, py: 2 }}>
         {lodgeStateLoading && <LinearProgress sx={{ mb: 2 }} />}
         {harborAidongs.size > 0 ? (
           <Alert severity="info" sx={{ mb: 2 }}>
@@ -1162,6 +1269,41 @@ export const LodgeScene = () => {
           }}
         />
       )}
+
+      <BedroomModule
+        open={activeModule === 'bedroom'}
+        onClose={() => setActiveModule(null)}
+        recruitedAidongs={recruitedAidongs}
+        equippedOutfit={equippedOutfit}
+        equippedItems={equippedItems}
+        inventory={inventory}
+        furnitureItems={furnitureItems}
+        aidongItems={aidongItemCatalog}
+        aidongLocations={aidongLocationLabels}
+        aidongLevels={aidongLevels}
+      />
+
+      <Dialog open={activeModule === 'yard'} onClose={() => setActiveModule(null)} maxWidth="xs" fullWidth disableScrollLock>
+        <DialogTitle>마당</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2, color: '#5b4636', fontWeight: 800 }}>
+            침실에 배치되지 않은 아이동 모음
+          </Typography>
+          <Stack spacing={1}>
+            {homeAidongs.length ? homeAidongs.map((characterId) => (
+              <Stack key={characterId} direction="row" spacing={1.5} alignItems="center" sx={{ p: 1.2, borderRadius: 2, bgcolor: '#fff8ef' }}>
+                <AidongSprite character={characterId} expression="happy" size={52} />
+                <Typography sx={{ fontWeight: 900 }}>{characterId}</Typography>
+              </Stack>
+            )) : (
+              <Typography sx={{ color: 'text.secondary' }}>마당에 표시할 아이동이 없어요.</Typography>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setActiveModule(null)}>닫기</Button>
+        </DialogActions>
+      </Dialog>
 
       <CareModal character={careTarget} onClose={() => setCareTarget(null)} />
     </Box>

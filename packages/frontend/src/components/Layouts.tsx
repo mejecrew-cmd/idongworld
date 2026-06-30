@@ -65,12 +65,23 @@ const mainShellSx = {
 const MainTabLayout = () => {
   const { pathname } = useLocation()
   const isMyIslandHub = pathname === '/island'
+  const isLodgeHub = pathname === '/island/lodge'
   // 내 정보는 상단 프로필을 숨기므로 헤더(뒤로가기+제목)를 적당히 위로 올린다.
   const isMyInfo = pathname === '/island/lodge/myroom/info'
 
   return (
-    <Box sx={{ ...mainShellSx, ...(isMyInfo ? { pt: { xs: '40px', sm: '52px', md: '60px' } } : {}) }}>
-      {!isMyIslandHub && <Box aria-hidden sx={mutedBackgroundOverlaySx} />}
+    <Box sx={{
+      ...mainShellSx,
+      ...(isMyInfo ? { pt: { xs: '40px', sm: '52px', md: '60px' } } : {}),
+      ...(isLodgeHub ? {
+        pt: 0,
+        pb: 0,
+        bgcolor: '#f8efe5',
+        '&::before': { display: 'none' },
+        '&::after': { display: 'none' },
+      } : {}),
+    }}>
+      {!isMyIslandHub && !isLodgeHub && <Box aria-hidden sx={mutedBackgroundOverlaySx} />}
       <HUD />
       <Box sx={contentLayerSx}>
         <Outlet />

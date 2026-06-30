@@ -1,79 +1,117 @@
-/**
- * 📁 screens/NamingToHeartScreen.tsx — 06 SOOKSO 이름 짓기
- * ───────────────────────────────────────────────
- * 📌 역할: 호스트 이름 입력. 빈 값이면 "호스트" 기본.
- *           completeOnboarding 호출로 온보딩 완료 마킹 + 기본 zone 해금.
- *
- * 🔗 연결:
- *   - stores/userStore.ts → completeOnboarding(name)
- *   - 다음: /island (마이섬 본 게임)
- *   - 기획 SoT: 모듈/오프닝.md §6 · 모듈/마이섬.md §3-3
- *
- * 💡 초보자 안내:
- *   - maxLength 12자 제한 (UI 깨짐 방지)
- *   - Enter 키로 즉시 확인 가능
- *   - 입력 후 마이섬 진입 시 HUD에 "{호스트명}의 마이섬" 표시
- */
 import { useState } from 'react'
-import { Box, Typography, Button, TextField } from '@mui/material'
+import { Box, Button, TextField, Typography } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import { ScreenHeader } from '@/components/ScreenHeader'
-import { accountStoreFacade } from '@/lib/storeFacades'
+import { api } from '@/lib/api'
+import { accountStoreFacade, myIslandStoreFacade } from '@/lib/storeFacades'
+
+const DEFAULT_LODGE_NAME = '내 숙소'
 
 export const NamingToHeartScreen = () => {
   const navigate = useNavigate()
+  const uid = accountStoreFacade.useFirebaseUid()
   const [name, setName] = useState('')
+  const [saving, setSaving] = useState(false)
 
-  const onConfirm = () => {
-    const trimmed = name.trim() || '호스트'
-    accountStoreFacade.completeOnboarding(trimmed)
-    navigate('/island')
+  const trimmedName = name.trim()
+  const nameToSave = trimmedName || DEFAULT_LODGE_NAME
+  const nameValid = trimmedName.length === 0 || (trimmedName.length >= 2 && trimmedName.length <= 10)
+
+  const onConfirm = async () => {
+    if (!nameValid || saving) return
+    setSaving(true)
+
+    accountStoreFacade.setSooksoName(nameToSave)
+    accountStoreFacade.setSooksoClean(true)
+    accountStoreFacade.setOnboardingComplete(true)
+    myIslandStoreFacade.unlockZone('harbor')
+    myIslandStoreFacade.unlockZone('lodge')
+
+    if (uid) {
+      try {
+        await api.patchAccountState(uid, {
+          sooksoName: nameToSave,
+          sooksoClean: true,
+          onboardingComplete: true,
+        })
+      } catch (error) {
+        console.warn('[naming] failed to persist lodge name', error)
+      }
+    }
+
+    navigate('/island/lodge', { replace: true })
   }
 
   return (
     <Box
       sx={{
         position: 'relative',
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        px: 2,
         backgroundImage: 'url(/assets/backgrounds/03_Home_00.png)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(180deg, rgba(91,62,48,0.18) 0%, rgba(253,239,218,0.58) 100%)',
+        },
       }}
     >
-      <ScreenHeader category="회색섬→하트섬" title="3단계 이름 짓기" overlay />
+      <ScreenHeader category="하트섬" title="숙소 이름 짓기" overlay showBack backTo="/heart-island/cleaning" />
+
       <Box
         sx={{
-          bgcolor: 'rgba(255,255,255,0.95)',
-          p: 4,
-          borderRadius: 2,
+          position: 'relative',
+          zIndex: 1,
+          width: 'min(88vw, 420px)',
+          bgcolor: 'rgba(255,255,255,0.96)',
+          border: '1px solid rgba(255,255,255,0.82)',
+          borderRadius: 4,
+          boxShadow: '0 18px 44px rgba(83,64,50,0.24)',
+          px: { xs: 3, sm: 4 },
+          py: { xs: 3.5, sm: 4.5 },
           textAlign: 'center',
-          maxWidth: 480,
-          mx: 2,
         }}
       >
-        <Typography variant="h2" sx={{ mb: 2 }}>SOOKSO에 이름을 지어주세요</Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, lineHeight: 1.8 }}>
-          이 섬에서 당신은 어떻게 불릴까요?<br />
-          (비워두면 "호스트"로 시작해요.)
+        <Typography sx={{ color: '#45372e', fontSize: 24, fontWeight: 900, lineHeight: 1.25, mb: 1 }}>
+          숙소 이름 짓기
         </Typography>
+        <Typography sx={{ color: '#7d6c5e', fontSize: 14, fontWeight: 700, lineHeight: 1.6, mb: 2.5 }}>
+          앞으로 사용할 숙소 이름을 정해주세요.
+        </Typography>
+
         <TextField
           autoFocus
+          fullWidth
+          size="small"
           value={name}
-          onChange={(e) => setName(e.target.value.slice(0, 12))}
-          placeholder="호스트"
-          inputProps={{ maxLength: 12 }}
-          sx={{ width: '100%', mb: 3 }}
-          onKeyDown={(e) => e.key === 'Enter' && onConfirm()}
+          onChange={(event) => setName(event.target.value.slice(0, 10))}
+          placeholder={DEFAULT_LODGE_NAME}
+          inputProps={{ minLength: 2, maxLength: 10 }}
+          error={name.length > 0 && !nameValid}
+          helperText={name.length > 0 && !nameValid ? '숙소 이름은 2~10자로 입력해주세요.' : '비워두면 기본 이름으로 시작해요.'}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') void onConfirm()
+          }}
+          sx={{ mb: 2.5 }}
         />
-        <Button variant="contained" size="large" onClick={onConfirm} fullWidth>
-          확인
+
+        <Button
+          variant="contained"
+          size="large"
+          fullWidth
+          disabled={!nameValid || saving}
+          onClick={() => void onConfirm()}
+          sx={{ fontWeight: 900 }}
+        >
+          {saving ? '저장 중' : '완료'}
         </Button>
-        <Typography variant="caption" sx={{ display: 'block', mt: 2, color: 'text.secondary' }}>
-          06 SOOKSO 이름 · 마이섬 진입
-        </Typography>
       </Box>
     </Box>
   )
