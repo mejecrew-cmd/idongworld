@@ -16,7 +16,7 @@ let isSyncing = false
 const SYNCED_KEYS = [
   'coins', 'diamonds',
   'gameStartedAt', 'openingSeen', 'sooksoClean', 'sooksoName', 'onboardingComplete', 'hostName', 'soundSettings',
-  'recruitedAidongs', 'firstGachaCandidate', 'firstGachaAttempts',
+  'recruitedAidongs', 'aidongDisplayNames', 'firstGachaCandidate', 'firstGachaAttempts',
   'affinities', 'needs',
   'unlockedZones', 'zoneSlots', 'dynamicAidongZones',
   'unlockedDiaries', 'unlockedCodexEntries', 'codexFullyRegistered', 'inventory',
@@ -28,6 +28,7 @@ const SYNCED_KEYS = [
 const HOST_KEYS = ['coins', 'diamonds', 'hostName', 'inventory', 'diceCount'] as const
 const MY_AIDONG_KEYS = [
   'recruitedAidongs',
+  'aidongDisplayNames',
   'firstGachaCandidate',
   'firstGachaAttempts',
   'affinities',

@@ -14,16 +14,14 @@
 import { useState } from 'react'
 import { Box, IconButton, Drawer, Typography, Button, Stack, Chip, Divider } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import { AIDONG_CATALOG_COUNT, AIDONG_IDS } from '@/data/aidongs'
 import { api } from '@/lib/api'
-import type { AidongCharacterId } from '@/stores/userStore'
 import {
   accountStoreFacade,
   hostStoreFacade,
   myAidongStoreFacade,
   voyageSessionFacade,
 } from '@/lib/storeFacades'
-
-const ALL_AIDONGS: AidongCharacterId[] = ['황금멍', '춤냥', '양털곰', '단풍볼', '날카여우']
 
 const QUICK_ROUTES = [
   { path: '/login', label: '00 로그인' },
@@ -60,7 +58,7 @@ export const DebugPanel = () => {
   const recruitedAidongs = myAidongStoreFacade.useRecruitedAidongs()
   const dayCount = getDayCount(gameStartedAt)
 
-  const recruitAll = () => ALL_AIDONGS.forEach((id) => myAidongStoreFacade.recruitAidong(id))
+  const recruitAll = () => AIDONG_IDS.forEach((id) => myAidongStoreFacade.recruitAidong(id))
 
   const advanceDay = async () => {
     const nextGameStartedAt = (gameStartedAt ?? Date.now()) - MS_PER_DAY
@@ -140,9 +138,9 @@ export const DebugPanel = () => {
           <Divider sx={{ my: 1 }} />
 
           {/* 캐릭터 */}
-          <Typography variant="caption" sx={{ fontWeight: 600 }}>🐾 영입 ({recruitedAidongs.length}/5)</Typography>
+          <Typography variant="caption" sx={{ fontWeight: 600 }}>🐾 영입 ({recruitedAidongs.length}/{AIDONG_CATALOG_COUNT})</Typography>
           <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1, mt: 0.5 }}>
-            {ALL_AIDONGS.map((id) => (
+            {AIDONG_IDS.map((id) => (
               <Chip
                 key={id}
                 label={id}

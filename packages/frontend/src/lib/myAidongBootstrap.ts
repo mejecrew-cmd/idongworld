@@ -1,15 +1,11 @@
 import { configure } from '@idongworld/my-aidong'
 import type { CareApplyResult, NeedsState } from '@idongworld/my-aidong'
-import type { AidongCharacterId } from '@/stores/userStore'
+import { isAidongId } from '@/data/aidongs'
 import { api } from './api'
 import { applyModuleActionState } from './actionApiSync'
 import { accountStoreFacade, myAidongStoreFacade } from './storeFacades'
 
 const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
-
-const VALID_CHARS: AidongCharacterId[] = ['황금멍', '춤냥', '양털곰', '단풍볼', '날카여우']
-const isValidChar = (id: string): id is AidongCharacterId =>
-  (VALID_CHARS as string[]).includes(id)
 
 function syncMyAidongState(): void {
   if (!MODULE_ACTION_API_SYNC) return
@@ -18,6 +14,7 @@ function syncMyAidongState(): void {
   const s = myAidongStoreFacade.getAidongState()
   void api.patchModuleState(uid, 'my-aidong', {
     recruitedAidongs: s.recruitedAidongs,
+    aidongDisplayNames: s.aidongDisplayNames,
     firstGachaCandidate: s.firstGachaCandidate,
     firstGachaAttempts: s.firstGachaAttempts,
     affinities: s.affinities,
@@ -52,7 +49,7 @@ export function bootstrapMyAidong(): void {
     getRecruited: () => myAidongStoreFacade.getAidongState().recruitedAidongs,
 
     doRecruit: (id) => {
-      if (!isValidChar(id)) return
+      if (!isAidongId(id)) return
       myAidongStoreFacade.recruitAidong(id)
       syncRecruit(id)
     },
@@ -63,7 +60,7 @@ export function bootstrapMyAidong(): void {
     },
 
     doAddAffinity: (id, delta) => {
-      if (!isValidChar(id)) return
+      if (!isAidongId(id)) return
       if (delta >= 0) {
         myAidongStoreFacade.addAffinity(id, delta)
       } else {
@@ -78,13 +75,13 @@ export function bootstrapMyAidong(): void {
     },
 
     doTickDecay: (id) => {
-      if (!isValidChar(id)) return
+      if (!isAidongId(id)) return
       myAidongStoreFacade.tickSequenceDecay(id)
       syncMyAidongState()
     },
 
     doApplyCareAction: (charId, actionId): CareApplyResult => {
-      if (!isValidChar(charId)) return { ok: false, reason: 'no_char' }
+      if (!isAidongId(charId)) return { ok: false, reason: 'no_char' }
       const result = myAidongStoreFacade.applyCareAction(charId, actionId)
       if (result.ok) syncMyAidongState()
       return result

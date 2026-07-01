@@ -38,6 +38,7 @@
 //     현재는 UI 친화 shape (emoji·label) 유지 위해 frontend 본 파일에 보관.
 // ──────────────────────────────────────────────
 import type { AidongCharacterId } from '@/stores/userStore'
+import { AIDONG_IDS } from '@/data/aidongs'
 import { ROUTE_ID as MODULE_ROUTE_ID } from '@idongworld/route-neighbor'
 
 /** 모듈 ROUTE_ID 와 정합 검증 — 빌드 시점 catch. */
@@ -106,14 +107,12 @@ const NEIGHBOR_SLOT_TEMPLATE: Omit<BoardSlot, 'characterId'>[] = [
   { index: 29, type: 'empty', label: '빈 바다', emoji: '🌊' },
 ]
 
-const ALL_AIDONGS: AidongCharacterId[] = ['황금멍', '춤냥', '양털곰', '단풍볼', '날카여우']
-
 /**
  * 이웃섬 항로 칸을 알려진 영입 캐릭터 목록 기반으로 동적 생성.
  * - 영입 안 된 4명을 character 칸 4곳(4·10·17·23)에 순서대로 배치.
  */
 export function buildNeighborRoute(recruited: AidongCharacterId[]): Route {
-  const remaining = ALL_AIDONGS.filter((id) => !recruited.includes(id))
+  const remaining = AIDONG_IDS.filter((id) => !recruited.includes(id))
   const charSlotIndices = [4, 10, 17, 23]
 
   const slots: BoardSlot[] = NEIGHBOR_SLOT_TEMPLATE.map((s) => {

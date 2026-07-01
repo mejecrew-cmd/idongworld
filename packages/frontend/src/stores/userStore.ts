@@ -95,6 +95,7 @@ export interface UserState {
 
   // 캐릭터
   recruitedAidongs: AidongCharacterId[]
+  aidongDisplayNames: Record<string, string>
   firstGachaCandidate?: AidongCharacterId
   firstGachaAttempts: number
   affinities: Record<string, { score: number; level: number }>
@@ -126,6 +127,7 @@ export interface UserState {
   logout: () => void
   recruitAidong: (id: AidongCharacterId) => void
   addAffinity: (id: AidongCharacterId, delta: number) => void
+  setAidongDisplayName: (id: AidongCharacterId, displayName?: string) => void
   completeOnboarding: (hostName: string) => void
   setSooksoClean: (sooksoClean: boolean) => void
   setSooksoName: (sooksoName?: string) => void
@@ -172,6 +174,7 @@ const initialUser = {
   sooksoName: undefined as string | undefined,
   onboardingComplete: false,
   recruitedAidongs: [] as AidongCharacterId[],
+  aidongDisplayNames: {} as Record<string, string>,
   firstGachaAttempts: 0,
   affinities: {},
   needs: {} as Record<string, Record<NeedKey, number>>,
@@ -255,6 +258,18 @@ export const useUserStore = create<UserState>()(
         }),
 
       // 온보딩 완료 처리 — SOOKSO 이름 + 항구·숙소 자동 해금
+      setAidongDisplayName: (id, displayName) =>
+        set((s) => {
+          const trimmed = displayName?.trim() ?? ''
+          const next = { ...s.aidongDisplayNames }
+          if (trimmed && trimmed !== id) {
+            next[id] = trimmed
+          } else {
+            delete next[id]
+          }
+          return { aidongDisplayNames: next }
+        }),
+
       completeOnboarding: (hostName) =>
         set({
           onboardingComplete: true,

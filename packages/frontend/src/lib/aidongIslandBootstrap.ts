@@ -6,18 +6,15 @@
  * 주의: 영입 성공 후 마이섬 편입은 자동 처리하지 않고, 다음 단계인 슬롯 선택으로 넘긴다.
  */
 import { configure, type AidongIslandRecruitPayload, type AidongIslandRecruitResult } from '@idongworld/aidong-island'
-import type { AidongCharacterId } from '@/stores/userStore'
+import { isAidongId } from '@/data/aidongs'
 import { applyModuleActionState } from './actionApiSync'
 import { api } from './api'
 import { accountStoreFacade, myAidongStoreFacade } from './storeFacades'
 
 const MODULE_ACTION_API_SYNC = import.meta.env.VITE_MODULE_ACTION_API_SYNC === 'true'
-const VALID_CHARS: AidongCharacterId[] = ['황금멍', '춤냥', '양털곰', '단풍볼', '날카여우']
-const isValidChar = (id: string): id is AidongCharacterId =>
-  (VALID_CHARS as string[]).includes(id)
 
 async function recruitPlaceholder(payload: AidongIslandRecruitPayload): Promise<AidongIslandRecruitResult> {
-  if (!isValidChar(payload.characterId)) {
+  if (!isAidongId(payload.characterId)) {
     return { ok: false, characterId: payload.characterId, message: '아직 영입할 수 없는 Aidong이에요.' }
   }
 

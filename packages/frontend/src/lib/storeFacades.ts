@@ -136,6 +136,7 @@ export const settingsStoreFacade = {
 
 export const myAidongStoreFacade = {
   useRecruitedAidongs: () => useUserStore((state) => state.recruitedAidongs),
+  useAidongDisplayNames: () => useUserStore((state) => state.aidongDisplayNames),
   useFirstGachaCandidate: () => useUserStore((state) => state.firstGachaCandidate),
   useFirstGachaAttempts: () => useUserStore((state) => state.firstGachaAttempts),
   useAffinities: () => useUserStore((state) => state.affinities),
@@ -148,6 +149,7 @@ export const myAidongStoreFacade = {
     const state = getUserState()
     return {
       recruitedAidongs: state.recruitedAidongs,
+      aidongDisplayNames: state.aidongDisplayNames,
       firstGachaCandidate: state.firstGachaCandidate,
       firstGachaAttempts: state.firstGachaAttempts,
       affinities: state.affinities,
@@ -158,6 +160,8 @@ export const myAidongStoreFacade = {
     }
   },
   recruitAidong: (id: AidongCharacterId) => getUserState().recruitAidong(id),
+  setAidongDisplayName: (id: AidongCharacterId, displayName?: string) =>
+    getUserState().setAidongDisplayName(id, displayName),
   addAffinity: (id: AidongCharacterId, delta: number) => getUserState().addAffinity(id, delta),
   decreaseAffinityScore: (id: AidongCharacterId, delta: number) =>
     useUserStore.setState((state) => ({

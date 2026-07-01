@@ -22,15 +22,11 @@ import * as myAidong from '@idongworld/my-aidong'
 import * as codex from '@idongworld/codex'
 import { incrementRetryCount } from '@idongworld/gacha'
 import { AidongSprite } from '@/components/AidongSprite'
-import type { AidongCharacterId, ExpressionId } from '@/components/AidongSprite'
+import type { ExpressionId } from '@/components/AidongSprite'
+import { isAidongId } from '@/data/aidongs'
 import { play as playAudio } from '@/data/audio'
 
 // useUserStore 의존 정착 완료 — 모든 trigger 가 host·myAidong·codex·gacha actions 위임
-
-const AIDONG_IDS: AidongCharacterId[] = ['황금멍', '춤냥', '양털곰', '단풍볼', '날카여우']
-
-const isAidongChar = (id: string): id is AidongCharacterId =>
-  (AIDONG_IDS as string[]).includes(id)
 
 /**
  * 앱 시작 시 1회 호출. main.tsx 의 bootstrapAuth 직후 권장.
@@ -38,7 +34,7 @@ const isAidongChar = (id: string): id is AidongCharacterId =>
 export function bootstrapVNRunner(): void {
   configure({
     renderCharacter: ({ id, expression, size }) => {
-      if (!isAidongChar(id)) return null
+      if (!isAidongId(id)) return null
       return (
         <AidongSprite
           character={id}
@@ -50,26 +46,26 @@ export function bootstrapVNRunner(): void {
     triggerHandlers: {
       // 친밀도·영입 — my-aidong 모듈 actions 위임 (정착)
       'affinity_+1': (charId) => {
-        if (isAidongChar(charId)) myAidong.addAffinity(charId, 1)
+        if (isAidongId(charId)) myAidong.addAffinity(charId, 1)
       },
       'affinity_+2': (charId) => {
-        if (isAidongChar(charId)) myAidong.addAffinity(charId, 2)
+        if (isAidongId(charId)) myAidong.addAffinity(charId, 2)
       },
       'affinity_+3': (charId) => {
-        if (isAidongChar(charId)) myAidong.addAffinity(charId, 3)
+        if (isAidongId(charId)) myAidong.addAffinity(charId, 3)
       },
       unlock_aidong: (charId) => {
-        if (isAidongChar(charId)) myAidong.recruit(charId)
+        if (isAidongId(charId)) myAidong.recruit(charId)
       },
       // 도감·일기 — codex 광역 모듈 actions 위임 (정착 완료)
       unlock_diary: (id) => {
         codex.unlockDiary(id)
       },
       unlock_codex_slot: (charId) => {
-        if (isAidongChar(charId)) codex.unlockCodexSlot(charId)
+        if (isAidongId(charId)) codex.unlockCodexSlot(charId)
       },
       unlock_codex_full: (charId) => {
-        if (isAidongChar(charId)) codex.fullyRegisterCodex(charId)
+        if (isAidongId(charId)) codex.fullyRegisterCodex(charId)
       },
       gacha_confirm: () => {
         // recruit 시나리오로 이동 — VNPlayer scene level에서 처리됨

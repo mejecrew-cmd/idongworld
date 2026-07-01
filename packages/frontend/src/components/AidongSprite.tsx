@@ -13,6 +13,55 @@ export const OUTFIT_FILTERS: Record<string, string> = {
   fancy: 'hue-rotate(80deg) saturate(1.5) brightness(1.1)',
 }
 
+// Aidong part layout rule from art:
+// Head and body must overlap by exactly 47 source pixels at the neck.
+// Every layered Aidong uses this same coordinate system.
+const AIDONG_PART_LAYOUT = {
+  headWidth: 1160,
+  headHeight: 980,
+  bodyWidth: 820,
+  bodyHeight: 600,
+  topWidth: 740,
+  topHeight: 358,
+  bottomWidth: 520,
+  bottomHeight: 310,
+  headBodyOverlapPx: 47,
+} as const
+
+const pct = (value: number, base: number) => `${(value / base) * 100}%`
+
+const OUTFIT_PARTS: Record<string, { top?: string; bottom?: string }> = {
+  none: {},
+  casual: { top: 'T_Top01.png', bottom: 'B_Pants01.png' },
+  sporty: { top: 'T_Top02.png', bottom: 'B_Pants02.png' },
+  formal: { top: 'T_Top02.png', bottom: 'B_Pants01.png' },
+  fancy: { top: 'T_Top01.png', bottom: 'B_Pants02.png' },
+  smoke_outfit: { top: 'T_Top02.png', bottom: 'B_Pants02.png' },
+  'temp-hoodie': { top: 'T_Top01.png' },
+  'temp-jeans': { bottom: 'B_Pants01.png' },
+}
+
+const AIDONG_ASSET_CODES: Partial<Record<AidongCharacterId, string>> = {
+  황금멍: 'AIDONG-0019',
+  춤냥: 'AIDONG-0119',
+}
+
+const AIDONG_PART_VISIBLE_BOUNDS: Record<string, { headVisibleBottom: number; bodyVisibleTop: number }> = {
+  'AIDONG-0019': { headVisibleBottom: 975, bodyVisibleTop: 40 },
+  'AIDONG-0119': { headVisibleBottom: 979, bodyVisibleTop: 40 },
+}
+
+function getLayerLayout(assetCode?: string) {
+  const bounds = assetCode ? AIDONG_PART_VISIBLE_BOUNDS[assetCode] : undefined
+  const bodyTop = bounds
+    ? bounds.headVisibleBottom - AIDONG_PART_LAYOUT.headBodyOverlapPx - bounds.bodyVisibleTop
+    : AIDONG_PART_LAYOUT.headHeight - AIDONG_PART_LAYOUT.headBodyOverlapPx
+  return {
+    bodyTop,
+    stageHeight: bodyTop + AIDONG_PART_LAYOUT.bodyHeight,
+  }
+}
+
 export const OUTFIT_OPTIONS = [
   { id: 'none', emoji: '기본', label: '기본' },
   { id: 'casual', emoji: 'C', label: '캐주얼' },
@@ -25,12 +74,24 @@ interface AidongSpriteProps {
   character: AidongCharacterId
   expression?: ExpressionId
   outfit?: string | null
+  outfitItems?: string[]
   size?: number
   onClick?: () => void
 }
 
 function getAssetPath(character: AidongCharacterId, fileName: string): string {
   return `/assets/aidong/${encodeURIComponent(character)}/${fileName}`
+}
+
+function getClothesAssetPath(kind: 'top' | 'bottom', fileName: string): string {
+  const dir = kind === 'top' ? '00_Top' : '01_Bottom'
+  return `/assets/aidong/99_Resources/01_Clothes/${dir}/${fileName}`
+}
+
+function getPartAssetPath(character: AidongCharacterId, part: 'Head' | 'Body'): string {
+  const code = AIDONG_ASSET_CODES[character]
+  if (!code) return getAssetPath(character, part === 'Head' ? 'head.png' : 'body_part.png')
+  return `/assets/aidong/99_Resources/00_Aidong/${code}_${part}.png`
 }
 
 function fallbackLabel(character: AidongCharacterId): string {
@@ -41,12 +102,23 @@ export const AidongSprite = ({
   character,
   expression = 'normal',
   outfit,
+  outfitItems,
   size = 240,
   onClick,
 }: AidongSpriteProps) => {
   const [bodyMissing, setBodyMissing] = useState(false)
   const [faceMissing, setFaceMissing] = useState(false)
+  const [headPartMissing, setHeadPartMissing] = useState(false)
+  const [bodyPartMissing, setBodyPartMissing] = useState(false)
   const outfitFilter = outfit && OUTFIT_FILTERS[outfit] ? OUTFIT_FILTERS[outfit] : 'none'
+  const outfitParts = (outfitItems?.length ? outfitItems : [outfit ?? 'none'])
+    .reduce<{ top?: string; bottom?: string }>((parts, outfitId) => ({
+      ...parts,
+      ...OUTFIT_PARTS[outfitId],
+    }), {})
+  const useLayeredParts = !headPartMissing && !bodyPartMissing
+  const assetCode = AIDONG_ASSET_CODES[character]
+  const layerLayout = getLayerLayout(assetCode)
   const showFace = expression !== 'normal' && !faceMissing && !bodyMissing
 
   return (
@@ -63,7 +135,7 @@ export const AidongSprite = ({
         overflow: 'hidden',
       }}
     >
-      {bodyMissing && (
+      {bodyMissing && !useLayeredParts && (
         <Box
           sx={{
             width: '82%',
@@ -89,6 +161,83 @@ export const AidongSprite = ({
         </Box>
       )}
 
+      {useLayeredParts && (
+        <Box
+          aria-hidden
+          sx={{
+            position: 'relative',
+            width: size * (AIDONG_PART_LAYOUT.headWidth / layerLayout.stageHeight),
+            height: size,
+          }}
+        >
+          <Box
+            component="img"
+            src={getPartAssetPath(character, 'Body')}
+            alt=""
+            onError={() => setBodyPartMissing(true)}
+            sx={{
+              position: 'absolute',
+              left: '50%',
+              top: pct(layerLayout.bodyTop, layerLayout.stageHeight),
+              width: pct(AIDONG_PART_LAYOUT.bodyWidth, AIDONG_PART_LAYOUT.headWidth),
+              height: pct(AIDONG_PART_LAYOUT.bodyHeight, layerLayout.stageHeight),
+              transform: 'translateX(-50%)',
+              objectFit: 'fill',
+              zIndex: 1,
+            }}
+          />
+          {outfitParts.bottom && (
+            <Box
+              component="img"
+              src={getClothesAssetPath('bottom', outfitParts.bottom)}
+              alt=""
+              sx={{
+                position: 'absolute',
+                left: '50%',
+                top: pct(layerLayout.bodyTop + AIDONG_PART_LAYOUT.bodyHeight - AIDONG_PART_LAYOUT.bottomHeight, layerLayout.stageHeight),
+                width: pct(AIDONG_PART_LAYOUT.bottomWidth, AIDONG_PART_LAYOUT.headWidth),
+                height: pct(AIDONG_PART_LAYOUT.bottomHeight, layerLayout.stageHeight),
+                transform: 'translateX(-50%)',
+                objectFit: 'fill',
+                zIndex: 2,
+              }}
+            />
+          )}
+          {outfitParts.top && (
+            <Box
+              component="img"
+              src={getClothesAssetPath('top', outfitParts.top)}
+              alt=""
+              sx={{
+                position: 'absolute',
+                left: '50%',
+                top: pct(layerLayout.bodyTop, layerLayout.stageHeight),
+                width: pct(AIDONG_PART_LAYOUT.topWidth, AIDONG_PART_LAYOUT.headWidth),
+                height: pct(AIDONG_PART_LAYOUT.topHeight, layerLayout.stageHeight),
+                transform: 'translateX(-50%)',
+                objectFit: 'fill',
+                zIndex: 3,
+              }}
+            />
+          )}
+          <Box
+            component="img"
+            src={getPartAssetPath(character, 'Head')}
+            alt={character}
+            onError={() => setHeadPartMissing(true)}
+            sx={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '100%',
+              height: pct(AIDONG_PART_LAYOUT.headHeight, layerLayout.stageHeight),
+              objectFit: 'fill',
+              zIndex: 4,
+            }}
+          />
+        </Box>
+      )}
+
       {!bodyMissing && (
         <Box
           component="img"
@@ -102,6 +251,7 @@ export const AidongSprite = ({
             height: '100%',
             objectFit: 'contain',
             zIndex: 1,
+            opacity: useLayeredParts ? 0 : 1,
             filter: outfitFilter,
             transition: 'filter 0.4s',
           }}
